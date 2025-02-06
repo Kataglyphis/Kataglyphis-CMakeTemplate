@@ -61,7 +61,6 @@ target_link_libraries(
   ${COMMIT_TEST_SUITE}
   PUBLIC ${CMAKE_DL_LIBS}
          Threads::Threads
-         Vulkan::Vulkan
          # enable compiler warnings
          myproject_warnings
          # enable sanitizers

@@ -3,7 +3,7 @@
 # # configure vulkan version
 # set(VULKAN_VERSION_MAJOR 1)
 # set(VULKAN_VERSION_MINOR 3)
-# find_package(Threads REQUIRED)
+find_package(Threads REQUIRED)
 
 # # we depend on OpenGL
 # find_package(OpenGL REQUIRED COMPONENTS OpenGL)

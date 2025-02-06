@@ -5,7 +5,7 @@ set(PROJECT_SRC_DIR ${WORKING_DIRECTORY}Src/)
 set(PROJECT_INCLUDE_DIR ${WORKING_DIRECTORY}Src/)
 set(EXTERNAL_LIB_SRC_DIR ${WORKING_DIRECTORY}ExternalLib/)
 
-include(${WORKING_DIRECTORY}Src/cmake/filters/SetProjectFilters.cmake)
+include(${PROJECT_SRC_DIR}cmake/filters/SetProjectFilters.cmake)
 
 include(cmake/SetTestFilters.cmake)
 
@@ -39,7 +39,7 @@ endif()
 
 if(NOT MSVC)
   target_compile_definitions(${PERF_TEST_SUITE} PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources/"
-                                                        RELATIVE_INCLUDE_PATH="/../../Src//")
+                                                        RELATIVE_INCLUDE_PATH="/../../Src/")
 else()
   target_compile_definitions(${PERF_TEST_SUITE} PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources/"
                                                         RELATIVE_INCLUDE_PATH="/../../Src/")
