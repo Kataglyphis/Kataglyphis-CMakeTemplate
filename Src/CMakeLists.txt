@@ -32,23 +32,19 @@ if(NOT MSVC)
   target_compile_definitions(
     ${PROJECT_NAME}
     PRIVATE RELATIVE_RESOURCE_PATH="/../Resources/"
-            RELATIVE_INCLUDE_PATH="/../Src/GraphicsEngineVulkan/"
+            RELATIVE_INCLUDE_PATH="/../Src/"
             RELATIVE_IMGUI_FONTS_PATH="/../ExternalLib/IMGUI/misc/fonts/"
             ShaderIncludesString="${ShaderIncludesString}")
 else()
-  target_compile_definitions(
-    ${PROJECT_NAME}
-    PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources/"
-            RELATIVE_INCLUDE_PATH="/../../Src/GraphicsEngineVulkan/"
-            RELATIVE_IMGUI_FONTS_PATH="/../../ExternalLib/IMGUI/misc/fonts/"
-            ShaderIncludesString="${ShaderIncludesString}")
+  target_compile_definitions(${PROJECT_NAME} PRIVATE RELATIVE_RESOURCE_PATH="/../Resources/"
+                                                     RELATIVE_INCLUDE_PATH="/../Src/")
 endif()
 
 configure_file(KataglyphisCppProjectConfig.hpp.in "${CMAKE_CURRENT_SOURCE_DIR}/KataglyphisCppProjectConfig.hpp")
 
 target_sources(
   ${PROJECT_NAME}
-  PUBLIC ${KataglyphisCppProject_SOURCES_SOURCES}
+  PUBLIC ${KataglyphisCppProject_SOURCES}
   PUBLIC FILE_SET
          HEADERS
          BASE_DIRS

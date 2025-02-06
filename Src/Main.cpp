@@ -1,4 +1,4 @@
-#include "KataglyphisCppProjectConfig..hpp"
+#include "KataglyphisCppProjectConfig.hpp"
 #include <iostream>
 
 extern "C" {
