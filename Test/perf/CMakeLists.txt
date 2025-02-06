@@ -11,18 +11,16 @@ include(cmake/SetTestFilters.cmake)
 
 set(PERF_TEST_SUITE perfTestSuite)
 
-file(
-  GLOB_RECURSE KataglyphisCppProject_SOURCES
-  RELATIVE ${PROJECT_SRC_DIR}
-  "*.cpp")
+file(GLOB_RECURSE KataglyphisCppProject_SOURCES
+     # RELATIVE ${PROJECT_SRC_DIR}
+     "${PROJECT_SRC_DIR}/*.cpp")
 
 # Specify the file to exclude
 list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/Main.cpp")
 
-file(
-  GLOB_RECURSE KataglyphisCppProject_HEADERS
-  RELATIVE ${PROJECT_SRC_DIR}
-  "*.hpp")
+file(GLOB_RECURSE KataglyphisCppProject_HEADERS
+     # RELATIVE ${PROJECT_SRC_DIR}
+     "${PROJECT_SRC_DIR}/*.hpp")
 
 # if(RUST_FEATURES)
 #   corrosion_import_crate(MANIFEST_PATH ${PROJECT_SRC_DIR}rusty_code/Cargo.toml)

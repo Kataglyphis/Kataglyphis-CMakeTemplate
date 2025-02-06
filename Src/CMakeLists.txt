@@ -44,11 +44,11 @@ else()
             ShaderIncludesString="${ShaderIncludesString}")
 endif()
 
-configure_file(KataglyphisCppProjectConfig.hpp.in "${CMAKE_CURRENT_SOURCE_DIR}/KataglyphisCppProjectConfig..hpp")
+configure_file(KataglyphisCppProjectConfig.hpp.in "${CMAKE_CURRENT_SOURCE_DIR}/KataglyphisCppProjectConfig.hpp")
 
 target_sources(
   ${PROJECT_NAME}
-  PUBLIC ${VULKANRENDERER_SOURCES}
+  PUBLIC ${KataglyphisCppProject_SOURCES_SOURCES}
   PUBLIC FILE_SET
          HEADERS
          BASE_DIRS
