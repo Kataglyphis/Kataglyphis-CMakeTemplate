@@ -42,6 +42,10 @@ myproject_local_options()
 include(cmake/SystemLibDependencies.cmake)
 add_subdirectory(ExternalLib)
 
+if (BUILD_TESTING)
+fuzztest_setup_fuzzing_flags()
+endif()
+
 add_subdirectory(Src)
 
 if(NOT WINDOWS_CI)

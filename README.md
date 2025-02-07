@@ -2,7 +2,7 @@
   <br>
   <a href="https://jonasheinle.de"><img src="images/logo.png" alt="logo" width="200"></a>
   <br>
-  Cataglyphis template
+  This CMake/C++ template project gives me a good starting point for f.e. GPU/Graphics programming. For everything close to hardware ... 
   <br>
 </h1>
 
@@ -75,7 +75,7 @@
 [![Kataglyphis Engine][product-screenshot2]](https://jonasheinle.de)
 [![Kataglyphis Engine][product-screenshot3]](https://jonasheinle.de) -->
 
-This project is a template. 
+This project is dedicated to compiling a comprehensive collection of best practices for C++ development using CMake. It serves as a definitive guide for starting new C++ projects, providing insights into optimal project setup, modern CMake techniques, and efficient workflows. The repository includes examples, templates, and detailed instructions to help developers of all levels adopt industry standards and improve their project configuration and build processes.
 
 ### Key Features
 
@@ -91,25 +91,116 @@ This project is a template.
 
 ### Dependencies
 This enumeration also includes submodules.
-<!-- * [Vulkan 1.3](https://www.vulkan.org/) -->
+* [nlohmann_json](https://github.com/nlohmann/json)
+* [SPDLOG](https://github.com/gabime/spdlog)
+* [gtest](https://github.com/google/googletest)
+* [gbenchmark](https://github.com/google/benchmark)
+* [google fuzztest](https://github.com/google/fuzztest)
+
+##### Optional
+* [Rust](https://www.rust-lang.org/)
+* [corrision-rs](https://github.com/corrosion-rs/corrosion)
+* [cxx](https://cxx.rs/)
 
 ### Useful tools
+* [doxygen](https://www.doxygen.nl/index.html)
+* [cppcheck](https://cppcheck.sourceforge.io/)
+* [cmake](https://cmake.org/)
+* [gsl](https://github.com/Microsoft/GSL)
+* [NSIS](https://nsis.sourceforge.io/Main_Page)
+* [cppcheck](https://cppcheck.sourceforge.io/)
+* [valgrind](https://valgrind.org/)
+* [clangtidy](https://github.com/llvm/llvm-project)
+* [ClangPowerTools](https://www.clangpowertools.com/)
+* [Codecov](https://app.codecov.io/gh)
+* [Ccache](https://ccache.dev/)
+* []()
 
-<!-- * [cppcheck](https://cppcheck.sourceforge.io/) -->
+### VSCode Extensions
+* [CMake format](https://github.com/cheshirekow/cmake_format)
+* [CMake tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools)
+* [CppTools](https://github.com/microsoft/vscode-cpptools)
 
 <!-- GETTING STARTED -->
 ## Getting Started
 
 ### Prerequisites
+Dependencies to libraries are stated above.<br />
+C++23 or higher required.<br />
+C17 or higher required.<br />
+CMake 3.31.5 or higher required.<br />
 
 ### Installation
 
 1. Clone the repo
    ```sh
-   git clone --recurse-submodules git@github.com:Kataglyphis/....git
+   git clone --recurse-submodules git@github.com:Kataglyphis/Kataglyphis-CMakeTemplate.git
    ```
+2. Then build your solution with [CMAKE] (https://cmake.org/) <br />
+  Here the recommended way over command line after cloning the repo:<br />
+  > **_NOTE:_** Here we use CmakePresets to simplify things. Consider using it too
+  or just build on a common way.
+  
+  For now the features in Rust are experimental. If you want to use them install
+  Rust and set `RUST_FEATURES=ON` on your CMake build.
 
-## Tests
+  (for clarity: Assumption you are in the dir you have cloned the repo into)
+  ```sh
+  $ mkdir build ; cd build
+  # enlisting all available presets
+  $ cmake --list-presets=all ../
+  $ cmake --preset <configurePreset-name> ../
+  $ cmake --build --preset <buildPreset-name> .
+  ```
+
+### Upgrades
+#### Rusty things:
+1. Do not forget to upgrade the cxxbridge from time to time:
+```bash
+cargo install cxxbridge-cmd
+```
+
+# Tests
+I have four tests suites.
+
+1. Compilation Test Suite: This suite gets executed every compilation step. This ensures the very most important functionality is correct before every compilation.
+
+2. Commit Test Suite: This gets executed on every push. More expensive tests are allowed :) 
+
+3. Perf test suite: It is all about measurements of performance. We are C++ tho! 
+
+4. Fuzz testing suite
+
+## Static Analyzers
+
+```bash
+clang --analyze --output-format html $(find Src -name '*.cpp' -o -name '*.cc')
+scan-build cmake --build .
+clang-tidy -p=./build/compile_commands.json  $(find Src -name '*.cpp' -o -name '*.cc')
+
+```
+
+# Format cmake files
+
+```bash
+uv venv
+source .venv/bin/activate
+pip install -v -e .
+cmake-format -c ./.cmake-format.yaml -i $(find cmake -name '*.cmake' -o -name 'CMakeLists.txt')
+```
+# Format code files 
+
+```bash
+clang-format -i $(find include -name "*.cpp" -or -name "*.h" -or -name "*.hpp")
+```
+
+# Docs
+Build the docs
+```bash
+pip install -v -e .
+cd docs 
+make html
+```
 
 <!-- ROADMAP -->
 ## Roadmap
@@ -138,9 +229,7 @@ Contributions are what make the open source community such an amazing place to b
 
 Jonas Heinle - [@Cataglyphis_](https://twitter.com/Cataglyphis_) - jonasheinle@googlemail.com
 
-Project Link: [https://github.com/Kataglyphis/...](https://github.com/Kataglyphis/...)
-
-
+[jonasheinle.de](https://jonasheinle.de/#/landingPage)
 <!-- ACKNOWLEDGEMENTS -->
 ## Acknowledgements
 
@@ -152,40 +241,12 @@ Project Link: [https://github.com/Kataglyphis/...](https://github.com/Kataglyphi
 
 Some very helpful literature, tutorials, etc. 
 
-<!-- CMake/C++
+Rust
+* [rust-lang](https://www.rust-lang.org/)
+
+CMake/C++
 * [Cpp best practices](https://github.com/cpp-best-practices/cppbestpractices)
-
-Vulkan
-* [Udemy course by Ben Cook](https://www.udemy.com/share/102M903@JMHgpMsdMW336k2s5Ftz9FMx769wYAEQ7p6GMAPBsFuVUbWRgq7k2uY6qBCG6UWNPQ==/)
-* [Vulkan Tutorial](https://vulkan-tutorial.com/)
-* [Vulkan Raytracing Tutorial](https://developer.nvidia.com/rtx/raytracing/vkray)
-* [Vulkan Tutorial; especially chapter about integrating imgui](https://frguthmann.github.io/posts/vulkan_imgui/)
-* [NVidia Raytracing tutorial with Vulkan](https://nvpro-samples.github.io/vk_raytracing_tutorial_KHR/)
-* [Blog from Sascha Willems](https://www.saschawillems.de/)
-
-Physically Based Shading
-* [Advanced Global Illumination by Dutre, Bala, Bekaert](https://www.oreilly.com/library/view/advanced-global-illumination/9781439864951/)
-* [The Bible: PBR book](https://pbr-book.org/3ed-2018/Reflection_Models/Microfacet_Models)
-* [Real shading in Unreal engine 4](https://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf)
-* [Physically Based Shading at Disney](https://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf)
-* [RealTimeRendering](https://www.realtimerendering.com/)
-* [Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs](https://hal.inria.fr/hal-01024289/)
-* [Sampling the GGX Distribution of Visible Normals](https://pdfs.semanticscholar.org/63bc/928467d760605cdbf77a25bb7c3ad957e40e.pdf)
-
-Path tracing
-* [NVIDIA Path tracing Tutorial](https://github.com/nvpro-samples/vk_mini_path_tracer/blob/main/vk_mini_path_tracer/main.cpp) -->
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/othneildrew/Best-README-Template.svg?style=for-the-badge
-[contributors-url]: https://github.com/othneildrew/Best-README-Template/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/othneildrew/Best-README-Template.svg?style=for-the-badge
-[forks-url]: https://github.com/othneildrew/Best-README-Template/network/members
-[stars-shield]: https://img.shields.io/github/stars/othneildrew/Best-README-Template.svg?style=for-the-badge
-[stars-url]: https://github.com/othneildrew/Best-README-Template/stargazers
-[issues-shield]: https://img.shields.io/github/issues/othneildrew/Best-README-Template.svg?style=for-the-badge
-[issues-url]: https://github.com/othneildrew/Best-README-Template/issues
-[license-shield]: https://img.shields.io/github/license/othneildrew/Best-README-Template.svg?style=for-the-badge
-[license-url]: https://github.com/othneildrew/Best-README-Template/blob/master/LICENSE.txt
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://www.linkedin.com/in/jonas-heinle-0b2a301a0/
+* [Integrate Rust into CMake projects](https://github.com/trondhe/rusty_cmake)
+* [corrision-rs](https://github.com/corrosion-rs/corrosion)
+* [cxx](https://cxx.rs/)
+* [C++ Software Design by Klaus Iglberger](https://meetingcpp.com/2024/Speaker/items/Klaus_Iglberger.html)

@@ -1,8 +1,8 @@
-﻿{
-	"version": 3,
+{
+	"version": 10,
 	"cmakeMinimumRequired": {
 		"major": 3,
-		"minor": 20,
+		"minor": 23,
 		"patch": 0
 	},
 	"configurePresets": [
@@ -351,5 +351,53 @@
 				}
 			}
 		}
-	]
+	],
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "linux-debug-clang"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "default",
+      "configurePreset": "linux-debug-clang",
+      "output": {"outputOnFailure": true},
+      "execution": {"noTestsAction": "error", "stopOnFailure": true}
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "default",
+      "configurePreset": "linux-debug-clang",
+      "generators": [
+        "TGZ"
+      ]
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "linux-debug-clang-workflow",
+      "displayName": "Linux Debug Clang Workflow",
+      "description": "Workflow preset for linux-debug-clang",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "linux-debug-clang"
+        },
+        {
+          "type": "build",
+          "name": "default"
+        },
+        {
+          "type": "test",
+          "name": "default"
+        },
+        {
+          "type": "package",
+          "name": "default"
+        }
+      ]
+    }
+  ]
 }
