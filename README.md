@@ -136,6 +136,12 @@ CMake 3.31.5 or higher required.<br />
    ```sh
    git clone --recurse-submodules git@github.com:Kataglyphis/Kataglyphis-CMakeTemplate.git
    ```
+   > **_NOTE:_** In case you forgot the flag --recurse run the following command  
+   ```sh
+   git submodule update --init --recursive
+
+   ```
+   afterwards.
 2. Then build your solution with [CMAKE] (https://cmake.org/) <br />
   Here the recommended way over command line after cloning the repo:<br />
   > **_NOTE:_** Here we use CmakePresets to simplify things. Consider using it too
