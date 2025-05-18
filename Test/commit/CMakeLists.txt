@@ -72,7 +72,7 @@ target_link_libraries(
 
 if(NOT WINDOWS_CI)
   message(STATUS "WINDOWS_CI is OFF or not defined.")
-  gtest_discover_tests(${COMMIT_TEST_SUITE} DISCOVERY_MODE PRE_TEST DISCOVERY_TIMEOUT 30000)
+  gtest_discover_tests(${COMMIT_TEST_SUITE} DISCOVERY_TIMEOUT 300)
 else()
   message(STATUS "WINDOWS_CI is OFF or not defined.")
 endif()
