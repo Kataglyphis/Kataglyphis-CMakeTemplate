@@ -14,10 +14,11 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        "CMAKE_VERBOSE_MAKEFILE": "ON",
+                                "CMAKE_VERBOSE_MAKEFILE": "ON",
 				"CMAKE_BUILD_TYPE": "Debug",
 				"CMAKE_C_COMPILER": "clang",
-				"CMAKE_CXX_COMPILER": "clang++"
+				"CMAKE_CXX_COMPILER": "clang++",
+                                "COMPILER_CACHE": "sccache"
 			},
 			"condition": {
 				"type": "equals",
@@ -33,10 +34,11 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        "CMAKE_VERBOSE_MAKEFILE": "ON",
+                                "CMAKE_VERBOSE_MAKEFILE": "ON",
 				"CMAKE_BUILD_TYPE": "RelWithDebInfo",
 				"CMAKE_C_COMPILER": "clang",
-				"CMAKE_CXX_COMPILER": "clang++"
+				"CMAKE_CXX_COMPILER": "clang++",
+                                "COMPILER_CACHE": "sccache"
 			},
 			"condition": {
 				"type": "equals",
@@ -52,10 +54,11 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        "CMAKE_VERBOSE_MAKEFILE": "ON",
+                                "CMAKE_VERBOSE_MAKEFILE": "ON",
 				"CMAKE_BUILD_TYPE": "Release",
 				"CMAKE_C_COMPILER": "clang",
-				"CMAKE_CXX_COMPILER": "clang++"
+				"CMAKE_CXX_COMPILER": "clang++",
+                                "COMPILER_CACHE": "sccache"
 			},
 			"condition": {
 				"type": "equals",
@@ -71,10 +74,11 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        "CMAKE_VERBOSE_MAKEFILE": "ON",
+                                "CMAKE_VERBOSE_MAKEFILE": "ON",
 				"CMAKE_BUILD_TYPE": "Debug",
 				"CMAKE_C_COMPILER": "gcc",
-				"CMAKE_CXX_COMPILER": "g++"
+				"CMAKE_CXX_COMPILER": "g++",
+                                "COMPILER_CACHE": "sccache"
 			},
 			"condition": {
 				"type": "equals",
@@ -90,10 +94,11 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        "CMAKE_VERBOSE_MAKEFILE": "ON",
+                                "CMAKE_VERBOSE_MAKEFILE": "ON",
 				"CMAKE_BUILD_TYPE": "RelWithDebInfo",
 				"CMAKE_C_COMPILER": "gcc",
-				"CMAKE_CXX_COMPILER": "g++"
+				"CMAKE_CXX_COMPILER": "g++",
+                                "COMPILER_CACHE": "sccache"
 			},
 			"condition": {
 				"type": "equals",
@@ -109,10 +114,11 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        "CMAKE_VERBOSE_MAKEFILE": "ON",
+                                "CMAKE_VERBOSE_MAKEFILE": "ON",
 				"CMAKE_BUILD_TYPE": "Release",
 				"CMAKE_C_COMPILER": "gcc",
-				"CMAKE_CXX_COMPILER": "g++"
+				"CMAKE_CXX_COMPILER": "g++",
+                                "COMPILER_CACHE": "sccache"
 			},
 			"condition": {
 				"type": "equals",
@@ -127,10 +133,11 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        "CMAKE_VERBOSE_MAKEFILE": "ON",
+                                "CMAKE_VERBOSE_MAKEFILE": "ON",
 				"CMAKE_C_COMPILER": "cl",
 				"CMAKE_CXX_COMPILER": "cl",
-        "CMAKE_BUILD_TYPE": "Debug"
+                                "CMAKE_BUILD_TYPE": "Debug",
+                                "compiler_cache": "sccache"
 			},
 			"condition": {
 				"type": "equals",
@@ -149,10 +156,11 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        	 "CMAKE_VERBOSE_MAKEFILE": "ON",
+        	                   "CMAKE_VERBOSE_MAKEFILE": "ON",
 				   "CMAKE_C_COMPILER": "cl",
 				   "CMAKE_CXX_COMPILER": "cl",
-        		"CMAKE_BUILD_TYPE": "Release"
+        		           "CMAKE_BUILD_TYPE": "Release",
+                                   "compiler_cache": "sccache"
 			},
 			"condition": {
 				"type": "equals",
@@ -171,11 +179,12 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        		"CMAKE_VERBOSE_MAKEFILE": "ON",
+        		        "CMAKE_VERBOSE_MAKEFILE": "ON",
 				"CMAKE_C_COMPILER": "clang-cl",
 				"CMAKE_CXX_COMPILER": "clang-cl",
 				"RUST_FEATURES": "OFF",
-				"CMAKE_BUILD_TYPE": "RelWithDebInfo"
+				"CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                                "compiler_cache": "sccache"
 			},
 			"toolset": "ClangCL",
 			"condition": {
@@ -200,11 +209,12 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        		"CMAKE_VERBOSE_MAKEFILE": "ON",
+        		        "CMAKE_VERBOSE_MAKEFILE": "ON",
 				"CMAKE_C_COMPILER": "clang-cl",
 				"CMAKE_CXX_COMPILER": "clang-cl",
 				"RUST_FEATURES": "OFF",
-				"CMAKE_BUILD_TYPE": "Debug"
+				"CMAKE_BUILD_TYPE": "Debug",
+                                "COMPILER_CACHE": "sccache"
 			},
 			"toolset": "ClangCL",
 			"condition": {
@@ -229,11 +239,12 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        		"CMAKE_VERBOSE_MAKEFILE": "ON",
+        		        "CMAKE_VERBOSE_MAKEFILE": "ON",
 				"CMAKE_C_COMPILER": "clang-cl",
 				"CMAKE_CXX_COMPILER": "clang-cl",
 				"RUST_FEATURES": "OFF",
-				"CMAKE_BUILD_TYPE": "Release"
+				"CMAKE_BUILD_TYPE": "Release",
+                                "compiler_cache": "sccache"
 			},
 			"toolset": "ClangCL",
 			"condition": {
@@ -258,11 +269,12 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        		"CMAKE_VERBOSE_MAKEFILE": "ON",
+        		        "CMAKE_VERBOSE_MAKEFILE": "ON",
 				"CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
 				"CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
 				"RUST_FEATURES": "OFF",
-				"CMAKE_BUILD_TYPE": "RelWithDebInfo"
+				"CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                                "compiler_cache": "sccache"
 			},
 			"condition": {
 				"type": "equals",
@@ -282,11 +294,12 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        		"CMAKE_VERBOSE_MAKEFILE": "ON",
+        		        "CMAKE_VERBOSE_MAKEFILE": "ON",
 				"CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
 				"CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
 				"RUST_FEATURES": "OFF",
-				"CMAKE_BUILD_TYPE": "Debug"
+				"CMAKE_BUILD_TYPE": "Debug",
+                                "compiler_cache": "sccache"
 			},
 			"condition": {
 				"type": "equals",
@@ -306,11 +319,12 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        		"CMAKE_VERBOSE_MAKEFILE": "ON",
+        		        "CMAKE_VERBOSE_MAKEFILE": "ON",
 				"CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
 				"CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
 				"RUST_FEATURES": "OFF",
-				"CMAKE_BUILD_TYPE": "Release"
+				"CMAKE_BUILD_TYPE": "Release",
+                                "compiler_cache": "sccache"
 			},
 			"condition": {
 				"type": "equals",
@@ -330,10 +344,11 @@
 			"binaryDir": "${sourceDir}/build/",
 			"installDir": "${sourceDir}/build/",
 			"cacheVariables": {
-        "CMAKE_VERBOSE_MAKEFILE": "ON",
+                                "CMAKE_VERBOSE_MAKEFILE": "ON",
 				"CMAKE_C_COMPILER": "clang-cl",
 				"CMAKE_CXX_COMPILER": "clang-cl",
-				"WINDOWS_CI": "ON"
+				"WINDOWS_CI": "ON",
+                                "compiler_cache": "sccache"
 			},
 			"toolset": "ClangCL",
 			"condition": {
