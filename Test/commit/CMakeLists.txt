@@ -14,7 +14,7 @@ set(COMMIT_TEST_SUITE commitTestSuite)
 
 file(GLOB_RECURSE KataglyphisCppProject_COMMIT_TEST_FILTER "*.cpp")
 
-message("Render commit test filter is: ${RENDERER_COMMIT_TEST_FILTER}")
+message("Commit test filter is: ${KataglyphisCppProject_COMMIT_TEST_FILTER}")
 
 file(GLOB_RECURSE KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/*.cpp")
 
