@@ -9,9 +9,9 @@ set(EXTERNAL_LIB_SRC_DIR ${WORKING_DIRECTORY}ExternalLib/)
 
 include(${PROJECT_SRC_DIR}cmake/filters/SetProjectFilters.cmake)
 
-file(GLOB_RECURSE RENDERER_COMPILE_TEST_FILTER "*.cpp")
+file(GLOB_RECURSE COMPILE_TEST_FILTER "*.cpp")
 
-message("Render compile test suite files are: ${RENDERER_COMPILE_TEST_FILTER}")
+message("Render compile test suite files are: ${COMPILE_TEST_FILTER}")
 
 set(COMPILE_TEST_SUITE compileTestSuite)
 
@@ -20,7 +20,7 @@ file(GLOB_RECURSE KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/*.cpp")
 # Specify the file to exclude
 list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/Main.cpp")
 
-file(GLOB_RECURSE VKataglyphisCppProject_HEADERS "${PROJECT_SRC_DIR}/*.hpp")
+file(GLOB_RECURSE KataglyphisCppProject_HEADERS "${PROJECT_SRC_DIR}/*.hpp")
 
 add_executable(${COMPILE_TEST_SUITE})
 
