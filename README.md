@@ -6,6 +6,8 @@
   <br>
 </h1>
 
+[![CMake on Linux GNU Debug](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run.yml/badge.svg?branch=main)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run.yml)
+
 <!-- <h1 align="center">
   <br>
   <a href="https://jonasheinle.de"><img src="images/vulkan-logo.png" alt="VulkanEngine" width="200"></a>
