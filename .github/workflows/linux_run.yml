@@ -1,6 +1,6 @@
 # This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
-name: CMake on a single platform
+name: CMake on Linux GNU Debug
 
 on:
   push:
@@ -24,8 +24,10 @@ jobs:
       with:
           fetch-depth: 0         # fetch full history for tags, branches, etc.
           submodules: recursive  # initialize & update all submodules, including nested ones
+    
     - name: Install latest CMake
       run: |
+        sudo apt-get remove --purge --auto-remove cmake
         wget -qO - https://apt.kitware.com/keys/kitware-archive-latest.asc \
           | gpg --dearmor \
           | sudo tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
