@@ -132,7 +132,7 @@ This enumeration also includes submodules.
 Dependencies to libraries are stated above.<br />
 C++23 or higher required.<br />
 C17 or higher required.<br />
-CMake 3.31.5 or higher required.<br />
+CMake 4.0.0 or higher required.<br />
 
 ### Installation
 
