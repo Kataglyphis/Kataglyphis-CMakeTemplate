@@ -27,6 +27,8 @@ jobs:
     
     - name: Install latest CMake
       run: |
+          which cmake
+          sudo snap remove cmake
           # Remove any existing CMake to avoid conflicts
           sudo apt-get purge --auto-remove -y cmake        # recommended to ensure a clean install:contentReference[oaicite:1]{index=1}
 
