@@ -11,7 +11,7 @@ include(${PROJECT_SRC_DIR}cmake/filters/SetProjectFilters.cmake)
 
 file(GLOB_RECURSE COMPILE_TEST_FILTER "*.cpp")
 
-message("Render compile test suite files are: ${COMPILE_TEST_FILTER}")
+message("Compile test suite files are: ${COMPILE_TEST_FILTER}")
 
 set(COMPILE_TEST_SUITE compileTestSuite)
 
