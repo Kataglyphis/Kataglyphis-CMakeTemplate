@@ -101,7 +101,7 @@ This enumeration also includes submodules.
 * [gbenchmark](https://github.com/google/benchmark)
 * [google fuzztest](https://github.com/google/fuzztest)
 
-##### Optional
+##### Opt
 * [Rust](https://www.rust-lang.org/)
 * [corrision-rs](https://github.com/corrosion-rs/corrosion)
 * [cxx](https://cxx.rs/)
@@ -118,7 +118,7 @@ This enumeration also includes submodules.
 * [ClangPowerTools](https://www.clangpowertools.com/)
 * [Codecov](https://app.codecov.io/gh)
 * [Ccache](https://ccache.dev/)
-* []()
+* [Sccache](https://github.com/mozilla/sccache)
 
 ### VSCode Extensions
 * [CMake format](https://github.com/cheshirekow/cmake_format)
