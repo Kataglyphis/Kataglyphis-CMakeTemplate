@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0.0)
+cmake_minimum_required(VERSION 4.0.2)
 
 # set the project name
 project(
@@ -59,7 +59,7 @@ endif()
 if(BUILD_TESTING)
   message(STATUS "Tests are enabled.!")
   add_subdirectory(Test/commit)
-  # add_subdirectory(Test/compile)
+  add_subdirectory(Test/compile)
   add_subdirectory(Test/perf)
   add_subdirectory(Test/fuzz)
 else()
