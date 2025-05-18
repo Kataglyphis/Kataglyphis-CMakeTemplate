@@ -27,6 +27,8 @@ jobs:
     
     - name: Install latest CMake
       run: |
+          # 1. Remove any manually installed CMake binary
+          sudo rm -f /usr/local/bin/cmake
           which cmake
           sudo snap remove cmake
           # Remove any existing CMake to avoid conflicts
@@ -50,6 +52,7 @@ jobs:
 
           # Verify the installation
           cmake --version
+          
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
