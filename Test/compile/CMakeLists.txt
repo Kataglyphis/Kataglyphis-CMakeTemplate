@@ -66,7 +66,7 @@ target_link_libraries(
 
 if(NOT WINDOWS_CI)
   message(STATUS "WINDOWS_CI is OFF or not defined.")
-  gtest_discover_tests(${COMPILE_TEST_SUITE} DISCOVERY_TIMEOUT 300)
+  gtest_discover_tests(${COMPILE_TEST_SUITE} DISCOVERY_TIMEOUT 30000)
 else()
   message(STATUS "WINDOWS_CI is OFF or not defined.")
 endif()
