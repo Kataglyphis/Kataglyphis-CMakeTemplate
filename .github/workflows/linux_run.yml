@@ -50,6 +50,9 @@ jobs:
           sudo apt-get update                              # pick up the new repository:contentReference[oaicite:5]{index=5}
           sudo apt-get install -y cmake                     # installs the latest upstream release:contentReference[oaicite:6]{index=6}
 
+          # 5. Add the APT-installed CMake directory to PATH
+          echo "/usr/bin" >> $GITHUB_PATH                          # prepend /usr/bin so 'cmake' resolves to the APT version :contentReference[oaicite:2]{index=2}
+          
           # Verify the installation
           cmake --version
           
