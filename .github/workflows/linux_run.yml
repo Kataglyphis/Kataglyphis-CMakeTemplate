@@ -35,7 +35,7 @@ jobs:
         test -f /usr/share/doc/kitware-archive-keyring/copyright ||
         sudo rm /usr/share/keyrings/kitware-archive-keyring.gpg 
         sudo apt-get install kitware-archive-keyring
-        sudo apt-get install -y cmake
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y cmake
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
