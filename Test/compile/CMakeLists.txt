@@ -9,11 +9,9 @@ set(EXTERNAL_LIB_SRC_DIR ${WORKING_DIRECTORY}ExternalLib/)
 
 include(${PROJECT_SRC_DIR}cmake/filters/SetProjectFilters.cmake)
 
-file(GLOB_RECURSE COMPILE_TEST_FILTER "*.cpp")
+file(GLOB_RECURSE KataglyphisCppProject_COMPILE_TEST_FILTER "*.cpp")
 
-message("Compile test suite files are: ${COMPILE_TEST_FILTER}")
-
-set(COMPILE_TEST_SUITE compileTestSuite)
+message("Compile test filter is: ${KataglyphisCppProject_COMPILE_TEST_FILTER}")
 
 file(GLOB_RECURSE KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/*.cpp")
 
@@ -34,8 +32,7 @@ if(NOT MSVC)
   target_compile_definitions(${COMPILE_TEST_SUITE} PRIVATE RELATIVE_RESOURCE_PATH="/../../../Resources/"
                                                            RELATIVE_INCLUDE_PATH="/../../../Src/")
 else()
-  target_compile_definitions(${COMPILE_TEST_SUITE} PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources/"
-                                                           RELATIVE_INCLUDE_PATH="/../../Src/")
+  target_compile_definitions(${COMPILE_TEST_SUITE} PRIVATE RELATIVE_RESOURCE_PATH="/../../ResouPUBLIC                                                         RELATIVE_INCLUDE_PATH="/../../Src/")
 endif()
 
 configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.hpp.in
@@ -43,7 +40,7 @@ configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.hpp.in
 
 target_sources(
   ${COMPILE_TEST_SUITE}
-  PUBLIC ${KataglyphisCppProject_SOURCES}
+  PUBLIC ${KataglyphisCppProject_COMPILE_TEST_FILTER} ${KataglyphisCppProject_SOURCES}
   PUBLIC FILE_SET
          HEADERS
          BASE_DIRS
