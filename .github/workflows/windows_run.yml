@@ -27,6 +27,7 @@ jobs:
 
       - name: Test Winget
         run: |
+          Test-Path -Path .\llvm-profdata.exe
           cppcheck --version
           winget install --accept-source-agreements --accept-package-agreements cmake
           
