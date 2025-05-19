@@ -27,8 +27,8 @@ jobs:
 
       - name: Test Winget
         run: |
-          ls "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\Llvm\x64\bin"
           choco install llvm --version=20.1.0 --params="'/AddToPath'" -y
+          ls "C:\Program Files\LLVM\bin"
           cppcheck --version
           winget install --accept-source-agreements --accept-package-agreements cmake
           
