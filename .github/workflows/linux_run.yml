@@ -24,7 +24,10 @@ jobs:
       with:
           fetch-depth: 0         # fetch full history for tags, branches, etc.
           submodules: recursive  # initialize & update all submodules, including nested ones
-    
+    - name: Install deps
+      run: |
+        chmod +x scripts/prepare_tooling.sh
+        ./scripts/prepare_tooling.sh
     - name: Install latest CMake
       run: |
         # 1. Remove any manually installed CMake binary
