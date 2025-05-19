@@ -33,7 +33,7 @@ jobs:
     - name: Install gcov
       run: |
         gcov --version
-        sudo apt-get install gcov-13
+        which gcov
         
     - name: Install latest CMake
       run: |
@@ -86,9 +86,9 @@ jobs:
         export GCOV_TOOL=/usr/bin/gcov-13
         # Then tell lcov/geninfo to use it:
         lcov --capture \
-             --gcov-tool "$GCOV_TOOL" \
-             --directory . \
-             --output-file coverage.info
+          --gcov-tool /usr/bin/gcov-13 \
+          --directory . \
+          --output-file coverage.info
         
     - name: Run performance benchmarks
       run: ./${{github.workspace}}/build/perfTestSuite
