@@ -91,13 +91,13 @@ jobs:
           # Show a coverage summary in the console
           & "C:\Program Files\LLVM\bin\llvm-cov.exe" report `
               "$Env:GITHUB_WORKSPACE\build\Test\compileTestSuite" `
-              -instr-profile="$Env:GITHUB_WORKSPACE\build\Test\compileTestSuite.profdata"
+              -instr-profile="$Env:GITHUB_WORKSPACE\build\compileTestSuite.profdata"
 
           # Export detailed coverage to JSON
           & "C:\Program Files\LLVM\bin\llvm-cov.exe" export `
               "$Env:GITHUB_WORKSPACE\build\Test\compileTestSuite" `
               -format=text `
-              -instr-profile="$Env:GITHUB_WORKSPACE\build\Test\compileTestSuite.profdata" `
+              -instr-profile="$Env:GITHUB_WORKSPACE\build\compileTestSuite.profdata" `
             | Out-File -FilePath "$Env:GITHUB_WORKSPACE\build\coverage.json" -Encoding UTF8
 
       - name: Run performance benchmarks
