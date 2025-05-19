@@ -30,10 +30,11 @@ jobs:
         chmod +x scripts/prepare_tooling.sh
         ./scripts/prepare_tooling.sh
 
-    - name: Install gcov
+    - name: Install gcovr
       run: |
         gcov --version
         which gcov
+        pip install gcovr
         
     - name: Install latest CMake
       run: |
@@ -83,10 +84,7 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: | 
         ctest -C ${{env.BUILD_TYPE}}
-        # Then tell lcov/geninfo to use it:
-        lcov --capture \
-          --directory ${{github.workspace}} \
-          --output-file coverage.info
+        gcovr -r .  
         
     - name: Run performance benchmarks
       run: ./${{github.workspace}}/build/perfTestSuite
