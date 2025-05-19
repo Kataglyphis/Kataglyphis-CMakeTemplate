@@ -7,7 +7,6 @@
 </h1>
 
 [![CMake on Linux GNU Debug](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run.yml/badge.svg?branch=main)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run.yml)
-
 [![CMake on Windows MSVC x64](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/windows_run.yml/badge.svg?branch=main)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/windows_run.yml)
 
 <!-- <h1 align="center">
@@ -84,14 +83,12 @@ This project is dedicated to compiling a comprehensive collection of best practi
 ### Key Features
 
 <!-- ❌  -->
-<!-- |          Feature                    |   Implement Status |
+|          Feature                    |   Implement Status |
 | ------------------------------------| :----------------: |
-| Rasterizer                          |         ✔️         |
-| Raytracing                          |         ✔️         |
-| Path tracing                        |         ✔️         |
-| PBR support (UE4,disney,... etc.)   |         ✔️         |
-| .obj Model loading                  |         ✔️         |
-| Mip Mapping                         |         ✔️         | -->
+| CMake > 4.0                         |         ✔️         |
+| Performance Benchmark               |         ✔️         |
+| Linux/Windows support               |         ✔️         |
+| Clang/GNU/MSVC support              |         ✔️         |
 
 ### Dependencies
 This enumeration also includes submodules.
@@ -129,6 +126,7 @@ This enumeration also includes submodules.
 ## Getting Started
 
 ### Prerequisites
+
 Dependencies to libraries are stated above.<br />
 C++23 or higher required.<br />
 C17 or higher required.<br />
