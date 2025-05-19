@@ -24,10 +24,16 @@ jobs:
       with:
           fetch-depth: 0         # fetch full history for tags, branches, etc.
           submodules: recursive  # initialize & update all submodules, including nested ones
+          
     - name: Install deps
       run: |
         chmod +x scripts/prepare_tooling.sh
         ./scripts/prepare_tooling.sh
+
+    - name: Install gcov
+      run: | 
+        sudo apt-get install gcov-13
+        
     - name: Install latest CMake
       run: |
         # 1. Remove any manually installed CMake binary
@@ -76,7 +82,12 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: | 
         ctest -C ${{env.BUILD_TYPE}}
-        lcov --capture --directory . --output-file coverage.info
+        export GCOV_TOOL=/usr/bin/gcov-13
+        # Then tell lcov/geninfo to use it:
+        lcov --capture \
+             --gcov-tool "$GCOV_TOOL" \
+             --directory . \
+             --output-file coverage.info
         
     - name: Run performance benchmarks
       run: ./${{github.workspace}}/build/perfTestSuite
