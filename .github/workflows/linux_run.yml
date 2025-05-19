@@ -87,8 +87,8 @@ jobs:
         gcovr -r .  
         
     - name: Run performance benchmarks
-      run: ./${{github.workspace}}/build/perfTestSuite
+      run: .${{github.workspace}}/build/perfTestSuite
 
     - name: Run fuzzer tests
-      run: ./${{github.workspace}}/build/first_fuzz_test
+      run: .${{github.workspace}}/build/first_fuzz_test
 
