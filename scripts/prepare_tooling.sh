@@ -6,16 +6,16 @@ set -e
 if command -v apt-get >/dev/null; then
     echo "Detected apt-get. Installing via apt-get..."
     sudo apt-get update
-    sudo apt-get install -y sccache ccache cppcheck iwyu lcov
+    sudo apt-get install -y sccache ccache cppcheck iwyu lcov gprof
 elif command -v yum >/dev/null; then
     echo "Detected yum. Installing via yum..."
-    sudo yum install -y sccache ccache cppcheck iwyu lcov
+    sudo yum install -y sccache ccache cppcheck iwyu lcov gprof
 elif command -v dnf >/dev/null; then
     echo "Detected dnf. Installing via dnf..."
-    sudo dnf install -y sccache ccache cppcheck iwyu lcov
+    sudo dnf install -y sccache ccache cppcheck iwyu lcov gprof
 elif command -v pacman >/dev/null; then
     echo "Detected pacman. Installing via pacman..."
-    sudo pacman -Sy --noconfirm sccache ccache cppcheck iwyu lcov
+    sudo pacman -Sy --noconfirm sccache ccache cppcheck iwyu lcov gprof
 else
     echo "No supported package manager found. Please install ccache and cppcheck manually."
     exit 1

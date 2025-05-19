@@ -18,6 +18,9 @@
 
 <h4 align="center">A template <a href="https://jonasheinle.de" target="_blank"></a>.</h4>
 
+>  **__Note:__** For now the Fuzzer tests do only run on GCC-13 and *NOT* on GCC14
+>  
+
 <!-- [![Linux build](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Linux.yml/badge.svg)](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Linux.yml)
 [![Windows build](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Windows.yml/badge.svg)](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Windows.yml)
 [![TopLang](https://img.shields.io/github/languages/top/Kataglyphis/GraphicsEngineVulkan)]() -->

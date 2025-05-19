@@ -37,6 +37,7 @@ myproject_setup_options()
 
 myproject_global_options()
 
+message(STATUS "About to call the local options function.")
 myproject_local_options()
 
 include(cmake/SystemLibDependencies.cmake)

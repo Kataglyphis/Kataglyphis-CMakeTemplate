@@ -2,7 +2,7 @@ include(FetchContent)
 
 # include google test to project
 FetchContent_Declare(googletest
-                     URL https://github.com/google/googletest/archive/e235eb34c6c4fed790ccdad4b16394301360dcd4.zip)
+                     URL https://github.com/google/googletest/archive/571930618fa96eabcd05b573285edbee9fc13bae.zip)
 
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt

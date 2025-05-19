@@ -1,384 +1,470 @@
 {
-	"version": 10,
-	"cmakeMinimumRequired": {
-		"major": 3,
-		"minor": 23,
-		"patch": 0
-	},
-	"configurePresets": [
-		{
-			"name": "linux-debug-clang",
-			"displayName": "Linux Debug Clang",
-			"description": "Go with Linux",
-			"generator": "Ninja",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-                                "CMAKE_VERBOSE_MAKEFILE": "ON",
-				"CMAKE_BUILD_TYPE": "Debug",
-				"CMAKE_C_COMPILER": "clang",
-				"CMAKE_CXX_COMPILER": "clang++",
-                                "COMPILER_CACHE": "sccache"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Linux"
-			}
-		},
+  "version": 10,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 23,
+    "patch": 0
+  },
+  "configurePresets": [
     {
-			"name": "linux-RelWithDebInfo-clang",
-			"displayName": "Linux RelWithDebInfo Clang",
-			"description": "Go with Linux",
-			"generator": "Ninja",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-                                "CMAKE_VERBOSE_MAKEFILE": "ON",
-				"CMAKE_BUILD_TYPE": "RelWithDebInfo",
-				"CMAKE_C_COMPILER": "clang",
-				"CMAKE_CXX_COMPILER": "clang++",
-                                "COMPILER_CACHE": "sccache"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Linux"
-			}
-		},
-		{
-			"name": "linux-release-clang",
-			"displayName": "Linux Release Clang",
-			"description": "Go with Linux",
-			"generator": "Ninja",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-                                "CMAKE_VERBOSE_MAKEFILE": "ON",
-				"CMAKE_BUILD_TYPE": "Release",
-				"CMAKE_C_COMPILER": "clang",
-				"CMAKE_CXX_COMPILER": "clang++",
-                                "COMPILER_CACHE": "sccache"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Linux"
-			}
-		},
-		{
-			"name": "linux-debug-GNU",
-			"displayName": "Linux Debug GNU",
-			"description": "Go with Linux",
-			"generator": "Ninja",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-                                "CMAKE_VERBOSE_MAKEFILE": "ON",
-				"CMAKE_BUILD_TYPE": "Debug",
-				"CMAKE_C_COMPILER": "gcc",
-				"CMAKE_CXX_COMPILER": "g++",
-                                "COMPILER_CACHE": "sccache"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Linux"
-			}
-		},
+      "name": "linux-debug-clang",
+      "displayName": "Linux Debug Clang",
+      "description": "Go with Linux",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "COMPILER_CACHE": "sccache"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
     {
-			"name": "linux-RelWithDebInfo-GNU",
-			"displayName": "Linux RelWithDebInfo GNU",
-			"description": "Go with Linux",
-			"generator": "Ninja",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-                                "CMAKE_VERBOSE_MAKEFILE": "ON",
-				"CMAKE_BUILD_TYPE": "RelWithDebInfo",
-				"CMAKE_C_COMPILER": "gcc",
-				"CMAKE_CXX_COMPILER": "g++",
-                                "COMPILER_CACHE": "sccache"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Linux"
-			}
-		},
-		{
-			"name": "linux-release-GNU",
-			"displayName": "Linux Release GNU",
-			"description": "Go with Linux",
-			"generator": "Ninja",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-                                "CMAKE_VERBOSE_MAKEFILE": "ON",
-				"CMAKE_BUILD_TYPE": "Release",
-				"CMAKE_C_COMPILER": "gcc",
-				"CMAKE_CXX_COMPILER": "g++",
-                                "COMPILER_CACHE": "sccache"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Linux"
-			}
-		},
-		{
-			"name": "x64-MSVC-Windows-Debug",
-			"description": "Windows and standard MSVC - Debug",
-			"generator": "Visual Studio 17 2022",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-                                "CMAKE_VERBOSE_MAKEFILE": "ON",
-				"CMAKE_C_COMPILER": "cl",
-				"CMAKE_CXX_COMPILER": "cl",
-                                "CMAKE_BUILD_TYPE": "Debug",
-                                "compiler_cache": "sccache"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Windows"
-			},
-			"architecture": {
-				"value": "x64",
-				"strategy": "set"
-			}
-		},
+      "name": "linux-profile-clang",
+      "displayName": "Linux Profile Clang",
+      "description": "Go with Linux",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_BUILD_TYPE": "Profile",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "COMPILER_CACHE": "sccache"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
     {
-			"name": "x64-MSVC-Windows-Release",
-			"description": "Windows and standard MSVC - Release",
-			"generator": "Visual Studio 17 2022",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-        	                   "CMAKE_VERBOSE_MAKEFILE": "ON",
-				   "CMAKE_C_COMPILER": "cl",
-				   "CMAKE_CXX_COMPILER": "cl",
-        		           "CMAKE_BUILD_TYPE": "Release",
-                                   "compiler_cache": "sccache"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Windows"
-			},
-			"architecture": {
-				"value": "x64",
-				"strategy": "set"
-			}
-		},
+      "name": "linux-RelWithDebInfo-clang",
+      "displayName": "Linux RelWithDebInfo Clang",
+      "description": "Go with Linux",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "COMPILER_CACHE": "sccache"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
     {
-			"name": "x64-ClangCL-Windows-RelWithDebInfo",
-			"description": "Windows and Clang",
-			"generator": "Visual Studio 17 2022",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-        		        "CMAKE_VERBOSE_MAKEFILE": "ON",
-				"CMAKE_C_COMPILER": "clang-cl",
-				"CMAKE_CXX_COMPILER": "clang-cl",
-				"RUST_FEATURES": "OFF",
-				"CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                                "compiler_cache": "sccache"
-			},
-			"toolset": "ClangCL",
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Windows"
-			},
-			"architecture": {
-				"value": "x64",
-				"strategy": "set"
-			},
-			"vendor": {
-				"microsoft.com/VisualStudioSettings/CMake/1.0": {
-					"intelliSenseMode": "windows-clang-x64"
-				}
-			}
-		},
-		{
-			"name": "x64-ClangCL-Windows-Debug",
-			"description": "Windows and Clang",
-			"generator": "Visual Studio 17 2022",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-        		        "CMAKE_VERBOSE_MAKEFILE": "ON",
-				"CMAKE_C_COMPILER": "clang-cl",
-				"CMAKE_CXX_COMPILER": "clang-cl",
-				"RUST_FEATURES": "OFF",
-				"CMAKE_BUILD_TYPE": "Debug",
-                                "COMPILER_CACHE": "sccache"
-			},
-			"toolset": "ClangCL",
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Windows"
-			},
-			"architecture": {
-				"value": "x64",
-				"strategy": "set"
-			},
-			"vendor": {
-				"microsoft.com/VisualStudioSettings/CMake/1.0": {
-					"intelliSenseMode": "windows-clang-x64"
-				}
-			}
-		},
-		{
-			"name": "x64-ClangCL-Windows-Release",
-			"description": "Windows and Clang",
-			"generator": "Visual Studio 17 2022",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-        		        "CMAKE_VERBOSE_MAKEFILE": "ON",
-				"CMAKE_C_COMPILER": "clang-cl",
-				"CMAKE_CXX_COMPILER": "clang-cl",
-				"RUST_FEATURES": "OFF",
-				"CMAKE_BUILD_TYPE": "Release",
-                                "compiler_cache": "sccache"
-			},
-			"toolset": "ClangCL",
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Windows"
-			},
-			"architecture": {
-				"value": "x64",
-				"strategy": "set"
-			},
-			"vendor": {
-				"microsoft.com/VisualStudioSettings/CMake/1.0": {
-					"intelliSenseMode": "windows-clang-x64"
-				}
-			}
-		},
-		{
-			"name": "x64-Clang-Windows-RelWithDebInfo",
-			"description": "Windows and Clang",
-			"generator": "Ninja",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-        		        "CMAKE_VERBOSE_MAKEFILE": "ON",
-				"CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
-				"CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
-				"RUST_FEATURES": "OFF",
-				"CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                                "compiler_cache": "sccache"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Windows"
-			},
-			"vendor": {
-				"microsoft.com/VisualStudioSettings/CMake/1.0": {
-					"intelliSenseMode": "windows-clang-x64"
-				}
-			}
-		},
-		{
-			"name": "x64-Clang-Windows-Debug",
-			"description": "Windows and Clang",
-			"generator": "Ninja",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-        		        "CMAKE_VERBOSE_MAKEFILE": "ON",
-				"CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
-				"CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
-				"RUST_FEATURES": "OFF",
-				"CMAKE_BUILD_TYPE": "Debug",
-                                "compiler_cache": "sccache"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Windows"
-			},
-			"vendor": {
-				"microsoft.com/VisualStudioSettings/CMake/1.0": {
-					"intelliSenseMode": "windows-clang-x64"
-				}
-			}
-		},
-		{
-			"name": "x64-Clang-Windows-Release",
-			"description": "Windows and Clang",
-			"generator": "Ninja",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-        		        "CMAKE_VERBOSE_MAKEFILE": "ON",
-				"CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
-				"CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
-				"RUST_FEATURES": "OFF",
-				"CMAKE_BUILD_TYPE": "Release",
-                                "compiler_cache": "sccache"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Windows"
-			},
-			"vendor": {
-				"microsoft.com/VisualStudioSettings/CMake/1.0": {
-					"intelliSenseMode": "windows-clang-x64"
-				}
-			}
-		},
-		{
-			"name": "x64-Clang-Windows-CI",
-			"description": "Windows and Clang",
-			"generator": "Visual Studio 17 2022",
-			"binaryDir": "${sourceDir}/build/",
-			"installDir": "${sourceDir}/build/",
-			"cacheVariables": {
-                                "CMAKE_VERBOSE_MAKEFILE": "ON",
-				"CMAKE_C_COMPILER": "clang-cl",
-				"CMAKE_CXX_COMPILER": "clang-cl",
-				"WINDOWS_CI": "ON",
-                                "compiler_cache": "sccache"
-			},
-			"toolset": "ClangCL",
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Windows"
-			},
-			"architecture": {
-				"value": "x64",
-				"strategy": "set"
-			},
-			"vendor": {
-				"microsoft.com/VisualStudioSettings/CMake/1.0": {
-					"intelliSenseMode": "windows-clang-x64"
-				}
-			}
-		}
-	],
+      "name": "linux-release-clang",
+      "displayName": "Linux Release Clang",
+      "description": "Go with Linux",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "COMPILER_CACHE": "sccache"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-debug-GNU",
+      "displayName": "Linux Debug GNU",
+      "description": "Go with Linux",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "gcc-13",
+        "CMAKE_CXX_COMPILER": "g++-13",
+        "COMPILER_CACHE": "sccache"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-profile-GNU",
+      "displayName": "Linux Profile GNU",
+      "description": "Go with Linux",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_BUILD_TYPE": "Profile",
+        "CMAKE_C_COMPILER": "gcc-13",
+        "CMAKE_CXX_COMPILER": "g++-13",
+        "COMPILER_CACHE": "sccache"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-RelWithDebInfo-GNU",
+      "displayName": "Linux RelWithDebInfo GNU",
+      "description": "Go with Linux",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "COMPILER_CACHE": "sccache"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-release-GNU",
+      "displayName": "Linux Release GNU",
+      "description": "Go with Linux",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "COMPILER_CACHE": "sccache"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "x64-MSVC-Windows-Debug",
+      "description": "Windows and standard MSVC - Debug",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "compiler_cache": "sccache"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
+      }
+    },
+    {
+      "name": "x64-MSVC-Windows-Release",
+      "description": "Windows and standard MSVC - Release",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl",
+        "CMAKE_BUILD_TYPE": "Release",
+        "compiler_cache": "sccache"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
+      }
+    },
+    {
+      "name": "x64-ClangCL-Windows-RelWithDebInfo",
+      "description": "Windows and Clang",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "RUST_FEATURES": "OFF",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "compiler_cache": "sccache"
+      },
+      "toolset": "ClangCL",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64"
+        }
+      }
+    },
+    {
+      "name": "x64-ClangCL-Windows-Debug",
+      "description": "Windows and Clang",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "RUST_FEATURES": "OFF",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "COMPILER_CACHE": "sccache"
+      },
+      "toolset": "ClangCL",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64"
+        }
+      }
+    },
+    {
+      "name": "x64-ClangCL-Windows-Release",
+      "description": "Windows and Clang",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "RUST_FEATURES": "OFF",
+        "CMAKE_BUILD_TYPE": "Release",
+        "compiler_cache": "sccache"
+      },
+      "toolset": "ClangCL",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64"
+        }
+      }
+    },
+    {
+      "name": "x64-Clang-Windows-RelWithDebInfo",
+      "description": "Windows and Clang",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
+        "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
+        "RUST_FEATURES": "OFF",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "compiler_cache": "sccache"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64"
+        }
+      }
+    },
+    {
+      "name": "x64-Clang-Windows-Debug",
+      "description": "Windows and Clang",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
+        "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
+        "RUST_FEATURES": "OFF",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "compiler_cache": "sccache"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64"
+        }
+      }
+    },
+    {
+      "name": "x64-Clang-Windows-Release",
+      "description": "Windows and Clang",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
+        "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
+        "RUST_FEATURES": "OFF",
+        "CMAKE_BUILD_TYPE": "Release",
+        "compiler_cache": "sccache"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64"
+        }
+      }
+    },
+    {
+      "name": "x64-Clang-Windows-Profile",
+      "description": "Windows and Clang",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
+        "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
+        "RUST_FEATURES": "OFF",
+        "CMAKE_BUILD_TYPE": "Profile",
+        "compiler_cache": "sccache"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64"
+        }
+      }
+    },
+    {
+      "name": "x64-Clang-Windows-CI",
+      "description": "Windows and Clang",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/",
+      "installDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "WINDOWS_CI": "ON",
+        "compiler_cache": "sccache"
+      },
+      "toolset": "ClangCL",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64"
+        }
+      }
+    }
+  ],
   "buildPresets": [
     {
       "name": "default",
+      "jobs": 0,
       "configurePreset": "linux-debug-clang"
+    },
+    {
+      "name": "linux-debug-GNU",
+      "jobs": 0,
+      "configurePreset": "linux-debug-GNU"
+    },
+    {
+      "name": "linux-profile-GNU",
+      "jobs": 0,
+      "configurePreset": "linux-profile-GNU"
+    },
+    {
+      "name": "linux-profile-clang",
+      "jobs": 0,
+      "configurePreset": "linux-profile-clang"
     }
   ],
   "testPresets": [
     {
       "name": "default",
       "configurePreset": "linux-debug-clang",
-      "output": {"outputOnFailure": true},
-      "execution": {"noTestsAction": "error", "stopOnFailure": true}
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": true
+      }
     }
   ],
   "packagePresets": [
