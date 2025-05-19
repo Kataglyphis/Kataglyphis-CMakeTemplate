@@ -84,17 +84,17 @@ jobs:
           ctest -C ${{env.BUILD_TYPE}}
 
           # Merge raw profiles into a .profdata
-          & ".\llvm-profdata.exe" merge `
+          & "C:\Program Files\LLVM\bin\llvm-profdata.exe" merge `
               -sparse "$Env:GITHUB_WORKSPACE\build\Test\compile\default.profraw" `
               -o      "$Env:GITHUB_WORKSPACE\build\compileTestSuite.profdata"
 
           # Show a coverage summary in the console
-          & ".\llvm-cov.exe" report `
+          & "C:\Program Files\LLVM\bin\llvm-cov.exe" report `
               "$Env:GITHUB_WORKSPACE\build\compileTestSuite" `
               -instr-profile="$Env:GITHUB_WORKSPACE\build\compileTestSuite.profdata"
 
           # Export detailed coverage to JSON
-          & ".\llvm-cov.exe" export `
+          & "C:\Program Files\LLVM\bin\llvm-cov.exe" export `
               "$Env:GITHUB_WORKSPACE\build\compileTestSuite" `
               -format=text `
               -instr-profile="$Env:GITHUB_WORKSPACE\build\compileTestSuite.profdata" `
@@ -114,12 +114,12 @@ jobs:
           & ".\KataglyphisCppProject.exe"                                         # call operator runs the .exe
 
           # 3. Merge the raw profile data into .profdata
-          & ".\llvm-profdata.exe" merge `
+          & "C:\Program Files\LLVM\bin\llvm-profdata.exe" merge `
               -sparse "$Env:GITHUB_WORKSPACE\build\dummy.profraw" `
               -o      "$Env:GITHUB_WORKSPACE\build\dummy.profdata"
 
           # 4. Show the coverage report in text form
-          & ".\llvm-cov.exe" show `
+          & "C:\Program Files\LLVM\bin\llvm-cov.exe" show `
               ".\KataglyphisCppProject.exe" `
               -instr-profile="$Env:GITHUB_WORKSPACE\build\dummy.profdata" `
               -format=text
