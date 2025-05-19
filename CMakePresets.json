@@ -177,7 +177,7 @@
         "CMAKE_C_COMPILER": "cl",
         "CMAKE_CXX_COMPILER": "cl",
         "CMAKE_BUILD_TYPE": "Debug",
-        "compiler_cache": "sccache"
+        "COMPILER_CACHE": "sccache"
       },
       "condition": {
         "type": "equals",
@@ -200,7 +200,7 @@
         "CMAKE_C_COMPILER": "cl",
         "CMAKE_CXX_COMPILER": "cl",
         "CMAKE_BUILD_TYPE": "Release",
-        "compiler_cache": "sccache"
+        "COMPILER_CACHE": "sccache"
       },
       "condition": {
         "type": "equals",
@@ -224,7 +224,7 @@
         "CMAKE_CXX_COMPILER": "clang-cl",
         "RUST_FEATURES": "OFF",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "compiler_cache": "sccache"
+        "COMPILER_CACHE": "sccache"
       },
       "toolset": "ClangCL",
       "condition": {
@@ -284,7 +284,7 @@
         "CMAKE_CXX_COMPILER": "clang-cl",
         "RUST_FEATURES": "OFF",
         "CMAKE_BUILD_TYPE": "Release",
-        "compiler_cache": "sccache"
+        "COMPILER_CACHE": "sccache"
       },
       "toolset": "ClangCL",
       "condition": {
@@ -314,7 +314,7 @@
         "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
         "RUST_FEATURES": "OFF",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "compiler_cache": "sccache"
+        "COMPILER_CACHE": "sccache"
       },
       "condition": {
         "type": "equals",
@@ -339,7 +339,7 @@
         "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
         "RUST_FEATURES": "OFF",
         "CMAKE_BUILD_TYPE": "Debug",
-        "compiler_cache": "sccache"
+        "COMPILER_CACHE": "sccache"
       },
       "condition": {
         "type": "equals",
@@ -364,7 +364,7 @@
         "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
         "RUST_FEATURES": "OFF",
         "CMAKE_BUILD_TYPE": "Release",
-        "compiler_cache": "sccache"
+        "COMPILER_CACHE": "sccache"
       },
       "condition": {
         "type": "equals",
@@ -389,7 +389,7 @@
         "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
         "RUST_FEATURES": "OFF",
         "CMAKE_BUILD_TYPE": "Profile",
-        "compiler_cache": "sccache"
+        "COMPILER_CACHE": "sccache"
       },
       "condition": {
         "type": "equals",
@@ -413,7 +413,7 @@
         "CMAKE_C_COMPILER": "clang-cl",
         "CMAKE_CXX_COMPILER": "clang-cl",
         "WINDOWS_CI": "ON",
-        "compiler_cache": "sccache"
+        "COMPILER_CACHE": "sccache"
       },
       "toolset": "ClangCL",
       "condition": {

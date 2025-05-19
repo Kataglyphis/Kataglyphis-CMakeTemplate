@@ -166,6 +166,7 @@ macro(myproject_local_options)
   if (
     CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
     OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+    AND NOT WIN32
   )
     message(STATUS "Enabling gprof profiling")
     target_compile_options(myproject_options INTERFACE -pg)
