@@ -83,11 +83,9 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: | 
         ctest -C ${{env.BUILD_TYPE}}
-        export GCOV_TOOL=/usr/bin/gcov-13
         # Then tell lcov/geninfo to use it:
         lcov --capture \
-          --gcov-tool /usr/bin/gcov-13 \
-          --directory . \
+          --directory ${{github.workspace}} \
           --output-file coverage.info
         
     - name: Run performance benchmarks
