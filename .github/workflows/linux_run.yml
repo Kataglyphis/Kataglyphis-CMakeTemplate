@@ -66,7 +66,7 @@ jobs:
     - name: Build
       # Build your program with the given configuration
       run: | 
-          set CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)   # Linux: number of cores
+          export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)   # Linux: number of cores
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Test
