@@ -27,6 +27,9 @@ jobs:
 
       - name: Install deps
         run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh all
           chmod +x scripts/prepare_tooling.sh
           ./scripts/prepare_tooling.sh
 
