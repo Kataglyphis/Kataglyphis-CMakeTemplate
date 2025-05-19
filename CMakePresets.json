@@ -436,7 +436,8 @@
     {
       "name": "default",
       "jobs": 0,
-      "configurePreset": "linux-debug-clang"
+      "configurePreset": "linux-debug-clang",
+      "target": "all"
     },
     {
       "name": "linux-debug-GNU",
