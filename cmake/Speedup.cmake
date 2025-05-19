@@ -2,6 +2,7 @@
 
 include(ProcessorCount)
 ProcessorCount(N)
+message(STATUS "Processor count: ${N}")         # prints “-- Processor count: <N>” during configure
 if(NOT
    N
    EQUAL
