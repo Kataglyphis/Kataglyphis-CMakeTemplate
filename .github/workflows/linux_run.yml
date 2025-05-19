@@ -27,7 +27,6 @@ jobs:
 
       - name: Install deps
         run: |
-          sudo apt-get update
           chmod +x scripts/prepare_tooling.sh
           ./scripts/prepare_tooling.sh
 
