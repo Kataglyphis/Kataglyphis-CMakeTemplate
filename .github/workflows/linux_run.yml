@@ -93,8 +93,8 @@ jobs:
 
       - name: Run performance benchmarks with GCC
         run: |
-          chmod +x ${{github.workspace}}/build/perfTestSuite 
-          .${{github.workspace}}/build/perfTestSuite
+          # chmod +x ${{github.workspace}}/build/perfTestSuite 
+          ${{github.workspace}}/build/perfTestSuite
 
       - name: Run GProf
         run: |
@@ -104,8 +104,8 @@ jobs:
 
       - name: Run fuzzer tests with GCC
         run: |
-          chmod +x ${{github.workspace}}/build/first_fuzz_test
-          .${{github.workspace}}/build/first_fuzz_test
+          # chmod +x ${{github.workspace}}/build/first_fuzz_test
+          ${{github.workspace}}/build/first_fuzz_test
 
       - name: Run clang tidy
         run: clang-tidy -p=./build/compile_commands.json  $(find Src -name '*.cpp' -o -name '*.cc')
