@@ -31,7 +31,8 @@ jobs:
         ./scripts/prepare_tooling.sh
 
     - name: Install gcov
-      run: | 
+      run: |
+        gcov --version
         sudo apt-get install gcov-13
         
     - name: Install latest CMake
