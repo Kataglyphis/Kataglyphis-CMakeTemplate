@@ -1,8 +1,8 @@
 {
   "version": 10,
   "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 23,
+    "major": 4,
+    "minor": 0,
     "patch": 0
   },
   "configurePresets": [
@@ -436,8 +436,7 @@
     {
       "name": "default",
       "jobs": 0,
-      "configurePreset": "linux-debug-clang",
-      "target": "all"
+      "configurePreset": "linux-debug-clang"
     },
     {
       "name": "linux-debug-GNU",
