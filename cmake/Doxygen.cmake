@@ -1,7 +1,7 @@
 function(enable_doxygen)
 
   # first we can indicate the documentation build as an option and set it to ON by default
-  option(BUILD_DOC "Build documentation" OFF)
+  option(BUILD_DOC "Build documentation" ON)
 
   # check if Doxygen is installed
   if(BUILD_DOC)
