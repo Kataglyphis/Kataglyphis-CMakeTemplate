@@ -53,7 +53,7 @@ jobs:
 
       - name: Prepare for clang
         run: |
-          Remove-Item -Path "$Env:GITHUB_WORKSPACE\build" -Recurse -Force
+          Remove-Item -Path ${{github.workspace}}/build -Recurse -Force
           clang --version
 
       - name: Configure CMake with Clang
@@ -85,20 +85,20 @@ jobs:
 
           # Merge raw profiles into a .profdata
           & "C:\Program Files\LLVM\bin\llvm-profdata.exe" merge `
-              -sparse "$Env:GITHUB_WORKSPACE\build\Test\compile\default.profraw" `
-              -o      "$Env:GITHUB_WORKSPACE\build\compileTestSuite.profdata"
+              -sparse "${{github.workspace}}\build\Test\compile\default.profraw" `
+              -o      "${{github.workspace}}\build\compileTestSuite.profdata"
 
           # Show a coverage summary in the console
           & "C:\Program Files\LLVM\bin\llvm-cov.exe" report `
-              "$Env:GITHUB_WORKSPACE\build\Test\compileTestSuite" `
-              -instr-profile="$Env:GITHUB_WORKSPACE\build\compileTestSuite.profdata"
+              "${{github.workspace}}\build\Test\compileTestSuite" `
+              -instr-profile="${{github.workspace}}\build\compileTestSuite.profdata"
 
           # Export detailed coverage to JSON
           & "C:\Program Files\LLVM\bin\llvm-cov.exe" export `
-              "$Env:GITHUB_WORKSPACE\build\Test\compileTestSuite" `
+              "${{github.workspace}}\build\Test\compileTestSuite" `
               -format=text `
-              -instr-profile="$Env:GITHUB_WORKSPACE\build\compileTestSuite.profdata" `
-            | Out-File -FilePath "$Env:GITHUB_WORKSPACE\build\coverage.json" -Encoding UTF8
+              -instr-profile="${{github.workspace}}\build\compileTestSuite.profdata" `
+            | Out-File -FilePath "${{github.workspace}}\build\coverage.json" -Encoding UTF8
 
       - name: Run performance benchmarks
         run: |
@@ -107,19 +107,19 @@ jobs:
       - name: Run LLVM Source based Code Coverage
         run: |
           # 1. Change into build directory
-          Push-Location "$Env:GITHUB_WORKSPACE\build"
+          Push-Location "${{github.workspace}}\build"
 
           # 2. Run the instrumented executable with LLVM_PROFILE_FILE set for this process only
-          $Env:LLVM_PROFILE_FILE = "$Env:GITHUB_WORKSPACE\build\dummy.profraw"   # set env var 
+          $Env:LLVM_PROFILE_FILE = "${{github.workspace}}\build\dummy.profraw"   # set env var 
           & ".\KataglyphisCppProject.exe"                                         # call operator runs the .exe
 
           # 3. Merge the raw profile data into .profdata
           & "C:\Program Files\LLVM\bin\llvm-profdata.exe" merge `
-              -sparse "$Env:GITHUB_WORKSPACE\build\dummy.profraw" `
-              -o      "$Env:GITHUB_WORKSPACE\build\dummy.profdata"
+              -sparse "${{github.workspace}}\build\dummy.profraw" `
+              -o      "${{github.workspace}}\build\dummy.profdata"
 
           # 4. Show the coverage report in text form
           & "C:\Program Files\LLVM\bin\llvm-cov.exe" show `
               ".\KataglyphisCppProject.exe" `
-              -instr-profile="$Env:GITHUB_WORKSPACE\build\dummy.profdata" `
+              -instr-profile="${{github.workspace}}\build\dummy.profdata" `
               -format=text
