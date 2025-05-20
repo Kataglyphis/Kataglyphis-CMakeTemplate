@@ -90,12 +90,12 @@ jobs:
 
           # Show a coverage summary in the console
           & "C:\Program Files\LLVM\bin\llvm-cov.exe" report `
-              "${{github.workspace}}\build\Test\compileTestSuite" `
+              "${{github.workspace}}\build\Test\compile" `
               -instr-profile="${{github.workspace}}\build\compileTestSuite.profdata"
 
           # Export detailed coverage to JSON
           & "C:\Program Files\LLVM\bin\llvm-cov.exe" export `
-              "${{github.workspace}}\build\Test\compileTestSuite" `
+              "${{github.workspace}}\build\Test\compile" `
               -format=text `
               -instr-profile="${{github.workspace}}\build\compileTestSuite.profdata" `
             | Out-File -FilePath "${{github.workspace}}\build\coverage.json" -Encoding UTF8
