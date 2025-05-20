@@ -141,9 +141,9 @@ jobs:
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
         run: |
           ctest -C ${{env.BUILD_TYPE}}
-          llvm-profdata merge -sparse ${{github.workspace}}/build/Test/compile/default.profraw -o ${{github.workspace}}/build/compileTestSuite.profdata
-          llvm-cov report ${{github.workspace}}/build/compileTestSuite -instr-profile=${{github.workspace}}/build/compileTestSuite.profdata
-          llvm-cov export ${{github.workspace}}/build/compileTestSuite -format=text -instr-profile=${{github.workspace}}/build/compileTestSuite.profdata > ${{github.workspace}}/build/coverage.json
+          /usr/bin/llvm-profdata merge -sparse ${{github.workspace}}/build/Test/compile/default.profraw -o ${{github.workspace}}/build/compileTestSuite.profdata
+          /usr/bin/llvm-cov report ${{github.workspace}}/build/compileTestSuite -instr-profile=${{github.workspace}}/build/compileTestSuite.profdata
+          /usr/bin/llvm-cov export ${{github.workspace}}/build/compileTestSuite -format=text -instr-profile=${{github.workspace}}/build/compileTestSuite.profdata > ${{github.workspace}}/build/coverage.json
 
       - name: Run performance benchmarks
         run: |
@@ -154,8 +154,8 @@ jobs:
         run: |
           cd build
           LLVM_PROFILE_FILE="${{github.workspace}}/build/dummy.profraw" ./KataglyphisCppProject
-          llvm-profdata merge -sparse ${{github.workspace}}/build/dummy.profraw -o ${{github.workspace}}/build/dummy.profdata
-          llvm-cov show ./KataglyphisCppProject -instr-profile=${{github.workspace}}/build/dummy.profdata -format=text
+          /usr/bin/llvm-profdata merge -sparse ${{github.workspace}}/build/dummy.profraw -o ${{github.workspace}}/build/dummy.profdata
+          /usr/bin/llvm-cov show ./KataglyphisCppProject -instr-profile=${{github.workspace}}/build/dummy.profdata -format=text
 
       - name: Run GProf after clang compilation
         run: |
