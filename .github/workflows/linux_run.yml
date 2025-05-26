@@ -1,0 +1,100 @@
+name: Build and Test Reusable Workflow
+
+on:
+  workflow_call:
+    inputs:
+      compiler:
+        required: true
+        type: string
+      runner:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ${{ inputs.runner }} # Dynamically use input
+
+    env:
+      BUILD_TYPE: Debug
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y llvm
+          chmod +x scripts/prepare_tooling.sh
+          ./scripts/prepare_tooling.sh
+
+      - name: Install gcovr
+        run: |
+          gcov --version || true
+          which gcov || true
+          pip install gcovr
+
+      - name: Install latest CMake
+        run: |
+          sudo apt-get purge --auto-remove -y cmake
+          sudo apt-get update
+          sudo apt-get install -y wget gpg lsb-release ca-certificates
+          wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc \
+            | gpg --dearmor \
+            | sudo tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
+          echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ noble main" \
+            | sudo tee /etc/apt/sources.list.d/kitware.list >/dev/null
+          sudo apt-get update
+          sudo apt-get install -y cmake
+          echo "/usr/bin" >> $GITHUB_PATH
+          cmake --version
+
+      - name: Configure CMake
+        run: |
+          if [[ "${{ inputs.compiler }}" == "gcc" ]]; then
+            cmake -B build --preset "linux-profile-GNU"
+          else
+            cmake -B build --preset "linux-profile-clang"
+          fi
+
+      - name: Build
+        run: |
+          export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)
+          cmake --build build --config $BUILD_TYPE
+
+      - name: Test
+        working-directory: build
+        run: |
+          ctest -C $BUILD_TYPE
+          if [[ "${{ inputs.compiler }}" == "gcc" ]]; then
+            gcovr -r .
+          else
+            /usr/bin/llvm-profdata merge -sparse Test/compile/default.profraw -o compileTestSuite.profdata
+            /usr/bin/llvm-cov report ./compileTestSuite -instr-profile=compileTestSuite.profdata
+            /usr/bin/llvm-cov export ./compileTestSuite -format=text -instr-profile=compileTestSuite.profdata > coverage.json
+          fi
+
+      - name: Run performance benchmarks
+        run: ./build/perfTestSuite
+
+      - name: Run GProf
+        run: |
+          cd build
+          ./KataglyphisCppProject
+          gprof KataglyphisCppProject gmon.out > profile.txt
+
+      - name: Run fuzzer tests
+        run: ./build/first_fuzz_test
+
+      - name: Run Clang-Tidy
+        if: ${{ inputs.compiler == 'clang' }}
+        run: clang-tidy -p=./build/compile_commands.json $(find Src -name '*.cpp' -o -name '*.cc')
+
+      - name: Run LLVM Source-Based Coverage
+        if: ${{ inputs.compiler == 'clang' }}
+        run: |
+          cd build
+          LLVM_PROFILE_FILE="dummy.profraw" ./KataglyphisCppProject
+          /usr/bin/llvm-profdata merge -sparse dummy.profraw -o dummy.profdata
+          /usr/bin/llvm-cov show ./KataglyphisCppProject -instr-profile=dummy.profdata -format=text
