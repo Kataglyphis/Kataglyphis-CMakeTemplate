@@ -7,13 +7,13 @@ on:
     branches: ["main"]
 
 jobs:
-  build-gcc-x64:
+  build-ubuntu24_04_gcc-arm:
     uses: ./.github/workflows/linux_run.yml
     with:
       compiler: gcc
       runner: ubuntu-24.04-arm
 
-  build-clang-arm:
+  build-ubuntu24_04_clang-arm:
     uses: ./.github/workflows/linux_run.yml
     with:
       compiler: clang
