@@ -1,4 +1,4 @@
-name: Main CI
+name: Linux run on ARM/GCC/Clang
 
 on:
   push:
