@@ -11,6 +11,8 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Debug
+  CLANG_VERSION: 20.1.0
+  LLVM_BIN: 'C:\Program Files\LLVM\bin'
 
 jobs:
   build:
@@ -27,7 +29,7 @@ jobs:
 
       - name: Test Winget
         run: |
-          choco install llvm --version=20.1.0 --params="'/AddToPath'" -y
+          choco install llvm --version="${{ env.CLANG_VERSION }}" --params="'/AddToPath'" -y
           choco install sccache
           ls "C:\Program Files\LLVM\bin"
           cppcheck --version
@@ -85,17 +87,17 @@ jobs:
           ctest -C ${{env.BUILD_TYPE}}
 
           # Merge raw profiles into a .profdata
-          & "C:\Program Files\LLVM\bin\llvm-profdata.exe" merge `
+          & "${{env.LLVM_BIN}}\llvm-profdata.exe" merge `
               -sparse "${{github.workspace}}\build\Test\compile\default.profraw" `
               -o      "${{github.workspace}}\build\compileTestSuite.profdata"
 
           # Show a coverage summary in the console
-          & "C:\Program Files\LLVM\bin\llvm-cov.exe" report `
+          & "${{env.LLVM_BIN}}\llvm-cov.exe" report `
               "${{github.workspace}}\build\compileTestSuite.exe" `
               -instr-profile="${{github.workspace}}\build\compileTestSuite.profdata"
 
           # Export detailed coverage to JSON
-          & "C:\Program Files\LLVM\bin\llvm-cov.exe" export `
+          & "${{env.LLVM_BIN}}\llvm-cov.exe" export `
               "${{github.workspace}}\build\compileTestSuite.exe" `
               -format=text `
               -instr-profile="${{github.workspace}}\build\compileTestSuite.profdata" `
@@ -115,12 +117,12 @@ jobs:
           & ".\KataglyphisCppProject.exe"                                         # call operator runs the .exe
 
           # 3. Merge the raw profile data into .profdata
-          & "C:\Program Files\LLVM\bin\llvm-profdata.exe" merge `
+          & "${{env.LLVM_BIN}}\llvm-profdata.exe" merge `
               -sparse "${{github.workspace}}\build\dummy.profraw" `
               -o      "${{github.workspace}}\build\dummy.profdata"
 
           # 4. Show the coverage report in text form
-          & "C:\Program Files\LLVM\bin\llvm-cov.exe" show `
+          & "${{env.LLVM_BIN}}\llvm-cov.exe" show `
               ".\KataglyphisCppProject.exe" `
               -instr-profile="${{github.workspace}}\build\dummy.profdata" `
               -format=text
