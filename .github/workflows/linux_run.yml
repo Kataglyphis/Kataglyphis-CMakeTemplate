@@ -85,7 +85,13 @@ jobs:
           gprof KataglyphisCppProject gmon.out > profile.txt
 
       - name: Run fuzzer tests
-        run: ./build/first_fuzz_test
+        run: |
+          ARCH=$(uname -m)
+          if [[ "$ARCH" == "x86_64" ]]; then
+            ./build/first_fuzz_test
+          else
+            echo "Skipping fuzzer tests on architecture: $ARCH"
+          fi
 
       - name: Run Clang-Tidy
         if: ${{ inputs.compiler == 'clang' }}
