@@ -126,7 +126,16 @@ jobs:
               ".\KataglyphisCppProject.exe" `
               -instr-profile="${{github.workspace}}\build\dummy.profdata" `
               -format=text
-              
-      - name: Package app
+
+      - name: Configure CMake for Release (Clang only)
         run: |
-          cpack        
+          cmake -B build-release --preset "x64-Clang-Windows-Release"
+
+      - name: Build Release (Clang only)
+        run: |
+          export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)
+          cmake --build build-release --config Release
+
+      - name: Package (Clang only)
+        run: |
+          cmake --build build-release --target package
