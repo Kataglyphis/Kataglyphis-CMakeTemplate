@@ -43,7 +43,7 @@ myproject_local_options()
 include(cmake/SystemLibDependencies.cmake)
 add_subdirectory(ExternalLib)
 
-if(BUILD_TESTING)
+if(BUILD_TESTING AND NOT WIN32)
   fuzztest_setup_fuzzing_flags()
 endif()
 
@@ -75,6 +75,5 @@ install(
 
 # we keep the relative paths in the install dir
 # keep in mind that install dir will be in front of this relative path ...
-install(DIRECTORY Resources/ DESTINATION Resources/)
 
 include(cmake/CPackOptions.cmake)
