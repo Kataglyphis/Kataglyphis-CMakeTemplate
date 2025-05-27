@@ -43,13 +43,13 @@ myproject_local_options()
 include(cmake/SystemLibDependencies.cmake)
 add_subdirectory(ExternalLib)
 
-if (BUILD_TESTING)
-    fuzztest_setup_fuzzing_flags()
+if(BUILD_TESTING)
+  fuzztest_setup_fuzzing_flags()
 endif()
 
 add_subdirectory(Src)
 
-if(NOT WINDOWS_CI)
+if(NOT WINDOWS_CI AND BUILD_TESTING)
   include(CTest)
   enable_testing()
   message(STATUS "WINDOWS_CI is OFF or not defined.")
@@ -77,8 +77,4 @@ install(
 # keep in mind that install dir will be in front of this relative path ...
 install(DIRECTORY Resources/ DESTINATION Resources/)
 
-include(InstallRequiredSystemLibraries)
-
 include(cmake/CPackOptions.cmake)
-
-include(CPack)

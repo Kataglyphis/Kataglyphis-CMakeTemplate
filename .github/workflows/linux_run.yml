@@ -104,7 +104,19 @@ jobs:
           LLVM_PROFILE_FILE="dummy.profraw" ./KataglyphisCppProject
           /usr/bin/llvm-profdata merge -sparse dummy.profraw -o dummy.profdata
           /usr/bin/llvm-cov show ./KataglyphisCppProject -instr-profile=dummy.profdata -format=text
-      
-      - name: Package app
+
+      - name: Configure CMake for Release (Clang only)
+        if: ${{ inputs.compiler == 'clang' }}
         run: |
-          cpack    
+          cmake -B build-release --preset linux-release-clang
+
+      - name: Build Release (Clang only)
+        if: ${{ inputs.compiler == 'clang' }}
+        run: |
+          export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)
+          cmake --build build-release --config Release
+
+      - name: Package (Clang only)
+        if: ${{ inputs.compiler == 'clang' }}
+        run: |
+          cmake --build build-release --target package

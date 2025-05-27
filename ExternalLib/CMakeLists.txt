@@ -1,14 +1,15 @@
 include(FetchContent)
 
 # include google test to project
-FetchContent_Declare(googletest
-                     URL https://github.com/google/googletest/archive/571930618fa96eabcd05b573285edbee9fc13bae.zip)
-
+if(BUILD_TESTING)
+  FetchContent_Declare(googletest
+                       URL https://github.com/google/googletest/archive/571930618fa96eabcd05b573285edbee9fc13bae.zip)
+  set(gtest_force_shared_crt
+      ON
+      CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+endif()
 # For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt
-    ON
-    CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
 
 # We will not need to test benchmark lib itself.
 set(BENCHMARK_ENABLE_TESTING
@@ -28,7 +29,7 @@ set(BENCHMARK_USE_BUNDLED_GTEST
 
 add_subdirectory(GOOGLE_BENCHMARK)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND BUILD_TESTING)
   message(STATUS "This is a Linux system.")
   # # Detect target architecture
   # string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" TARGET_ARCH)
@@ -37,7 +38,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   # # Check if not ARM
   # if(NOT TARGET_ARCH MATCHES "^(arm|aarch64)")
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
-    
+
     message("Adding Fuzztest")
     add_subdirectory(FUZZTEST)
     if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
