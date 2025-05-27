@@ -126,3 +126,7 @@ jobs:
               ".\KataglyphisCppProject.exe" `
               -instr-profile="${{github.workspace}}\build\dummy.profdata" `
               -format=text
+              
+      - name: Package app
+        run: |
+          cpack        

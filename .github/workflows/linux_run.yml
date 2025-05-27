@@ -104,3 +104,7 @@ jobs:
           LLVM_PROFILE_FILE="dummy.profraw" ./KataglyphisCppProject
           /usr/bin/llvm-profdata merge -sparse dummy.profraw -o dummy.profdata
           /usr/bin/llvm-cov show ./KataglyphisCppProject -instr-profile=dummy.profdata -format=text
+      
+      - name: Package app
+        run: |
+          cpack    
