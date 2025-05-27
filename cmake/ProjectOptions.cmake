@@ -20,13 +20,21 @@ macro(myproject_setup_options)
   option(myproject_ENABLE_COVERAGE "Enable coverage reporting" ON)
   option(myproject_DISABLE_EXCEPTIONS "Disable C++ exceptions" ON)
   option(myproject_ENABLE_GPROF "Enable profiling with gprof (adds -pg flags)" ON)
-
-  cmake_dependent_option(
-    myproject_ENABLE_GLOBAL_HARDENING
-    "Attempt to push hardening options to built dependencies"
-    OFF
-    myproject_ENABLE_HARDENING
-    OFF)
+  # for now disable global hardening, as it is not supported by all dependencies
+  option(myproject_ENABLE_GLOBAL_HARDENING "Enable global hardening for all dependencies" OFF)
+  if(myproject_ENABLE_GLOBAL_HARDENING)
+    message(WARNING "Global hardening is enabled, but it is not supported by all dependencies.")
+  else()
+    message(STATUS "Global hardening is disabled")
+  endif()
+  
+  # namely FUZZTEST
+  # cmake_dependent_option(
+  #   myproject_ENABLE_GLOBAL_HARDENING
+  #   "Attempt to push hardening options to built dependencies"
+  #   OFF
+  #   myproject_ENABLE_HARDENING
+  #   OFF)
 
   myproject_supports_sanitizers()
 
