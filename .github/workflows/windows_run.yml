@@ -33,7 +33,7 @@ jobs:
           choco install sccache
           ls "C:\Program Files\LLVM\bin"
           cppcheck --version
-          winget install --accept-source-agreements --accept-package-agreements cmake
+          winget install --accept-source-agreements --accept-package-agreements cmake nsis
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
