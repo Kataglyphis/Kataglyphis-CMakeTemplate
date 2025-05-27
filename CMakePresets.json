@@ -363,8 +363,8 @@
       "name": "x64-Clang-Windows-Release",
       "description": "Windows and Clang",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
+      "binaryDir": "${sourceDir}/build_release/",
+      "installDir": "${sourceDir}/build_release/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
