@@ -55,3 +55,5 @@ Documents/doxygen/*
 # cmake configure file
 Src/GraphicsEngineOpenGL/renderer/VulkanRendererConfig.hpp
 Src/GraphicsEngineVulkan/renderer/OpenGLRendererConfig.hpp
+
+build*
