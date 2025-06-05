@@ -16,17 +16,25 @@ macro(myproject_supports_sanitizers)
 endmacro()
 
 macro(myproject_setup_options)
-  option(myproject_ENABLE_HARDENING "Enable hardening" OFF)
+  option(myproject_ENABLE_HARDENING "Enable hardening" ON)
   option(myproject_ENABLE_COVERAGE "Enable coverage reporting" ON)
   option(myproject_DISABLE_EXCEPTIONS "Disable C++ exceptions" ON)
   option(myproject_ENABLE_GPROF "Enable profiling with gprof (adds -pg flags)" ON)
-
-  cmake_dependent_option(
-    myproject_ENABLE_GLOBAL_HARDENING
-    "Attempt to push hardening options to built dependencies"
-    OFF
-    myproject_ENABLE_HARDENING
-    OFF)
+  # for now disable global hardening, as it is not supported by all dependencies
+  option(myproject_ENABLE_GLOBAL_HARDENING "Enable global hardening for all dependencies" OFF)
+  if(myproject_ENABLE_GLOBAL_HARDENING)
+    message(WARNING "Global hardening is enabled, but it is not supported by all dependencies.")
+  else()
+    message(STATUS "Global hardening is disabled")
+  endif()
+  
+  # namely FUZZTEST
+  # cmake_dependent_option(
+  #   myproject_ENABLE_GLOBAL_HARDENING
+  #   "Attempt to push hardening options to built dependencies"
+  #   OFF
+  #   myproject_ENABLE_HARDENING
+  #   OFF)
 
   myproject_supports_sanitizers()
 
@@ -95,8 +103,8 @@ macro(myproject_global_options)
 
   # set build type specific flags
   if(MSVC)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DEBUG /Od /std:c++23")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /std:c++23")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DEBUG /Od /std:c++23preview")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /std:c++23preview")
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # https://gcc.gnu.org/onlinedocs/gcc/Debugging-Options.html
     # https://gcc.gnu.org/onlinedocs/gcc/Option-Summary.html
@@ -138,6 +146,7 @@ macro(myproject_global_options)
     else()
       set(ENABLE_UBSAN_MINIMAL_RUNTIME TRUE)
     endif()
+    set(ENABLE_UBSAN_MINIMAL_RUNTIME FALSE)
     message("${myproject_ENABLE_HARDENING} ${ENABLE_UBSAN_MINIMAL_RUNTIME} ${myproject_ENABLE_SANITIZER_UNDEFINED}")
     myproject_enable_hardening(myproject_options ON ${ENABLE_UBSAN_MINIMAL_RUNTIME})
   endif()
@@ -163,16 +172,23 @@ macro(myproject_local_options)
     ""
     "")
   
+    # Only when building with -DCMAKE_BUILD_TYPE=Profile,
+  # with GCC or Clang on non-Windows hosts:
   if (
-    CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
-    OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+    CMAKE_BUILD_TYPE STREQUAL "Profile"
+    AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
+        OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     AND NOT WIN32
   )
+
     message(STATUS "Enabling gprof profiling")
     target_compile_options(myproject_options INTERFACE -pg)
     target_link_libraries(myproject_options INTERFACE -pg)
+
   elseif(myproject_ENABLE_GPROF)
-    message(WARNING "GProf should only be used in conjuction with GCC GNU.")
+
+    message(INFO "GProf should only be used in conjuction with GCC GNU.")
+    
   endif()
 
   if(myproject_DISABLE_EXCEPTIONS)
@@ -258,6 +274,7 @@ macro(myproject_local_options)
     else()
       set(ENABLE_UBSAN_MINIMAL_RUNTIME TRUE)
     endif()
+    set(ENABLE_UBSAN_MINIMAL_RUNTIME FALSE)
     myproject_enable_hardening(myproject_options OFF ${ENABLE_UBSAN_MINIMAL_RUNTIME})
   endif()
 
