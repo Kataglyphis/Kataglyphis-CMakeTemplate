@@ -186,6 +186,49 @@ I have four tests suites.
 
 4. Fuzz testing suite
 
+## Performance Tests
+
+### gperftools and pprof
+#### Install deps
+> **__Linux only__**
+1. Step:
+```bash
+sudo apt-get install google-perftools libgoogle-perftools-dev graphviz
+####### only if go is not installed already 
+wget https://go.dev/dl/go1.24.3.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.24.3.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+source ~/.bashrc
+# to see if everything works
+go version
+####### go on with this step if go already installed
+go install github.com/google/pprof@latest  # if you want to use latest Go-based pprof
+export PATH="$PATH:$HOME/go/bin"
+source ~/.bashrc  # or source ~/.zshrc
+```
+
+2. Step:
+Run actual profiling and look into results:
+```bash
+LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libprofiler.so CPUPROFILE=profile.prof ./build/KataglyphisCppProject
+pprof -http=:8080 ./build/KataglyphisCppProject profile.prof
+```
+
+### valgrind
+
+```bash
+sudo apt install valgrind kcachegrind
+# build in debug for readable information
+valgrind --tool=callgrind ./build/KataglyphisCppProject
+```
+
+### perf
+
+```bash
+sudo apt install linux-tools-$(uname -r)
+perf record ./build/KataglyphisCppProject
+```
+
 ## Static Analyzers
 
 ```bash
