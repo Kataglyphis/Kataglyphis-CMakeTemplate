@@ -134,7 +134,7 @@ jobs:
         run: |
           export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)   # Linux: number of cores
           # for running a CICD Job enabling cache would be a foolish thing to do
-          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+          cmake --build ${{github.workspace}}/build --preset "linux-profile-clang"
 
       - name: Test
         working-directory: ${{github.workspace}}/build
@@ -145,6 +145,28 @@ jobs:
           /usr/bin/llvm-profdata merge -sparse ${{github.workspace}}/build/Test/compile/default.profraw -o ${{github.workspace}}/build/compileTestSuite.profdata
           /usr/bin/llvm-cov report ${{github.workspace}}/build/compileTestSuite -instr-profile=${{github.workspace}}/build/compileTestSuite.profdata
           /usr/bin/llvm-cov export ${{github.workspace}}/build/compileTestSuite -format=text -instr-profile=${{github.workspace}}/build/compileTestSuite.profdata > ${{github.workspace}}/build/coverage.json
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: "3.11"
+      # You can test your matrix by printing the current Python version
+      - name: Setup python env
+        run: |
+          pip install -r requirements.txt
+
+      - name: Build web page
+        run: |
+          cd docs
+          make html
+
+      - name: 📂 Sync files to domain
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.SERVER }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PW }}
+          local-dir: "./docs/build/html/"
 
       - name: Run performance benchmarks
         run: |

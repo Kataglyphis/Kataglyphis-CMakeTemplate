@@ -946,9 +946,9 @@ WARN_LOGFILE           =
 INPUT                  = ../Src \
                          ../docs \
                          ../README.md
-                         Resources/Shaders/ \
-                         ../cmake \
-                         ../Test
+                         # Resources/Shaders/ \
+                         # ../cmake \
+                         # ../Test
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -1037,16 +1037,16 @@ FILE_PATTERNS          = *.c \
                          *.vhdl \
                          *.ucf \
                          *.qsf \
-                         *.ice \
-                         *.vert \
-                         *.frag \
-                         *.glsl \
-                         *.cmake \
-                         *.txt \
-                         *.comp \
-                         *.rchit \
-                         *.rgen \
-                         *.rmiss 
+                         *.ice #\
+                        # *.vert \
+                        # *.frag \
+                        # *.glsl \
+                        # *.cmake \
+                        # *.txt \
+                        # *.comp \
+                        # *.rchit \
+                        # *.rgen \
+                        # *.rmiss 
 
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
