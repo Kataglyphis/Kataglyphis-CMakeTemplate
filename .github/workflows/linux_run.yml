@@ -8,8 +8,7 @@ on:
         type: string
       runner:
         required: true
-        type: string
-        
+        type: string    
     secrets:
       SERVER:
         required: true
