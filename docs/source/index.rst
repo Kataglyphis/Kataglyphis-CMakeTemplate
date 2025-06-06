@@ -15,3 +15,14 @@ documentation for details.
    :maxdepth: 2
    :caption: Contents:
 
+   ../../README.md
+   api/library_root
+
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
