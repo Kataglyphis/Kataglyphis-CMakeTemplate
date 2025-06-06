@@ -138,6 +138,7 @@ jobs:
           make html
 
       - name: 📂 Sync files to domain
+        if: ${{ inputs.runner == 'ubuntu-24.04' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.SERVER }}
