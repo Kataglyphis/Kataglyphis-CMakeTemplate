@@ -22,6 +22,8 @@ exhale_args = {
     "rootFileTitle": "Library API",
     "doxygenStripFromPath": "../..",
     "createTreeView": True,
+    "contentsDirectives": True,  # Allows nested folder-like structure
+    "exhaleExecutesDoxygen": False,  # (optional) if you already run Doxygen manually
 }
 
 myst_enable_extensions = [
