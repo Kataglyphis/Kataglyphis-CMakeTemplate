@@ -943,8 +943,6 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ../Src \
-                         ../docs \
-                         ../README.md \
                          ../Test
                          # Resources/Shaders/ \
                          # ../cmake \
