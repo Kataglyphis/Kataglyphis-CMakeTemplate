@@ -122,6 +122,9 @@ This enumeration also includes submodules.
 * [Ccache](https://ccache.dev/)
 * [Sccache](https://github.com/mozilla/sccache)
 
+#### Benchmarking
+* [gperftools](https://github.com/gperftools/gperftools)
+
 ### VSCode Extensions
 * [CMake format](https://github.com/cheshirekow/cmake_format)
 * [CMake tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools)
