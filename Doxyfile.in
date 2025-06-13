@@ -42,8 +42,7 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = "Kataglyphis-CppProject"
-
+PROJECT_NAME           = "Kataglyphis-CMakeTemplate"
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
@@ -429,7 +428,7 @@ DISTRIBUTE_GROUP_DOC   = NO
 # is disabled and one has to add nested compounds explicitly via \ingroup.
 # The default value is: NO.
 
-GROUP_NESTED_COMPOUNDS = YES
+GROUP_NESTED_COMPOUNDS = NO
 
 # Set the SUBGROUPING tag to YES to allow class member groups of the same type
 # (for instance a group of public functions) to be put as a subgroup of that
@@ -524,13 +523,13 @@ EXTRACT_ALL            = YES
 # be included in the documentation.
 # The default value is: NO.
 
-EXTRACT_PRIVATE        = NO
+EXTRACT_PRIVATE        = YES
 
 # If the EXTRACT_PRIV_VIRTUAL tag is set to YES, documented private virtual
 # methods of a class will be included in the documentation.
 # The default value is: NO.
 
-EXTRACT_PRIV_VIRTUAL   = NO
+EXTRACT_PRIV_VIRTUAL   = YES
 
 # If the EXTRACT_PACKAGE tag is set to YES, all members with package or internal
 # scope will be included in the documentation.
@@ -558,11 +557,11 @@ EXTRACT_LOCAL_CLASSES  = YES
 # included.
 # The default value is: NO.
 
-EXTRACT_LOCAL_METHODS  = NO
+EXTRACT_LOCAL_METHODS  = YES
 
 # If this flag is set to YES, the members of anonymous namespaces will be
 # extracted and appear in the documentation as a namespace called
-# 'anonymous_namespace{file}', where file will be replaced with the base name of
+# 'anonymous_namespace{file}', where filwill be replaced with the base name of
 # the file that contains the anonymous namespace. By default anonymous namespace
 # are hidden.
 # The default value is: NO.
@@ -944,8 +943,7 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ../Src \
-                         ../docs \
-                         ../README.md
+                         ../Test
                          # Resources/Shaders/ \
                          # ../cmake \
                          # ../Test
@@ -1173,7 +1171,7 @@ FILTER_SOURCE_PATTERNS =
 # (index.html). This can be useful if you have a project on for instance GitHub
 # and want to reuse the introduction page also for the doxygen output.
 
-USE_MDFILE_AS_MAINPAGE = README.md
+USE_MDFILE_AS_MAINPAGE = 
 
 # The Fortran standard specifies that for fixed formatted Fortran code all
 # characters from position 72 are to be considered as comment. A common

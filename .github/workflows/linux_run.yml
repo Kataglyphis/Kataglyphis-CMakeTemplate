@@ -8,7 +8,14 @@ on:
         type: string
       runner:
         required: true
-        type: string
+        type: string    
+    secrets:
+      SERVER:
+        required: true
+      USERNAME:
+        required: true
+      PW:
+        required: true
 
 jobs:
   build:
@@ -138,6 +145,7 @@ jobs:
           make html
 
       - name: 📂 Sync files to domain
+        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.SERVER }}
