@@ -131,7 +131,7 @@ jobs:
           /usr/bin/llvm-cov export ${{github.workspace}}/build/compileTestSuite -format=text -instr-profile=${{github.workspace}}/build/compileTestSuite.profdata > ${{github.workspace}}/build/coverage.json
 
       - name: Set up Python 3.11
-        uses: actions/setup-python@v5.3.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: "3.11"
       # You can test your matrix by printing the current Python version
