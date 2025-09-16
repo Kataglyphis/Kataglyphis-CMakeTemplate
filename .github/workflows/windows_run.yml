@@ -12,6 +12,10 @@ env:
   CLANG_VERSION: 21.1.1
   LLVM_BIN: 'C:\Program Files\LLVM\bin'
 
+defaults:
+  run:
+    shell: pwsh # Set PowerShell as default shell for all steps
+
 jobs:
   build:
     runs-on: windows-2025
@@ -51,6 +55,7 @@ jobs:
         shell: pwsh
 
       - name: Configure CMake (Clang)
+        # cppcheck has a weired bug in windows-2025 ... at least last time i tested so turn it off for now
         run: cmake -B ${{ env.BUILD_DIR }} --preset x64-Clang-Windows-Profile -Dmyproject_ENABLE_CPPCHECK=OFF
 
       - name: Build (Clang)
