@@ -97,6 +97,7 @@ jobs:
             ./build/first_fuzz_test
           else
             echo "Compiled with GCC so no fuzz testing!"
+          fi
 
       - name: Run clang tidy
         run: clang-tidy -p=./build/compile_commands.json  $(find Src -name '*.cpp' -o -name '*.cc')
