@@ -134,10 +134,10 @@ jobs:
           /usr/bin/llvm-cov report ${{github.workspace}}/build/compileTestSuite -instr-profile=${{github.workspace}}/build/compileTestSuite.profdata
           /usr/bin/llvm-cov export ${{github.workspace}}/build/compileTestSuite -format=text -instr-profile=${{github.workspace}}/build/compileTestSuite.profdata > ${{github.workspace}}/build/coverage.json
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.13
         uses: actions/setup-python@v6.0.0
         with:
-          python-version: "3.11"
+          python-version: "3.13"
       # You can test your matrix by printing the current Python version
       - name: Setup python env
         run: |
@@ -178,7 +178,7 @@ jobs:
         if: ${{ inputs.compiler == 'clang' }}
         run: |
           export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)
-          cmake --build build-release --config Release
+          cmake --build build-release --config linux-release-clang
 
       - name: Package (Clang only)
         if: ${{ inputs.compiler == 'clang' }}
