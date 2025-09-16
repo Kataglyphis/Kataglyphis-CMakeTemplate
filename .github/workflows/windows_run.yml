@@ -56,12 +56,12 @@ jobs:
 
       - name: Configure CMake (Clang)
         # cppcheck has a weired bug in windows-2025 ... at least last time i tested so turn it off for now
-        run: cmake -B ${{ env.BUILD_DIR }} --preset x64-Clang-Windows-Release -Dmyproject_ENABLE_CPPCHECK=OFF
+        run: cmake -B ${{ env.BUILD_DIR }} --preset x64-Clang-Windows-Debug -Dmyproject_ENABLE_CPPCHECK=OFF
 
       - name: Build (Clang)
         run: |
           $env:CMAKE_BUILD_PARALLEL_LEVEL = [Environment]::ProcessorCount
-          cmake --build ${{ env.BUILD_DIR }} --preset x64-Clang-Windows-Release
+          cmake --build ${{ env.BUILD_DIR }} --preset x64-Clang-Windows-Debug
         shell: pwsh
 
       - name: Test (Clang)
