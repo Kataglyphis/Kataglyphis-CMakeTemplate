@@ -363,8 +363,8 @@
       "name": "x64-Clang-Windows-Release",
       "description": "Windows and Clang",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
+      "binaryDir": "${sourceDir}/build_release/",
+      "installDir": "${sourceDir}/build_release/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
@@ -461,7 +461,31 @@
       "name": "linux-profile-clang",
       "jobs": 0,
       "configurePreset": "linux-profile-clang"
-    }
+    },
+	{
+      "name": "x64-MSVC-Windows-Debug",
+      "jobs": 0,
+      "configurePreset": "x64-MSVC-Windows-Debug",
+	  "configuration": "Debug"
+    },
+	{
+      "name": "x64-MSVC-Windows-Release",
+      "jobs": 0,
+      "configurePreset": "x64-MSVC-Windows-Release",
+	  "configuration": "Release"
+    },
+	{
+      "name": "x64-Clang-Windows-Debug",
+      "jobs": 0,
+      "configurePreset": "x64-Clang-Windows-Debug",
+	  "configuration": "Debug"
+    },
+	{
+      "name": "x64-Clang-Windows-Release",
+      "jobs": 0,
+      "configurePreset": "x64-Clang-Windows-Release",
+	  "configuration": "Release"
+	}
   ],
   "testPresets": [
     {

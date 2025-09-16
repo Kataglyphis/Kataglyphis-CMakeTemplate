@@ -37,7 +37,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND BUILD_TESTING)
 
   # # Check if not ARM
   # if(NOT TARGET_ARCH MATCHES "^(arm|aarch64)")
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+  if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
 
     message("Adding Fuzztest")
     add_subdirectory(FUZZTEST)

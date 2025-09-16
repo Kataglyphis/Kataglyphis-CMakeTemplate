@@ -8,7 +8,14 @@ on:
         type: string
       runner:
         required: true
-        type: string
+        type: string    
+    secrets:
+      SERVER:
+        required: true
+      USERNAME:
+        required: true
+      PW:
+        required: true
 
 jobs:
   build:
@@ -18,7 +25,7 @@ jobs:
       BUILD_TYPE: Debug
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5.0.0
         with:
           fetch-depth: 0
           submodules: recursive
@@ -86,19 +93,76 @@ jobs:
 
       - name: Run fuzzer tests
         run: |
-          ARCH=$(uname -m)
-          if [[ "$ARCH" == "x86_64" ]]; then
+          if [[ "${{ inputs.compiler }}" == "clang" ]]; then
             ./build/first_fuzz_test
           else
-            echo "Skipping fuzzer tests on architecture: $ARCH"
+            echo "Compiled with GCC so no fuzz testing!"
           fi
 
-      - name: Run Clang-Tidy
-        if: ${{ inputs.compiler == 'clang' }}
-        run: clang-tidy -p=./build/compile_commands.json $(find Src -name '*.cpp' -o -name '*.cc')
+      - name: Run clang tidy
+        run: clang-tidy -p=./build/compile_commands.json  $(find Src -name '*.cpp' -o -name '*.cc')
 
-      - name: Run LLVM Source-Based Coverage
-        if: ${{ inputs.compiler == 'clang' }}
+      ####################################
+      ###### Now run everything with clang
+      ####################################
+
+      - name: Prepare for clang
+        run: |
+          sudo rm -r ${{github.workspace}}/build
+          which clang 
+          clang --version
+
+      - name: Configure CMake with Clang
+        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+        run: cmake -B ${{github.workspace}}/build --preset "linux-profile-clang"
+
+      - name: Build
+        # Build your program with the given configuration
+        run: |
+          export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)   # Linux: number of cores
+          # for running a CICD Job enabling cache would be a foolish thing to do
+          cmake --build ${{github.workspace}}/build --preset "linux-profile-clang"
+
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        # Execute tests defined by the CMake configuration.
+        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+        run: |
+          ctest -C ${{env.BUILD_TYPE}}
+          /usr/bin/llvm-profdata merge -sparse ${{github.workspace}}/build/Test/compile/default.profraw -o ${{github.workspace}}/build/compileTestSuite.profdata
+          /usr/bin/llvm-cov report ${{github.workspace}}/build/compileTestSuite -instr-profile=${{github.workspace}}/build/compileTestSuite.profdata
+          /usr/bin/llvm-cov export ${{github.workspace}}/build/compileTestSuite -format=text -instr-profile=${{github.workspace}}/build/compileTestSuite.profdata > ${{github.workspace}}/build/coverage.json
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6.0.0
+        with:
+          python-version: "3.11"
+      # You can test your matrix by printing the current Python version
+      - name: Setup python env
+        run: |
+          pip install -r requirements.txt
+
+      - name: Build web page
+        run: |
+          cd docs
+          make html
+
+      - name: 📂 Sync files to domain
+        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.SERVER }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PW }}
+          local-dir: "./docs/build/html/"
+
+      - name: Run performance benchmarks
+        run: |
+          # chmod +x ${{github.workspace}}/build/perfTestSuite 
+          ${{github.workspace}}/build/perfTestSuite
+
+      - name: Run LLVM Source based Code Coverage
         run: |
           cd build
           LLVM_PROFILE_FILE="dummy.profraw" ./KataglyphisCppProject

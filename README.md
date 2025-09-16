@@ -2,14 +2,11 @@
   <br>
   <a href="https://jonasheinle.de"><img src="images/logo.png" alt="logo" width="200"></a>
   <br>
-  This CMake/C++ template project gives me a good starting point for f.e. GPU/Graphics programming. For everything close to hardware ... 
+  CMake/C++ template project
   <br>
 </h1>
 
 
-[![Linux run on ARM/GCC/Clang](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_arm.yml/badge.svg)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_arm.yml)
-[![Linux run on x86/GCC/Clang](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_x86.yml/badge.svg)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_x86.yml)
-[![CMake on Windows MSVC x64](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/windows_run.yml/badge.svg?branch=main)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/windows_run.yml)
 
 <!-- <h1 align="center">
   <br>
@@ -18,11 +15,13 @@
   <a href="https://jonasheinle.de"><img src="images/glm_logo.png" alt="VulkanEngine" width="200"></a>
 </h1> -->
 
-<h4 align="center">A template <a href="https://jonasheinle.de" target="_blank"></a>.</h4>
+<h4 align="center">This CMake/C++ template project gives me a good starting point for f.e. GPU/Graphics programming. For everything close to hardware ...  <a href="https://jonasheinle.de" target="_blank"></a>.</h4>
 
->  **__Note:__** For now the Fuzzer tests do only run on GCC-13 and *NOT* on GCC14
->  
+For the official docs follow this [link](https://cmaketemplate.jonasheinle.de/).
 
+[![Linux run on ARM/GCC/Clang](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_arm.yml/badge.svg)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_arm.yml)
+[![Linux run on x86/GCC/Clang](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_x86.yml/badge.svg)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_x86.yml)
+[![CMake on Windows MSVC x64](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/windows_run.yml/badge.svg?branch=main)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/windows_run.yml)
 <!-- [![Linux build](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Linux.yml/badge.svg)](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Linux.yml)
 [![Windows build](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Windows.yml/badge.svg)](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Windows.yml)
 [![TopLang](https://img.shields.io/github/languages/top/Kataglyphis/GraphicsEngineVulkan)]() -->
@@ -85,15 +84,30 @@
 
 This project is dedicated to compiling a comprehensive collection of best practices for C++ development using CMake. It serves as a definitive guide for starting new C++ projects, providing insights into optimal project setup, modern CMake techniques, and efficient workflows. The repository includes examples, templates, and detailed instructions to help developers of all levels adopt industry standards and improve their project configuration and build processes.
 
+Frequently tested under   
+* windows server 2025 x64 *__Clang 20.1.0__* and *__MSVC__*
+* ubuntu 24.04 x64 *__Clang 18.1.3__*
+* ubuntu 24.04 ARM *__Clang 18.1.3__*
+
 ### Key Features
 
-<!-- ❌  -->
-|          Feature                    |   Implement Status |
-| ------------------------------------| :----------------: |
-| CMake > 4.0                         |         ✔️         |
-| Performance Benchmark               |         ✔️         |
-| Linux/Windows support               |         ✔️         |
-| Clang/GNU/MSVC support              |         ✔️         |
+<div align="center">
+
+| Category            | Feature                      | Implement Status |
+|---------------------|------------------------------|:----------------:|
+| Build System        | CMake > 4.0                  |        ✔️        |
+| Performance         | Performance Benchmark        |        ✔️        |
+| Platform Support    | Linux/Windows support        |        ✔️        |
+| Compiler Support    | Clang/GNU/MSVC support       |        ✔️        |
+
+</div>
+
+**Legend:**
+- ✔️ - completed  
+- 🔶 - in progress  
+- ❌ - not started
+
+
 
 ### Dependencies
 This enumeration also includes submodules.
@@ -103,24 +117,26 @@ This enumeration also includes submodules.
 * [gbenchmark](https://github.com/google/benchmark)
 * [google fuzztest](https://github.com/google/fuzztest)
 
-##### Opt
+##### Optional
 * [Rust](https://www.rust-lang.org/)
 * [corrision-rs](https://github.com/corrosion-rs/corrosion)
 * [cxx](https://cxx.rs/)
 
 ### Useful tools
+* [NSIS](https://nsis.sourceforge.io/Main_Page)
 * [doxygen](https://www.doxygen.nl/index.html)
 * [cppcheck](https://cppcheck.sourceforge.io/)
 * [cmake](https://cmake.org/)
-* [gsl](https://github.com/Microsoft/GSL)
-* [NSIS](https://nsis.sourceforge.io/Main_Page)
-* [cppcheck](https://cppcheck.sourceforge.io/)
 * [valgrind](https://valgrind.org/)
 * [clangtidy](https://github.com/llvm/llvm-project)
+* [visualstudio](https://visualstudio.microsoft.com/de/)
 * [ClangPowerTools](https://www.clangpowertools.com/)
 * [Codecov](https://app.codecov.io/gh)
 * [Ccache](https://ccache.dev/)
 * [Sccache](https://github.com/mozilla/sccache)
+
+#### Benchmarking
+* [gperftools](https://github.com/gperftools/gperftools)
 
 ### VSCode Extensions
 * [CMake format](https://github.com/cheshirekow/cmake_format)
@@ -130,12 +146,11 @@ This enumeration also includes submodules.
 <!-- GETTING STARTED -->
 ## Getting Started
 
-### Prerequisites
+### Specific version requirements
 
-Dependencies to libraries are stated above.<br />
-C++23 or higher required.<br />
-C17 or higher required.<br />
-CMake 4.0.0 or higher required.<br />
+**C++23** or higher required.<br />
+**C17** or higher required.<br />
+**CMake 4.0.0** or higher required.<br />
 
 ### Installation
 
@@ -186,6 +201,49 @@ I have four tests suites.
 
 4. Fuzz testing suite
 
+## Performance Tests
+
+### gperftools and pprof
+#### Install deps
+> **__Linux only__**
+1. Step:
+```bash
+sudo apt-get install google-perftools libgoogle-perftools-dev graphviz
+####### only if go is not installed already 
+wget https://go.dev/dl/go1.24.3.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.24.3.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+source ~/.bashrc
+# to see if everything works
+go version
+####### go on with this step if go already installed
+go install github.com/google/pprof@latest  # if you want to use latest Go-based pprof
+export PATH="$PATH:$HOME/go/bin"
+source ~/.bashrc  # or source ~/.zshrc
+```
+
+2. Step:
+Run actual profiling and look into results:
+```bash
+LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libprofiler.so CPUPROFILE=profile.prof ./build/KataglyphisCppProject
+pprof -http=:8080 ./build/KataglyphisCppProject profile.prof
+```
+
+### valgrind
+
+```bash
+sudo apt install valgrind kcachegrind
+# build in debug for readable information
+valgrind --tool=callgrind ./build/KataglyphisCppProject
+```
+
+### perf
+
+```bash
+sudo apt install linux-tools-$(uname -r)
+perf record ./build/KataglyphisCppProject
+```
+
 ## Static Analyzers
 
 ```bash
@@ -212,7 +270,9 @@ clang-format -i $(find include -name "*.cpp" -or -name "*.h" -or -name "*.hpp")
 # Docs
 Build the docs
 ```bash
-pip install -v -e .
+uv venv
+source .venv/bin/activate
+pip install -r requirements.txt
 cd docs 
 make html
 ```
