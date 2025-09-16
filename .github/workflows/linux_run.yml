@@ -93,7 +93,10 @@ jobs:
 
       - name: Run fuzzer tests
         run: |
-          ./build/first_fuzz_test
+          if [[ "${{ inputs.compiler }}" == "clang" ]]; then
+            ./build/first_fuzz_test
+          else
+            echo "Compiled with GCC so no fuzz testing!"
 
       - name: Run clang tidy
         run: clang-tidy -p=./build/compile_commands.json  $(find Src -name '*.cpp' -o -name '*.cc')
