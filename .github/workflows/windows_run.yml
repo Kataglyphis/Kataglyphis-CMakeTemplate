@@ -8,7 +8,7 @@ on:
 
 env:
   BUILD_DIR: "${{github.workspace}}/build"
-  BUILD_DIR_RELEASE: "${{github.workspace}}/build"
+  BUILD_DIR_RELEASE: "${{github.workspace}}/build_release"
   CLANG_VERSION: 21.1.1
   LLVM_BIN: 'C:\Program Files\LLVM\bin'
 
