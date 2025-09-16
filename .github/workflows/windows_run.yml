@@ -11,7 +11,7 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Debug
-  CLANG_VERSION: 20.1.0
+  CLANG_VERSION: 21.1.1
   LLVM_BIN: 'C:\Program Files\LLVM\bin'
 
 jobs:
@@ -22,18 +22,15 @@ jobs:
     runs-on: windows-2025
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5.0.0
         with:
           fetch-depth: 0 # fetch full history for tags, branches, etc.
           submodules: recursive # initialize & update all submodules, including nested ones
 
       - name: Test Winget
         run: |
-          choco install llvm --version="${{ env.CLANG_VERSION }}" --params="'/AddToPath'" -y
-          choco install sccache
-          ls "C:\Program Files\LLVM\bin"
+          ./Scripts/Windows/setup-dependencies.ps1
           cppcheck --version
-          winget install --accept-source-agreements --accept-package-agreements cmake
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.

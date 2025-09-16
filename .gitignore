@@ -1,6 +1,8 @@
 # do not track user specific vcpkg things
 CMakeUserPresets.json
 
+.codacy
+
 *.log
 
 dist
