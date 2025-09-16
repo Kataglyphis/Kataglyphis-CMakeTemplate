@@ -1,5 +1,4 @@
 Param(
-    [string]$VulkanVersion = '1.4.321.1',
     [string]$ClangVersion  = '21.1.0'
 )
 

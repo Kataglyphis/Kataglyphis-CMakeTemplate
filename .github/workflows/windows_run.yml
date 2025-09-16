@@ -16,40 +16,32 @@ env:
 
 jobs:
   build:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: windows-2025
 
     steps:
       - uses: actions/checkout@v5.0.0
         with:
-          fetch-depth: 0 # fetch full history for tags, branches, etc.
-          submodules: recursive # initialize & update all submodules, including nested ones
+          fetch-depth: 0
+          submodules: recursive
 
-      - name: Test Winget
+      - name: Add LLVM to PATH
+        run: echo "${{ env.LLVM_BIN }}" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        shell: pwsh
+
+      - name: Install deps
         run: |
-          ./Scripts/Windows/setup-dependencies.ps1
+          ./Scripts/Windows/setup-dependencies.ps1 -ClangVersion ${{ env.CLANG_VERSION }}
           cppcheck --version
 
       - name: Configure CMake
-        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
         run: cmake -B ${{github.workspace}}/build --preset x64-MSVC-Windows-Debug
 
       - name: Build
-        # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        run: cmake --build ${{github.workspace}}/build --preset x64-MSVC-Windows-Debug
 
       - name: Test
         working-directory: ${{github.workspace}}/build
-        # Execute tests defined by the CMake configuration.
-        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest -C ${{env.BUILD_TYPE}}
-
-      ####################################
-      ###### Now run everything with clang
-      ####################################
+        run: ctest
 
       - name: Prepare for clang
         run: |
@@ -57,48 +49,22 @@ jobs:
           clang --version
 
       - name: Configure CMake with Clang
-        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        # the cppcheck version is not meant to run with clang
-        run: cmake -B ${{github.workspace}}/build --preset "x64-Clang-Windows-Profile" -Dmyproject_ENABLE_CPPCHECK="OFF"
+        run: cmake -B ${{github.workspace}}/build --preset x64-Clang-Windows-Profile -Dmyproject_ENABLE_CPPCHECK="OFF"
 
       - name: Build for Clang
-        # Build your program with the given configuration
         run: |
-          # 1. Get the number of logical processors
           $cores = [Environment]::ProcessorCount
-
-          # 2. Export to CMAKE_BUILD_PARALLEL_LEVEL in this session
           $Env:CMAKE_BUILD_PARALLEL_LEVEL = $cores
-
-          # (Optional) Verify it’s set
           Write-Host "CMAKE_BUILD_PARALLEL_LEVEL is set to $Env:CMAKE_BUILD_PARALLEL_LEVEL"
-          # for running a CICD Job enabling cache would be a foolish thing to do
-          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+          cmake --build ${{github.workspace}}/build --preset x64-Clang-Windows-Profile
 
       - name: Test on Clang
         working-directory: ${{github.workspace}}/build
-        # Execute tests defined by the CMake configuration.
-        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
         run: |
-          ctest -C ${{env.BUILD_TYPE}}
-
-          # Merge raw profiles into a .profdata
-          & "${{env.LLVM_BIN}}\llvm-profdata.exe" merge `
-              -sparse "${{github.workspace}}\build\Test\compile\default.profraw" `
-              -o      "${{github.workspace}}\build\compileTestSuite.profdata"
-
-          # Show a coverage summary in the console
-          & "${{env.LLVM_BIN}}\llvm-cov.exe" report `
-              "${{github.workspace}}\build\compileTestSuite.exe" `
-              -instr-profile="${{github.workspace}}\build\compileTestSuite.profdata"
-
-          # Export detailed coverage to JSON
-          & "${{env.LLVM_BIN}}\llvm-cov.exe" export `
-              "${{github.workspace}}\build\compileTestSuite.exe" `
-              -format=text `
-              -instr-profile="${{github.workspace}}\build\compileTestSuite.profdata" `
-            | Out-File -FilePath "${{github.workspace}}\build\coverage.json" -Encoding UTF8
+          ctest
+          & "llvm-profdata.exe" merge -sparse "${{github.workspace}}\build\Test\compile\default.profraw" -o "${{github.workspace}}\build\compileTestSuite.profdata"
+          & "llvm-cov.exe" report "${{github.workspace}}\build\compileTestSuite.exe" -instr-profile="${{github.workspace}}\build\compileTestSuite.profdata"
+          & "llvm-cov.exe" export "${{github.workspace}}\build\compileTestSuite.exe" -format=text -instr-profile="${{github.workspace}}\build\compileTestSuite.profdata" | Out-File -FilePath "${{github.workspace}}\build\coverage.json" -Encoding UTF8
 
       - name: Run performance benchmarks
         run: |
@@ -106,34 +72,21 @@ jobs:
 
       - name: Run LLVM Source based Code Coverage
         run: |
-          # 1. Change into build directory
           Push-Location "${{github.workspace}}\build"
-
-          # 2. Run the instrumented executable with LLVM_PROFILE_FILE set for this process only
-          $Env:LLVM_PROFILE_FILE = "${{github.workspace}}\build\dummy.profraw"   # set env var 
-          & ".\KataglyphisCppProject.exe"                                         # call operator runs the .exe
-
-          # 3. Merge the raw profile data into .profdata
-          & "${{env.LLVM_BIN}}\llvm-profdata.exe" merge `
-              -sparse "${{github.workspace}}\build\dummy.profraw" `
-              -o      "${{github.workspace}}\build\dummy.profdata"
-
-          # 4. Show the coverage report in text form
-          & "${{env.LLVM_BIN}}\llvm-cov.exe" show `
-              ".\KataglyphisCppProject.exe" `
-              -instr-profile="${{github.workspace}}\build\dummy.profdata" `
-              -format=text
+          $Env:LLVM_PROFILE_FILE = "${{github.workspace}}\build\dummy.profraw"
+          & ".\KataglyphisCppProject.exe"
+          & "llvm-profdata.exe" merge -sparse "${{github.workspace}}\build\dummy.profraw" -o "${{github.workspace}}\build\dummy.profdata"
+          & "llvm-cov.exe" show ".\KataglyphisCppProject.exe" -instr-profile="${{github.workspace}}\build\dummy.profdata" -format=text
+          Pop-Location
 
       - name: Configure CMake for Release (Clang only)
-        run: |
-          cmake -B build_release --preset "x64-Clang-Windows-Release" -Dmyproject_ENABLE_CPPCHECK="OFF"
+        run: cmake -B build_release --preset x64-Clang-Windows-Release -Dmyproject_ENABLE_CPPCHECK="OFF"
 
       - name: Build Release (Clang only)
         shell: pwsh
         run: |
           $env:CMAKE_BUILD_PARALLEL_LEVEL = $env:NUMBER_OF_PROCESSORS
-          cmake --build build_release --preset "x64-Clang-Windows-Release"
+          cmake --build build_release --preset x64-Clang-Windows-Release
 
       - name: Package (Clang only)
-        run: |
-          cmake --build build_release --target package
+        run: cmake --build build_release --preset x64-Clang-Windows-Release --target package
