@@ -1,5 +1,5 @@
 Param(
-    [string]$ClangVersion  = '21.1.0'
+    [string]$ClangVersion  = '21.1.1'
 )
 
 Write-Host "=== Installing build dependencies on Windows ==="

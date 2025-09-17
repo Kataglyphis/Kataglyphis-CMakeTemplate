@@ -32,7 +32,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          ./Scripts/Windows/setup-dependencies.ps1 -ClangVersion ${{ env.CLANG_VERSION }}
+          ./scripts/windows/setup_dependencies.ps1 -ClangVersion ${{ env.CLANG_VERSION }}
           cppcheck --version
 
       - name: Configure CMake (MSVC)

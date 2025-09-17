@@ -85,7 +85,7 @@ For the official docs follow this [link](https://cmaketemplate.jonasheinle.de/).
 This project is dedicated to compiling a comprehensive collection of best practices for C++ development using CMake. It serves as a definitive guide for starting new C++ projects, providing insights into optimal project setup, modern CMake techniques, and efficient workflows. The repository includes examples, templates, and detailed instructions to help developers of all levels adopt industry standards and improve their project configuration and build processes.
 
 Frequently tested under   
-* windows server 2025 x64 *__Clang 20.1.0__* and *__MSVC__*
+* windows server 2025 x64 *__Clang 21.1.1__* and *__MSVC__*
 * ubuntu 24.04 x64 *__Clang 18.1.3__*
 * ubuntu 24.04 ARM *__Clang 18.1.3__*
 
@@ -95,7 +95,7 @@ Frequently tested under
 
 | Category            | Feature                      | Implement Status |
 |---------------------|------------------------------|:----------------:|
-| Build System        | CMake > 4.0                  |        ✔️        |
+| Build System        | CMake > 4.1                  |        ✔️        |
 | Performance         | Performance Benchmark        |        ✔️        |
 | Platform Support    | Linux/Windows support        |        ✔️        |
 | Compiler Support    | Clang/GNU/MSVC support       |        ✔️        |
