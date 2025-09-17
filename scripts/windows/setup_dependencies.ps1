@@ -10,11 +10,11 @@ $ErrorActionPreference = 'Stop'
 # Install LLVM/Clang via Chocolatey
 # 
 Write-Host "Installing LLVM/Clang $ClangVersion..."
-winget install --id=LLVM.LLVM -v $ClangVersion -e --accept-package-agreements
+winget install --accept-source-agreements --accept-package-agreements --id=LLVM.LLVM -v $ClangVersion -e
 
 # Install sccache
 Write-Host "Installing sccache..."
-winget install --id=Ccache.Ccache  -e --accept-package-agreements
+winget install --accept-source-agreements --accept-package-agreements --id=Ccache.Ccache  -e
 
 # Install CMake, Cppcheck, NSIS via WinGet
 Write-Host "Installing CMake, Cppcheck and NSIS via winget..."
