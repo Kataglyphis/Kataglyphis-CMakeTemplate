@@ -60,10 +60,13 @@ if(WIN32)
   # set(CPACK_WIX_UI_BANNER ${CMAKE_CURRENT_SOURCE_DIR}/images/your_banner.bmp)
   # set(CPACK_WIX_UI_DIALOG  ${CMAKE_CURRENT_SOURCE_DIR}/images/your_dialog.bmp)
 
-  # License RTF: WiX benötigt echtes RTF. Falls keine LICENSE.rtf vorhanden ist, einfach weglassen.
-  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.rtf")
-    set(CPACK_WIX_LICENSE_RTF "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.rtf")
+  # License RTF: WiX benötigt echtes RTF. Falls keine LICENSE.rtf vorhanden ist, erzeugen wir eine minimale Dummy-Version,
+  # damit der Generator nicht mit 'unsupported WiX License file extension' abbricht (ein häufiger Fall auf CI).
+  set(_WIX_LICENSE_RTF "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.rtf")
+  if(NOT EXISTS "${_WIX_LICENSE_RTF}")
+    file(WRITE "${_WIX_LICENSE_RTF}" "{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\fs20 This software is licensed under the terms described in the accompanying LICENSE file.\\par}")
   endif()
+  set(CPACK_WIX_LICENSE_RTF "${_WIX_LICENSE_RTF}")
 
   # Beispiel für zusätzliche Einträge in ARP (Add/Remove Programs) - optional
   set(CPACK_WIX_PROPERTY_ARPURLINFOABOUT "${CMAKE_PROJECT_HOMEPAGE_URL}")
