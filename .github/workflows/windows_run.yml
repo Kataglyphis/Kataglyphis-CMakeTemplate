@@ -97,7 +97,7 @@ jobs:
         run: cmake --build ${{ env.BUILD_DIR_RELEASE }} --preset x64-Clang-Windows-Release --target package
 
       - name: Upload Installers & Zip
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: windows-installers
           path: |

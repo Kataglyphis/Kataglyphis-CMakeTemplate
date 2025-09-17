@@ -184,9 +184,10 @@ jobs:
         if: ${{ inputs.compiler == 'clang' }}
         run: |
           cmake --build build-release --target package
+
       - name: Upload Linux Packages (Clang only)
         if: ${{ inputs.compiler == 'clang' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: linux-packages
           path: |
