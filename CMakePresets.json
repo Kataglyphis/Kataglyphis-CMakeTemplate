@@ -507,6 +507,22 @@
       "generators": [
         "TGZ"
       ]
+    },
+    {
+      "name": "windows-clang-release-wix",
+      "displayName": "Windows Release Clang NSIS+WIX",
+      "description": "Erzeugt NSIS (.exe) und WIX (.msi) Installer via CPack",
+      "configurePreset": "x64-Clang-Windows-Release",
+      "generators": [
+        "NSIS",
+        "WIX",
+        "ZIP"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
     }
   ],
   "workflowPresets": [
