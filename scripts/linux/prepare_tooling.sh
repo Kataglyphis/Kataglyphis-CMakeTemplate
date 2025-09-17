@@ -7,6 +7,8 @@ if command -v apt-get >/dev/null; then
     echo "Detected apt-get. Installing via apt-get..."
     sudo apt-get update
     sudo apt-get install -y sccache ccache cppcheck iwyu lcov binutils graphviz doxygen
+    # for debian packaging
+    sudo apt-get install -y dpkg-dev fakeroot binutils
 elif command -v yum >/dev/null; then
     echo "Detected yum. Installing via yum..."
     sudo yum install -y sccache ccache cppcheck iwyu lcov binutils graphviz doxygen

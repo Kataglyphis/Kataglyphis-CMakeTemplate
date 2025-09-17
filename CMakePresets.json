@@ -509,6 +509,21 @@
       ]
     },
     {
+      "name": "linux-release-deb",
+      "displayName": "Linux Release TGZ+DEB",
+      "description": "Erzeugt TGZ und DEB Package für Release",
+      "configurePreset": "linux-release-clang",
+      "generators": [
+        "TGZ",
+        "DEB"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
       "name": "windows-clang-release-wix",
       "displayName": "Windows Release Clang NSIS+WIX",
       "description": "Erzeugt NSIS (.exe) und WIX (.msi) Installer via CPack",

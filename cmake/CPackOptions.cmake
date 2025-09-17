@@ -3,8 +3,24 @@ set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
 # Experience shows that explicit package naming can help make it easier to sort
 # out potential ABI related issues before they start, while helping you
 # track a build to a specific GIT SHA
+# Architektur bestimmen (normalisiert), damit sie in den Paketnamen aufgenommen werden kann.
+if(NOT DEFINED PROJECT_ARCH)
+  if(CMAKE_SYSTEM_PROCESSOR)
+    set(PROJECT_ARCH "${CMAKE_SYSTEM_PROCESSOR}")
+  else()
+    execute_process(COMMAND uname -m OUTPUT_VARIABLE PROJECT_ARCH OUTPUT_STRIP_TRAILING_WHITESPACE)
+  endif()
+endif()
+string(TOLOWER "${PROJECT_ARCH}" _arch_lc)
+set(_ARCH_PKG "${_arch_lc}")
+if(_arch_lc STREQUAL "x86_64" OR _arch_lc STREQUAL "amd64")
+  set(_ARCH_PKG "x86_64")
+elseif(_arch_lc STREQUAL "aarch64" OR _arch_lc STREQUAL "arm64")
+  set(_ARCH_PKG "aarch64")
+endif()
+
 set(CPACK_PACKAGE_FILE_NAME
-    "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_BUILD_TYPE}-${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}"
+    "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${_ARCH_PKG}-${CMAKE_BUILD_TYPE}-${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}"
 )
 set(CPACK_PACKAGE_VENDOR "${AUTHOR}")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
@@ -76,8 +92,32 @@ if(WIN32)
   set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_NAME}")
 
 else()
-  # Nicht Windows -> klassisch TGZ (kann um DEB/RPM erweitert werden)
+  # Nicht Windows -> Linux / andere UNIX Systeme
+  # Source bleibt TGZ; zusätzlich binärer TGZ + (unter Debian/Ubuntu) DEB
   set(CPACK_SOURCE_GENERATOR "TGZ")
+  if(UNIX AND NOT APPLE)
+    # Binaries als TGZ + DEB ausgeben
+    set(CPACK_GENERATOR "TGZ;DEB")
+    # Debian/Ubuntu spezifische Felder
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${AUTHOR}")
+    set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
+    set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+    # Architektur automatisch ermitteln
+    # Debian-Architektur (Mapping auf offizielle Deb-Namen)
+    if(NOT DEFINED CPACK_DEBIAN_PACKAGE_ARCHITECTURE)
+      if(_arch_lc STREQUAL "x86_64" OR _arch_lc STREQUAL "amd64")
+        set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
+      elseif(_arch_lc STREQUAL "aarch64" OR _arch_lc STREQUAL "arm64")
+        set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "arm64")
+      else()
+        set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${_arch_lc}")
+      endif()
+    endif()
+    # Abhängigkeiten (einfach gehalten; kann verfeinert werden)
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.31)")
+    # Automatisches Shlib-Skipping vermeiden falls nötig
+    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+  endif()
 endif()
 
 include(CPack)
