@@ -19,6 +19,14 @@ if(RUST_FEATURES)
     lib.rs)
 endif()
 
+if(WIN32)
+  # We compile under windows our crates with clang-cl to be compatible with MSVC
+  set_target_properties(rusty_bridge PROPERTIES
+      CXX_COMPILER clang-cl
+      C_COMPILER clang-cl
+  )
+endif()
+
 # add the executable
 add_executable(${PROJECT_NAME})
 
