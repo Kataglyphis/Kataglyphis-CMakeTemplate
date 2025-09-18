@@ -86,6 +86,7 @@ This project is dedicated to compiling a comprehensive collection of best practi
 
 Frequently tested under   
 * windows server 2025 x64 *__Clang 21.1.1__* and *__MSVC__*
+* [clang-cl](https://learn.microsoft.com/de-de/cpp/build/clang-support-msbuild?view=msvc-170) to compile the rust crate on windows
 * ubuntu 24.04 x64 *__Clang 18.1.3__*
 * ubuntu 24.04 ARM *__Clang 18.1.3__*
 
@@ -99,6 +100,7 @@ Frequently tested under
 | Performance         | Performance Benchmark        |        ✔️        |
 | Platform Support    | Linux/Windows support        |        ✔️        |
 | Compiler Support    | Clang/GNU/MSVC support       |        ✔️        |
+| Rust integration    | Call Rust code from C++      |        ✔️        |
 
 </div>
 
@@ -150,7 +152,7 @@ This enumeration also includes submodules.
 
 **C++23** or higher required.<br />
 **C17** or higher required.<br />
-**CMake 4.0.0** or higher required.<br />
+**CMake 4.1.1** or higher required.<br />
 
 ### Installation
 
@@ -171,8 +173,18 @@ This enumeration also includes submodules.
   > **_NOTE:_** Here we use CmakePresets to simplify things. Consider using it too
   or just build on a common way.
   
-  For now the features in Rust are experimental. If you want to use them install
-  Rust and set `RUST_FEATURES=ON` on your CMake build.
+  For now the features in Rust are experimental. If you want to use them install  
+  Rust and set `RUST_FEATURES=ON` on your CMake build. In order to compile a rust 
+  crate on windows u need to me MSVC ABI compatible. Therefore I use clang-cl
+  in order to compile the rust crate when on windows.  
+  See also file `Src\rusty_code\.cargo\config.toml`
+  ```toml
+  [target.x86_64-pc-windows-msvc.cc]
+  path = "clang-cl"
+
+  [target.x86_64-pc-windows-msvc.cxx]
+  path = "clang-cl"
+  ```
 
   (for clarity: Assumption you are in the dir you have cloned the repo into)
   ```sh
@@ -320,6 +332,7 @@ Rust
 * [rust-lang](https://www.rust-lang.org/)
 
 CMake/C++
+* [ClangCL](https://clang.llvm.org/docs/MSVCCompatibility.html)
 * [Cpp best practices](https://github.com/cpp-best-practices/cppbestpractices)
 * [Integrate Rust into CMake projects](https://github.com/trondhe/rusty_cmake)
 * [corrision-rs](https://github.com/corrosion-rs/corrosion)

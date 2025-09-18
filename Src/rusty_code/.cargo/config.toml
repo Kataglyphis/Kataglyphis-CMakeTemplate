@@ -1,0 +1,5 @@
+[target.x86_64-pc-windows-msvc.cc]
+path = "clang-cl"
+
+[target.x86_64-pc-windows-msvc.cxx]
+path = "clang-cl"

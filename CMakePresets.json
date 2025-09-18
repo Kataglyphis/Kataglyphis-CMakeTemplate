@@ -227,7 +227,7 @@
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_C_COMPILER": "clang-cl",
         "CMAKE_CXX_COMPILER": "clang-cl",
-        "RUST_FEATURES": "OFF",
+        "RUST_FEATURES": "ON",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "COMPILER_CACHE": "sccache"
       },
@@ -257,7 +257,7 @@
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_C_COMPILER": "clang-cl",
         "CMAKE_CXX_COMPILER": "clang-cl",
-        "RUST_FEATURES": "OFF",
+        "RUST_FEATURES": "ON",
         "CMAKE_BUILD_TYPE": "Debug",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
@@ -288,7 +288,7 @@
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_C_COMPILER": "clang-cl",
         "CMAKE_CXX_COMPILER": "clang-cl",
-        "RUST_FEATURES": "OFF",
+        "RUST_FEATURES": "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "COMPILER_CACHE": "sccache"
       },
@@ -318,7 +318,7 @@
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
         "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
-        "RUST_FEATURES": "OFF",
+        "RUST_FEATURES": "ON",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "COMPILER_CACHE": "sccache"
       },
@@ -343,7 +343,7 @@
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
         "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
-        "RUST_FEATURES": "OFF",
+        "RUST_FEATURES": "ON",
         "CMAKE_BUILD_TYPE": "Debug",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
@@ -369,7 +369,7 @@
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
         "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
-        "RUST_FEATURES": "OFF",
+        "RUST_FEATURES": "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "COMPILER_CACHE": "sccache"
       },
@@ -394,7 +394,7 @@
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
         "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
-        "RUST_FEATURES": "OFF",
+        "RUST_FEATURES": "ON",
         "CMAKE_BUILD_TYPE": "Profile",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
