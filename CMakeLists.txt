@@ -23,11 +23,11 @@ set(RUST_FEATURES
 if(RUST_FEATURES)
   message(STATUS "Rust features are enabled.")
   if(MSVC)
-    message(STATUS "On a windows machine you must use MSVC when integrating rust features.")
+    message(STATUS "On a windows machine you must use MSVC or clang-cl when integrating rust features.")
   endif()
 else()
   message(STATUS "Rust features are disabled.")
-  message(STATUS "Your are going to use a non MSVC compiler on windows. Therefore no rust integration possible.")
+  message(STATUS "Your are going to use a non MSVC/clang-cl compiler on windows. Therefore no rust integration possible.")
 endif()
 
 include(cmake/PreventInSourceBuilds.cmake)

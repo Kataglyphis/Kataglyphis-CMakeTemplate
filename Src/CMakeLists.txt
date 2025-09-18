@@ -10,6 +10,9 @@ file(GLOB_RECURSE KataglyphisCppProject_SOURCES "*.cpp")
 file(GLOB_RECURSE KataglyphisCppProject_HEADERS "*.hpp")
 
 if(RUST_FEATURES)
+  # Set environment for Rust compilation
+  set(ENV{CC_x86_64_pc_windows_msvc} "clang-cl")
+  set(ENV{CXX_x86_64_pc_windows_msvc} "clang-cl")
   corrosion_import_crate(MANIFEST_PATH rusty_code/Cargo.toml)
   corrosion_add_cxxbridge(
     rusty_bridge
@@ -17,14 +20,6 @@ if(RUST_FEATURES)
     rusty_code
     FILES
     lib.rs)
-endif()
-
-if(WIN32)
-  # We compile under windows our crates with clang-cl to be compatible with MSVC
-  set_target_properties(rusty_bridge PROPERTIES
-      CXX_COMPILER clang-cl
-      C_COMPILER clang-cl
-  )
 endif()
 
 # add the executable
