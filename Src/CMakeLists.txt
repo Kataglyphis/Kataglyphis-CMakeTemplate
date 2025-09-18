@@ -10,16 +10,23 @@ file(GLOB_RECURSE KataglyphisCppProject_SOURCES "*.cpp")
 file(GLOB_RECURSE KataglyphisCppProject_HEADERS "*.hpp")
 
 if(RUST_FEATURES)
-  # Set environment for Rust compilation
-  set(ENV{CC_x86_64_pc_windows_msvc} "clang-cl")
-  set(ENV{CXX_x86_64_pc_windows_msvc} "clang-cl")
-  corrosion_import_crate(MANIFEST_PATH rusty_code/Cargo.toml)
+
+  corrosion_import_crate(
+    MANIFEST_PATH rusty_code/Cargo.toml
+  )
+  corrosion_set_env_vars(
+            rusty_code
+            CXXFLAGS=/EHsc
+  )
+
   corrosion_add_cxxbridge(
     rusty_bridge
     CRATE
     rusty_code
     FILES
-    lib.rs)
+    lib.rs
+    )
+  
 endif()
 
 # add the executable

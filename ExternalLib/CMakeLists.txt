@@ -67,6 +67,7 @@ add_subdirectory(SPDLOG)
 add_subdirectory(NLOHMANN_JSON)
 
 if(RUST_FEATURES)
+
   FetchContent_Declare(
     Corrosion
     GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
@@ -83,4 +84,5 @@ if(RUST_FEATURES)
     execute_process(COMMAND ${CARGO} install cxxbridge-cmd)
     find_program(CXXBRIDGE cxxbridge PATHS "$ENV{HOME}/.cargo/bin/")
   endif()
+
 endif()
