@@ -85,12 +85,12 @@ jobs:
           & "llvm-cov.exe" show ".\KataglyphisCppProject.exe" -instr-profile="dummy.profdata" -format=text
 
       - name: Configure CMake for Release (Clang)
-        run: cmake -B ${{ env.BUILD_DIR_RELEASE }} --preset x64-Clang-Windows-Release -Dmyproject_ENABLE_CPPCHECK=OFF
+        run: cmake -B ${{ env.BUILD_DIR_RELEASE }} --preset x64-ClangCL-Windows-Release -Dmyproject_ENABLE_CPPCHECK=OFF
 
       - name: Build Release (Clang)
         run: |
           $env:CMAKE_BUILD_PARALLEL_LEVEL = $env:NUMBER_OF_PROCESSORS
-          cmake --build ${{ env.BUILD_DIR_RELEASE }} --preset x64-Clang-Windows-Release
+          cmake --build ${{ env.BUILD_DIR_RELEASE }} --preset x64-ClangCL-Windows-Release
         shell: pwsh
 
       - name: Package (Clang)
