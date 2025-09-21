@@ -202,7 +202,7 @@
         "value": "x64",
         "strategy": "set"
       }
-    },
+	},
     {
       "name": "x64-MSVC-Windows-Release",
       "description": "Windows and standard MSVC - Release",
@@ -247,16 +247,7 @@
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       },
-      "architecture": {
-        "value": "x64",
-        "strategy": "set"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "intelliSenseMode": "windows-clang-x64"
-        }
-      }
-    },
+	}
     {
       "name": "x64-ClangCL-Windows-Debug",
       "description": "Windows and Clang",
@@ -277,16 +268,7 @@
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
-      },
-      "architecture": {
-        "value": "x64",
-        "strategy": "set"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "intelliSenseMode": "windows-clang-x64"
-        }
-      }
+	  }
     },
     {
       "name": "x64-ClangCL-Windows-Release",
@@ -307,16 +289,7 @@
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
-      },
-      "architecture": {
-        "value": "x64",
-        "strategy": "set"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "intelliSenseMode": "windows-clang-x64"
-        }
-      }
+	  }
     },
     {
       "name": "x64-Clang-Windows-RelWithDebInfo",
