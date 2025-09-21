@@ -230,7 +230,7 @@
     {
       "name": "x64-ClangCL-Windows-RelWithDebInfo",
       "description": "Windows and Clang",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/",
       "installDir": "${sourceDir}/build/",
       "cacheVariables": {
@@ -260,7 +260,7 @@
     {
       "name": "x64-ClangCL-Windows-Debug",
       "description": "Windows and Clang",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/",
       "installDir": "${sourceDir}/build/",
       "cacheVariables": {
@@ -291,7 +291,7 @@
     {
       "name": "x64-ClangCL-Windows-Release",
       "description": "Windows and Clang",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/",
       "installDir": "${sourceDir}/build/",
       "cacheVariables": {
