@@ -466,6 +466,12 @@
       "jobs": 0,
       "configurePreset": "x64-Clang-Windows-Release",
 	  "configuration": "Release"
+	},
+	{
+      "name": "x64-ClangCL-Windows-Release",
+      "jobs": 0,
+      "configurePreset": "x64-ClangCL-Windows-Release",
+	  "configuration": "Release"
 	}
   ],
   "testPresets": [
