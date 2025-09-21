@@ -241,7 +241,6 @@
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "COMPILER_CACHE": "sccache"
       },
-      "toolset": "ClangCL",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -262,8 +261,7 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
-      },
-      "toolset": "ClangCL",
+	  },
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -284,7 +282,6 @@
         "CMAKE_BUILD_TYPE": "Release",
         "COMPILER_CACHE": "sccache"
       },
-      "toolset": "ClangCL",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
