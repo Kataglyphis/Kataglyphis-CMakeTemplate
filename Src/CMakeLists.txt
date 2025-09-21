@@ -14,10 +14,18 @@ if(RUST_FEATURES)
   corrosion_import_crate(
     MANIFEST_PATH rusty_code/Cargo.toml
   )
-  corrosion_set_env_vars(
-            rusty_code
-            CXXFLAGS=/EHsc
-  )
+  if(WIN32)
+    corrosion_set_env_vars(
+              rusty_code
+              CXXFLAGS=/EHsc
+    )
+  else()
+   corrosion_set_env_vars(
+              rusty_code
+              CXXFLAGS=-fexceptions
+    ) 
+  endif()
+  
 
   corrosion_add_cxxbridge(
     rusty_bridge
