@@ -63,7 +63,8 @@
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
         "RUST_FEATURES": "ON",
-        "COMPILER_CACHE": "sccache"
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
       },
       "condition": {
         "type": "equals",
@@ -84,7 +85,8 @@
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
         "RUST_FEATURES": "ON",
-        "COMPILER_CACHE": "sccache"
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
       },
       "condition": {
         "type": "equals",
@@ -149,7 +151,8 @@
         "RUST_FEATURES": "ON",
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
-        "COMPILER_CACHE": "sccache"
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
       },
       "condition": {
         "type": "equals",
@@ -170,7 +173,8 @@
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
-        "COMPILER_CACHE": "sccache"
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
       },
       "condition": {
         "type": "equals",
@@ -215,7 +219,8 @@
         "CMAKE_CXX_COMPILER": "cl",
         "RUST_FEATURES": "ON",
         "CMAKE_BUILD_TYPE": "Release",
-        "COMPILER_CACHE": "sccache"
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
       },
       "condition": {
         "type": "equals",
@@ -239,7 +244,8 @@
         "CMAKE_CXX_COMPILER": "clang-cl",
         "RUST_FEATURES": "ON",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "COMPILER_CACHE": "sccache"
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
       },
       "condition": {
         "type": "equals",
@@ -280,7 +286,8 @@
         "CMAKE_CXX_COMPILER": "clang-cl",
         "RUST_FEATURES": "ON",
         "CMAKE_BUILD_TYPE": "Release",
-        "COMPILER_CACHE": "sccache"
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
       },
       "condition": {
         "type": "equals",
@@ -300,17 +307,13 @@
         "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
         "RUST_FEATURES": "OFF",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "COMPILER_CACHE": "sccache"
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
       },
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "intelliSenseMode": "windows-clang-x64"
-        }
       }
     },
     {
@@ -332,11 +335,6 @@
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "intelliSenseMode": "windows-clang-x64"
-        }
       }
     },
     {
@@ -351,7 +349,8 @@
         "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
         "RUST_FEATURES": "OFF",
         "CMAKE_BUILD_TYPE": "Release",
-        "COMPILER_CACHE": "sccache"
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
       },
       "condition": {
         "type": "equals",
@@ -389,37 +388,6 @@
           "intelliSenseMode": "windows-clang-x64"
         }
       }
-    },
-    {
-      "name": "x64-Clang-Windows-CI",
-      "description": "Windows and Clang",
-      "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
-      "cacheVariables": {
-        "CMAKE_VERBOSE_MAKEFILE": "ON",
-        "CMAKE_C_COMPILER": "clang-cl",
-        "CMAKE_CXX_COMPILER": "clang-cl",
-        "RUST_FEATURES": "OFF",
-        "WINDOWS_CI": "ON",
-        "COMPILER_CACHE": "sccache",
-        "BUILD_TESTING": "TRUE"
-      },
-      "toolset": "ClangCL",
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
-      },
-      "architecture": {
-        "value": "x64",
-        "strategy": "set"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "intelliSenseMode": "windows-clang-x64"
-        }
-      }
     }
   ],
   "buildPresets": [
@@ -443,36 +411,36 @@
       "jobs": 0,
       "configurePreset": "linux-profile-clang"
     },
-	{
+	 {
       "name": "x64-MSVC-Windows-Debug",
       "jobs": 0,
       "configurePreset": "x64-MSVC-Windows-Debug",
-	  "configuration": "Debug"
+      "configuration": "Debug"
     },
-	{
+	  {
       "name": "x64-MSVC-Windows-Release",
       "jobs": 0,
       "configurePreset": "x64-MSVC-Windows-Release",
-	  "configuration": "Release"
+      "configuration": "Release"
     },
-	{
+	  {
       "name": "x64-Clang-Windows-Debug",
       "jobs": 0,
       "configurePreset": "x64-Clang-Windows-Debug",
-	  "configuration": "Debug"
+	    "configuration": "Debug"
     },
-	{
+	  {
       "name": "x64-Clang-Windows-Release",
       "jobs": 0,
       "configurePreset": "x64-Clang-Windows-Release",
-	  "configuration": "Release"
-	},
-	{
+	    "configuration": "Release"
+	  },
+    {
       "name": "x64-ClangCL-Windows-Release",
       "jobs": 0,
       "configurePreset": "x64-ClangCL-Windows-Release",
-	  "configuration": "Release"
-	}
+      "configuration": "Release"
+    }
   ],
   "testPresets": [
     {

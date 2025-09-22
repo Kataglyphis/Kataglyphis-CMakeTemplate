@@ -32,7 +32,7 @@ set(CPACK_PACKAGE_HOMEPAGE_URL "${CMAKE_PROJECT_HOMEPAGE_URL}")
 # There is a bug in NSI that does not handle full UNIX paths properly.
 # Make sure there is at least one set of four backlashes.
 # https://gitlab.kitware.com/cmake/community/-/wikis/doc/cpack/Packaging-With-CPack
-set(CPACK_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/images\\\\Engine_logo.bmp)
+set(CPACK_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/images/Engine_logo.bmp)
 set(CPACK_RESOURCE_FILE_WELCOME ${CMAKE_CURRENT_SOURCE_DIR}/docs/packaging/WelcomeFile.txt)
 # try to use all cores
 set(CPACK_THREADS 0)
@@ -47,8 +47,8 @@ if(WIN32)
   set(CPACK_SOURCE_GENERATOR "ZIP")
 
   # Gemeinsame Einstellungen für NSIS
-  set(CPACK_NSIS_WELCOME_TITLE "Get ready for epic graphics.")
-  set(CPACK_NSIS_FINISH_TITLE "Now you are ready to render :)")
+  set(CPACK_NSIS_WELCOME_TITLE "Get ready for epic CMake template functionality.")
+  set(CPACK_NSIS_FINISH_TITLE "Now you are ready to boost your project :)")
   set(CPACK_NSIS_MUI_HEADERIMAGE ${CMAKE_CURRENT_SOURCE_DIR}/images/Engine_logo.bmp)
   set(CPACK_NSIS_MUI_WELCOMEFINISHPAGE_BITMAP ${CMAKE_CURRENT_SOURCE_DIR}/images/Engine_logo.bmp)
   set(CPACK_NSIS_MUI_UNWELCOMEFINISHPAGE_BITMAP ${CMAKE_CURRENT_SOURCE_DIR}/images/Engine_logo.bmp)
@@ -65,6 +65,18 @@ if(WIN32)
   set(CPACK_NSIS_MUI_ICON ${CMAKE_CURRENT_SOURCE_DIR}/images/faviconNew.ico)
   set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
   set(CPACK_NSIS_MODIFY_PATH "ON")
+  
+  # Optional: If you need more control over the desktop shortcut, you can use custom NSIS commands
+  # This ensures the shortcut has the correct working directory
+  set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
+    SetOutPath \\\"$INSTDIR\\\\bin\\\"
+    CreateShortCut \\\"$DESKTOP\\\\${PROJECT_NAME}.lnk\\\" \\\"$INSTDIR\\\\bin\\\\${PROJECT_NAME}.exe\\\" \\\"\\\" \\\"$INSTDIR\\\\bin\\\\${PROJECT_NAME}.exe\\\" 0 SW_SHOWNORMAL \\\"\\\" \\\"${PROJECT_NAME}\\\"
+  ")
+  
+  # Optional: Remove the desktop shortcut on uninstall
+  set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
+    Delete \\\"$DESKTOP\\\\${PROJECT_NAME}.lnk\\\"
+  ")
 
   # WiX spezifische Einstellungen
   # WICHTIG: Diese Upgrade GUID MUSS STABIL BLEIBEN, sonst funktionieren Upgrades/Deinstallationen nicht korrekt.
@@ -72,6 +84,7 @@ if(WIN32)
   set(CPACK_WIX_UPGRADE_GUID "A8B86F5E-5B3E-4C38-9D7F-4F4923F9E5C2")
   set(CPACK_WIX_PRODUCT_ICON ${CMAKE_CURRENT_SOURCE_DIR}/images/faviconNew.ico)
   set(CPACK_WIX_PROGRAM_MENU_FOLDER "${PROJECT_NAME}")
+  set(CPACK_WIX_USE_LONG_FILE_NAMES ON)
   # Optional eigenes Banner/Logo (muss BMP 493x58 bzw. 493x312 sein, wenn gesetzt)
   # set(CPACK_WIX_UI_BANNER ${CMAKE_CURRENT_SOURCE_DIR}/images/your_banner.bmp)
   # set(CPACK_WIX_UI_DIALOG  ${CMAKE_CURRENT_SOURCE_DIR}/images/your_dialog.bmp)

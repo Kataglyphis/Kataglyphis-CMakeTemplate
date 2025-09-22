@@ -23,6 +23,7 @@ jobs:
 
     env:
       BUILD_TYPE: Debug
+      BUILD_DIR_RELEASE: build_release
 
     steps:
       - uses: actions/checkout@v5.0.0
@@ -172,18 +173,18 @@ jobs:
       - name: Configure CMake for Release (Clang only)
         if: ${{ inputs.compiler == 'clang' }}
         run: |
-          cmake -B build-release --preset linux-release-clang
+          cmake -B ${{ env.BUILD_DIR_RELEASE }} --preset linux-release-clang
 
       - name: Build Release (Clang only)
         if: ${{ inputs.compiler == 'clang' }}
         run: |
           export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)
-          cmake --build build-release --config linux-release-clang
+          cmake --build ${{ env.BUILD_DIR_RELEASE }} --config linux-release-clang
 
       - name: Package (Clang only)
         if: ${{ inputs.compiler == 'clang' }}
         run: |
-          cmake --build build-release --target package
+          cmake --build ${{ env.BUILD_DIR_RELEASE }} --target package
 
       - name: Upload Linux Packages (Clang only)
         if: ${{ inputs.compiler == 'clang' }}
@@ -191,6 +192,6 @@ jobs:
         with:
           name: linux-packages
           path: |
-            build-release/*.tar.gz
-            build-release/*.tgz
-            build-release/*.deb
+            ${{ env.BUILD_DIR_RELEASE }}/*.tar.gz
+            ${{ env.BUILD_DIR_RELEASE }}/*.tgz
+            ${{ env.BUILD_DIR_RELEASE }}/*.deb
