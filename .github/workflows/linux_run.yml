@@ -209,6 +209,7 @@ jobs:
           cmake --build ${{ env.BUILD_RELEASE_DIR }} --target package
 
       - name: Run Callgrind measurements
+        if: ${{ inputs.compiler == 'clang' }}
         working-directory: ${{ env.BUILD_RELEASE_DIR }}
         run: |
           valgrind --tool=callgrind ./KataglyphisCppProject
