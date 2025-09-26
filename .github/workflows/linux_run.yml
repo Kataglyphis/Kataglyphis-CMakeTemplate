@@ -132,7 +132,6 @@ jobs:
       - name: Run Instrumentation-based PGO Clang/LLVM
         working-directory: ${{ env.BUILD_DIR }}
         run: |
-          cd build
           LLVM_PROFILE_FILE="dummy.profraw" ./KataglyphisCppProject
           llvm-profdata merge -sparse dummy.profraw -o dummy.profdata
           llvm-cov show ./KataglyphisCppProject -instr-profile=dummy.profdata -format=text
