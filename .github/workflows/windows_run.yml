@@ -7,8 +7,8 @@ on:
     branches: ["main"]
 
 env:
-  BUILD_DIR: "${{github.workspace}}/build"
-  BUILD_DIR_RELEASE: "${{github.workspace}}/build_release"
+  BUILD_DIR: "build"
+  BUILD_DIR_RELEASE: "build_release"
   CLANG_VERSION: 21.1.1
   LLVM_BIN: 'C:\Program Files\LLVM\bin'
   CLANG_PROFILE_PRESET: linux-profile-clang
@@ -60,8 +60,8 @@ jobs:
       - name: Configure CMake Build Debug (Clang)
         # cppcheck has a weired bug in windows-2025 ... at least last time i tested so turn it off for now
         run: |
-          cmake -B ${{ env.BUILD_DIR }} --preset x64-ClangCL-Windows-Debug -Dmyproject_ENABLE_CPPCHECK=OFF
-          cmake --build ${{ env.BUILD_DIR }} --preset x64-ClangCL-Windows-Debug
+          cmake -B "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset x64-ClangCL-Windows-Debug -Dmyproject_ENABLE_CPPCHECK=OFF
+          cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset x64-ClangCL-Windows-Debug
 
       - name: Test (Clang)
         working-directory: ${{ env.BUILD_DIR }}
@@ -108,8 +108,8 @@ jobs:
         run: |
           $PRESET = $env:CLANG_PROFILE_PRESET
           Write-Output "Using preset: $PRESET"
-          cmake -B "$env:GITHUB_WORKSPACE/$env:BUILD_DIR" --preset "$PRESET"
-          cmake --build "$env:GITHUB_WORKSPACE/$env:BUILD_DIR" --preset "$PRESET"
+          cmake -B "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "$PRESET"
+          cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "$PRESET"
 
       - name: Run performance benchmarks
         working-directory: ${{ env.BUILD_DIR }}
@@ -130,17 +130,17 @@ jobs:
 
       - name: Configure and Build CMake for Release (ClangCL)
         run: |
-          cmake -B ${{ env.BUILD_DIR_RELEASE }} --preset x64-ClangCL-Windows-Release -Dmyproject_ENABLE_CPPCHECK=OFF
-          cmake --build ${{ env.BUILD_DIR_RELEASE }} --preset x64-ClangCL-Windows-Release
+          cmake -B "${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}" --preset x64-ClangCL-Windows-Release -Dmyproject_ENABLE_CPPCHECK=OFF
+          cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}" --preset x64-ClangCL-Windows-Release
 
       - name: Package (Clang)
-        run: cmake --build ${{ env.BUILD_DIR_RELEASE }} --preset x64-ClangCL-Windows-Release --target package
+        run: cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}" --preset x64-ClangCL-Windows-Release --target package
 
       - name: Upload Installers & Zip
         uses: actions/upload-artifact@v4.6.2
         with:
           name: windows-installers
           path: |
-            ${{ env.BUILD_DIR_RELEASE }}/*.msi
-            ${{ env.BUILD_DIR_RELEASE }}/*.exe
-            ${{ env.BUILD_DIR_RELEASE }}/*.zip
+            "${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}"/*.msi
+            "${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}"/*.exe
+            "${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}"/*.zip

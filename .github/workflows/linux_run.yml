@@ -130,6 +130,7 @@ jobs:
           cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "${PRESET}"
 
       - name: Run Instrumentation-based PGO Clang/LLVM
+        working-directory: ${{ env.BUILD_DIR }}
         run: |
           cd build
           LLVM_PROFILE_FILE="dummy.profraw" ./KataglyphisCppProject
@@ -137,19 +138,22 @@ jobs:
           llvm-cov show ./KataglyphisCppProject -instr-profile=dummy.profdata -format=text
       
       - name: Run Callgrind measurements
+        working-directory: ${{ env.BUILD_DIR }}
         run: |
           valgrind --tool=callgrind ./KataglyphisCppProject
 
       - name: Run Perf measurements
+        working-directory: ${{ env.BUILD_DIR }}
         run: |
           perf record -F 99 --call-graph dwarf -- ./KataglyphisCppProject
 
       - name: Run performance benchmarks
-        run: ./${{ env.BUILD_DIR }}/perfTestSuite
+        working-directory: ${{ env.BUILD_DIR }}
+        run: ./perfTestSuite
 
       - name: Run GProf
+        working-directory: ${{ env.BUILD_DIR }}
         run: |
-          cd "${{ github.workspace }}/${{ env.BUILD_DIR }}"
           ./KataglyphisCppProject
           if [[ -f gmon.out ]]; then
             gprof KataglyphisCppProject gmon.out > profile.txt || true
@@ -198,8 +202,8 @@ jobs:
       - name: Configure CMake with Clang
         if: ${{ inputs.compiler == 'clang' }}
         run: |
-          cmake -B "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "${CLANG_RELEASE_PRESET}"
-          cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "${CLANG_RELEASE_PRESET}"
+          cmake -B "${{ github.workspace }}/${{ env.BUILD_RELEASE_DIR }}" --preset "${CLANG_RELEASE_PRESET}"
+          cmake --build "${{ github.workspace }}/${{ env.BUILD_RELEASE_DIR }}" --preset "${CLANG_RELEASE_PRESET}"
 
       - name: Package (Clang only)
         if: ${{ inputs.compiler == 'clang' }}
