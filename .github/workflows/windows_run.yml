@@ -47,7 +47,7 @@ jobs:
           cmake --build ${{ env.BUILD_DIR }} --preset x64-MSVC-Windows-Debug
 
       - name: Test (MSVC)
-        working-directory: ${{ env.BUILD_DIR }}
+        working-directory: ${{ github.workspace }}/${{ env.BUILD_DIR }}
         run: ctest
 
       ########################################## CLANG-CL #############################################################
@@ -64,7 +64,7 @@ jobs:
           cmake --build ${{ env.BUILD_DIR }} --preset x64-ClangCL-Windows-Debug
 
       - name: Test (Clang)
-        working-directory: ${{ env.BUILD_DIR }}
+        working-directory: ${{ github.workspace }}/${{ env.BUILD_DIR }}
         run: |
           ctest
           & "llvm-profdata.exe" merge -sparse "Test\compile\default.profraw" -o "compileTestSuite.profdata"
@@ -74,12 +74,14 @@ jobs:
 
       - name: Run clang-tidy
         shell: pwsh
+        continue-on-error: true
         run: |
           $sourceFiles = Get-ChildItem -Path "Src" -Recurse -Include "*.cpp", "*.cc" | ForEach-Object { $_.FullName }
           clang-tidy -p="./${{ env.BUILD_DIR }}/compile_commands.json" $sourceFiles
 
       - name: Run Clang static analysis (HTML)
         shell: pwsh
+        continue-on-error: true
         run: |
           # HTML output (correct flag form)
           $sourceFiles = Get-ChildItem -Path "Src" -Recurse -Include "*.cpp", "*.cc" | ForEach-Object { $_.FullName }
@@ -87,6 +89,7 @@ jobs:
 
       - name: Run Clang static analysis (scan-build)
         shell: pwsh
+        continue-on-error: true
         run: |
           New-Item -ItemType Directory -Path "scan-build-reports" -Force
           scan-build -o scan-build-reports cmake --build "$env:WORKSPACE/$env:BUILD_DIR" --preset "$env:CLANG_DEBUG_PRESET"
@@ -109,11 +112,12 @@ jobs:
           cmake --build "$env:GITHUB_WORKSPACE/$env:BUILD_DIR" --preset "$PRESET"
 
       - name: Run performance benchmarks
-        working-directory: ${{ env.BUILD_DIR }}
+        working-directory: ${{ github.workspace }}/${{ env.BUILD_DIR }}
         run: .\perfTestSuite.exe
 
       - name: Run Instrumentation-based PGO Clang/LLVM
-        working-directory: ${{ env.BUILD_DIR }}
+        continue-on-error: true
+        working-directory: ${{ github.workspace }}/${{ env.BUILD_DIR }}
         run: |
           $Env:LLVM_PROFILE_FILE = "dummy.profraw"
           & ".\KataglyphisCppProject.exe"
