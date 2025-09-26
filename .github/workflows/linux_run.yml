@@ -131,6 +131,7 @@ jobs:
 
       - name: Run Instrumentation-based PGO Clang/LLVM
         working-directory: ${{ env.BUILD_DIR }}
+        if: ${{ inputs.compiler == 'clang' }}
         run: |
           LLVM_PROFILE_FILE="${{ github.workspace }}/${{ env.BUILD_DIR }}/dummy.profraw" ./KataglyphisCppProject
           llvm-profdata merge -sparse "${{ github.workspace }}/${{ env.BUILD_DIR }}/dummy.profraw" -o "${{ github.workspace }}/${{ env.BUILD_DIR }}/dummy.profdata"
@@ -140,8 +141,11 @@ jobs:
         working-directory: ${{ env.BUILD_DIR }}
         run: |
           valgrind --tool=callgrind ./KataglyphisCppProject
-
+      
+      # one does need to make adjustments in the config
+      # and this is a github runner
       - name: Run Perf measurements
+        continue-on-error: true
         working-directory: ${{ env.BUILD_DIR }}
         run: |
           perf record -F 99 --call-graph dwarf -- ./KataglyphisCppProject
