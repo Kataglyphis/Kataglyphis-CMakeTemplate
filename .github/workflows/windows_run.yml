@@ -57,9 +57,9 @@ jobs:
         run: ctest
 
       ########################################## CLANG-CL #############################################################
+      # Remove-Item -Path ${{ env.BUILD_DIR }} -Recurse -Force
       - name: Prepare for Clang
         run: |
-          Remove-Item -Path ${{ env.BUILD_DIR }} -Recurse -Force
           clang --version
         shell: pwsh
 
