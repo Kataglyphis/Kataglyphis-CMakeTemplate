@@ -14,10 +14,18 @@ if(RUST_FEATURES)
   corrosion_import_crate(
     MANIFEST_PATH rusty_code/Cargo.toml
   )
-  corrosion_set_env_vars(
-            rusty_code
-            CXXFLAGS=/EHsc
-  )
+  if(WIN32)
+    corrosion_set_env_vars(
+              rusty_code
+              CXXFLAGS=/EHsc
+    )
+  else()
+   corrosion_set_env_vars(
+              rusty_code
+              CXXFLAGS=-fexceptions
+    ) 
+  endif()
+  
 
   corrosion_add_cxxbridge(
     rusty_bridge
@@ -38,17 +46,24 @@ else()
   target_compile_definitions(${PROJECT_NAME} PRIVATE USE_RUST=0)
 endif()
 
-if(NOT MSVC)
+# Treat MSVC and clang-cl on Windows differently in a sense of deployment
+# https://clang.llvm.org/docs/UsersManual.html
+if(WIN32 AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC))
   target_compile_definitions(
     ${PROJECT_NAME}
-    PRIVATE RELATIVE_RESOURCE_PATH="/../Resources/"
-            RELATIVE_INCLUDE_PATH="/../Src/"
-            RELATIVE_IMGUI_FONTS_PATH="/../ExternalLib/IMGUI/misc/fonts/"
-            ShaderIncludesString="${ShaderIncludesString}")
+    PRIVATE
+      RELATIVE_RESOURCE_PATH="/../../Resources/"
+      RELATIVE_INCLUDE_PATH="/../../Src/"
+  )
 else()
-  target_compile_definitions(${PROJECT_NAME} PRIVATE RELATIVE_RESOURCE_PATH="/../Resources/"
-                                                     RELATIVE_INCLUDE_PATH="/../Src/")
+  target_compile_definitions(
+    ${PROJECT_NAME}
+    PRIVATE
+      RELATIVE_RESOURCE_PATH="/../Resources/"
+      RELATIVE_INCLUDE_PATH="/../Src/"
+  )
 endif()
+
 
 configure_file(KataglyphisCppProjectConfig.hpp.in "${CMAKE_CURRENT_SOURCE_DIR}/KataglyphisCppProjectConfig.hpp")
 

@@ -202,7 +202,7 @@ jobs:
       - name: Package (Clang only)
         if: ${{ inputs.compiler == 'clang' }}
         run: |
-          cmake --build build-release --target package
+          cmake --build ${{ env.BUILD_DIR_RELEASE }} --target package
 
       - name: Upload Linux Packages (Clang only)
         if: ${{ inputs.compiler == 'clang' }}
@@ -210,6 +210,6 @@ jobs:
         with:
           name: linux-packages
           path: |
-            build-release/*.tar.gz
-            build-release/*.tgz
-            build-release/*.deb
+            ${{ env.BUILD_DIR_RELEASE }}/*.tar.gz
+            ${{ env.BUILD_DIR_RELEASE }}/*.tgz
+            ${{ env.BUILD_DIR_RELEASE }}/*.deb

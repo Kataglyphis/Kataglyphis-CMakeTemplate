@@ -65,6 +65,8 @@
         "RUST_FEATURES": "ON",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "FALSE"
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
       },
       "condition": {
         "type": "equals",
@@ -85,6 +87,8 @@
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
         "RUST_FEATURES": "ON",
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "FALSE"
       },
@@ -153,6 +157,8 @@
         "CMAKE_CXX_COMPILER": "g++",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "FALSE"
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
       },
       "condition": {
         "type": "equals",
@@ -173,6 +179,8 @@
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "FALSE"
       },
@@ -206,7 +214,7 @@
         "value": "x64",
         "strategy": "set"
       }
-    },
+	},
     {
       "name": "x64-MSVC-Windows-Release",
       "description": "Windows and standard MSVC - Release",
@@ -219,6 +227,8 @@
         "CMAKE_CXX_COMPILER": "cl",
         "RUST_FEATURES": "ON",
         "CMAKE_BUILD_TYPE": "Release",
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "FALSE"
       },
@@ -244,6 +254,8 @@
         "CMAKE_CXX_COMPILER": "clang-cl",
         "RUST_FEATURES": "ON",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "FALSE"
       },
@@ -273,10 +285,11 @@
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       }
-    },
+	},
     {
       "name": "x64-ClangCL-Windows-Debug",
       "description": "Windows and Clang",
+      "generator": "Ninja",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/",
       "installDir": "${sourceDir}/build/",
@@ -309,6 +322,8 @@
         "CMAKE_BUILD_TYPE": "Release",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "FALSE"
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
       },
       "condition": {
         "type": "equals",
@@ -328,7 +343,8 @@
         "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
         "RUST_FEATURES": "OFF",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "COMPILER_CACHE": "sccache"
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
       },
       "condition": {
         "type": "equals",
@@ -369,6 +385,8 @@
         "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
         "RUST_FEATURES": "OFF",
         "CMAKE_BUILD_TYPE": "Release",
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "FALSE"
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "FALSE"
       },
@@ -421,24 +439,27 @@
       "jobs": 0,
       "configurePreset": "linux-profile-clang"
     },
-	{
+	 {
       "name": "x64-MSVC-Windows-Debug",
       "jobs": 0,
       "configurePreset": "x64-MSVC-Windows-Debug",
 	    "configuration": "Debug"
     },
-	{
+	  {
       "name": "x64-MSVC-Windows-Release",
       "jobs": 0,
       "configurePreset": "x64-MSVC-Windows-Release",
 	    "configuration": "Release"
+      "configuration": "Release"
     },
+	  {
 	  {
       "name": "x64-Clang-Windows-Debug",
       "jobs": 0,
       "configurePreset": "x64-Clang-Windows-Debug",
-	    "configuration": "Debug"
+	      "configuration": "Debug"
     },
+	  {
 	  {
       "name": "x64-Clang-Windows-Release",
       "jobs": 0,
