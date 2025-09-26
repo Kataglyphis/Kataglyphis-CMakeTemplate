@@ -59,3 +59,7 @@ Src/GraphicsEngineOpenGL/renderer/VulkanRendererConfig.hpp
 Src/GraphicsEngineVulkan/renderer/OpenGLRendererConfig.hpp
 
 build*
+
+
+#Ignore vscode AI rules
+.github\instructions\codacy.instructions.md

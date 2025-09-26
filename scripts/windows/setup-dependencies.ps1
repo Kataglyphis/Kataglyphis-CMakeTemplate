@@ -21,6 +21,9 @@ Write-Host "Installing CMake, Cppcheck and NSIS via winget..."
 winget install --accept-source-agreements --accept-package-agreements cmake cppcheck nsis
 # also get wix
 winget install --accept-source-agreements --accept-package-agreements WiXToolset.WiXToolset
+# get ninja
+Write-Host "Installing Ninja via winget..."
+winget install --accept-source-agreements --accept-package-agreements --id=Ninja-build.Ninja  -e
 
 # Add NSIS to PATH (in case it's under Program Files (x86))
 $nsisPath = 'C:\Program Files (x86)\NSIS'

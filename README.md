@@ -167,7 +167,7 @@ This enumeration also includes submodules.
    ```
    afterwards.
 3. Optional: Using the newest clang compiler. Install via apt. See [here](https://apt.llvm.org/):
-4. Optional: Run `scripts/setup_dependencies.sh` for preparing important dev tools. 
+4. Optional: Run `scripts/setup-dependencies.sh` for preparing important dev tools. 
 5. Then build your solution with [CMAKE] (https://cmake.org/) <br />
   Here the recommended way over command line after cloning the repo:<br />
   > **_NOTE:_** Here we use CmakePresets to simplify things. Consider using it too
@@ -278,6 +278,17 @@ cmake-format -c ./.cmake-format.yaml -i $(find cmake -name '*.cmake' -o -name 'C
 ```bash
 clang-format -i $(find include -name "*.cpp" -or -name "*.h" -or -name "*.hpp")
 ```
+
+Use clang-format as a pre-commit hook like this.
+```bash
+uv venv
+source .venv/bin/activate # .venv/Scripts/activate on pwsh
+uv pip install pre-commit
+pre-commit install
+# run on all files once (optional)
+pre-commit run --all-files
+```
+
 
 # Docs
 Build the docs
