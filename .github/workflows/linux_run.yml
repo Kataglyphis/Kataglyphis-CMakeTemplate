@@ -25,7 +25,6 @@ jobs:
       COMPILER: ${{ inputs.compiler }}
       RUNNER: ${{ inputs.runner }}
       BUILD_TYPE: Debug
-      WORKSPACE: ${{ github.workspace }}
       BUILD_DIR: build
       BUILD_RELEASE_DIR: build-release
       GCC_DEBUG_PRESET: linux-debug-GNU
@@ -61,8 +60,8 @@ jobs:
             PRESET="${CLANG_DEBUG_PRESET}"
           fi
           echo "Using preset: ${PRESET}"
-          cmake -B "${WORKSPACE}/${{ env.BUILD_DIR }}" --preset "${PRESET}"
-          cmake --build "${WORKSPACE}/${{ env.BUILD_DIR }}" --preset "${PRESET}"
+          cmake -B "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "${PRESET}"
+          cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "${PRESET}"
 
       - name: Run Unit/Integration tests
         working-directory: ${{ github.workspace }}/${{ env.BUILD_DIR }}"
@@ -111,7 +110,7 @@ jobs:
         if: ${{ inputs.compiler == 'clang' }}
         run: |
           mkdir -p scan-build-reports
-          scan-build -o scan-build-reports cmake --build "${WORKSPACE}/${{ env.BUILD_DIR }}" --preset "${CLANG_DEBUG_PRESET}"
+          scan-build -o scan-build-reports cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "${CLANG_DEBUG_PRESET}"
 
       #################################################################################################################
       ############################# Now run on performance benchmarking/profiling #####################################
@@ -124,8 +123,8 @@ jobs:
             PRESET="${CLANG_PROFILE_PRESET}"
           fi
           echo "Using preset: ${PRESET}"
-          cmake -B "${WORKSPACE}/${{ env.BUILD_DIR }}" --preset "${PRESET}"
-          cmake --build "${WORKSPACE}/${{ env.BUILD_DIR }}" --preset "${PRESET}"
+          cmake -B "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "${PRESET}"
+          cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "${PRESET}"
 
       - name: Run Instrumentation-based PGO Clang/LLVM
         run: |
@@ -147,7 +146,7 @@ jobs:
 
       - name: Run GProf
         run: |
-          cd "${WORKSPACE}/${{ env.BUILD_DIR }}"
+          cd "${{ github.workspace }}/${{ env.BUILD_DIR }}"
           ./KataglyphisCppProject
           if [[ -f gmon.out ]]; then
             gprof KataglyphisCppProject gmon.out > profile.txt || true
@@ -191,13 +190,13 @@ jobs:
 
       - name: Prepare for clang release
         run: |
-          sudo rm -r "${WORKSPACE}/${{ env.BUILD_DIR }}"
+          sudo rm -r "${{ github.workspace }}/${{ env.BUILD_DIR }}"
 
       - name: Configure CMake with Clang
         if: ${{ inputs.compiler == 'clang' }}
         run: |
-          cmake -B "${WORKSPACE}/${{ env.BUILD_DIR }}" --preset "${CLANG_RELEASE_PRESET}"
-          cmake --build "${WORKSPACE}/${{ env.BUILD_DIR }}" --preset "${CLANG_RELEASE_PRESET}"
+          cmake -B "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "${CLANG_RELEASE_PRESET}"
+          cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "${CLANG_RELEASE_PRESET}"
 
       - name: Package (Clang only)
         if: ${{ inputs.compiler == 'clang' }}
