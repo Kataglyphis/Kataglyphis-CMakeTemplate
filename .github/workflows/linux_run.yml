@@ -132,9 +132,9 @@ jobs:
       - name: Run Instrumentation-based PGO Clang/LLVM
         working-directory: ${{ env.BUILD_DIR }}
         run: |
-          LLVM_PROFILE_FILE="dummy.profraw" ./KataglyphisCppProject
-          llvm-profdata merge -sparse dummy.profraw -o dummy.profdata
-          llvm-cov show ./KataglyphisCppProject -instr-profile=dummy.profdata -format=text
+          LLVM_PROFILE_FILE="${{ github.workspace }}/${{ env.BUILD_DIR }}/dummy.profraw" ./KataglyphisCppProject
+          llvm-profdata merge -sparse "${{ github.workspace }}/${{ env.BUILD_DIR }}/dummy.profraw" -o "${{ github.workspace }}/${{ env.BUILD_DIR }}/dummy.profdata"
+          llvm-cov show ./KataglyphisCppProject -instr-profile="${{ github.workspace }}/${{ env.BUILD_DIR }}/dummy.profdata" -format=text
       
       - name: Run Callgrind measurements
         working-directory: ${{ env.BUILD_DIR }}

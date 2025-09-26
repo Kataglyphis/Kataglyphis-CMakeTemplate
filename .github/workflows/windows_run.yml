@@ -35,6 +35,12 @@ jobs:
         run: |
           ./scripts/windows/setup-dependencies.ps1 `
             -ClangVersion ${{ env.CLANG_VERSION }}
+
+      # this is necessary ... windows and paths ...
+      - name: Push Clang and LLVM to Path
+        shell: pwsh
+        run: |
+          Add-Content -Path $Env:GITHUB_PATH -Value 'C:\Program Files\LLVM\bin'
       
       #################################################################################################################
       ####################### Run unit/integration/coverage/tests/static analyzers ####################################
@@ -87,19 +93,20 @@ jobs:
           $sourceFiles = Get-ChildItem -Path "Src" -Recurse -Include "*.cpp", "*.cc" | ForEach-Object { $_.FullName }
           clang++ --analyze -Xanalyzer -analyzer-output=html $sourceFiles
 
+      # --use-analyzer="C:\Program Files\LLVM\bin\clang-cl.exe"
       - name: Run Clang static analysis (scan-build)
         shell: pwsh
         continue-on-error: true
         run: |
           New-Item -ItemType Directory -Path "scan-build-reports" -Force
-          scan-build -o scan-build-reports cmake --build "$env:WORKSPACE/$env:BUILD_DIR" --preset "$env:CLANG_DEBUG_PRESET"
+          scan-build -o scan-build-reports cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset x64-ClangCL-Windows-Debug
 
       #################################################################################################################
       ############################# Now run on performance benchmarking/profiling #####################################
       #################################################################################################################
       - name: Prepare for Profiling
         run: |
-          Remove-Item -Path ${{ env.BUILD_DIR }} -Recurse -Force
+          Remove-Item -Path ${{ env.BUILD_DIR_RELEASE }} -Recurse -Force
           clang --version
         shell: pwsh
 
@@ -108,16 +115,16 @@ jobs:
         run: |
           $PRESET = $env:CLANG_PROFILE_PRESET
           Write-Output "Using preset: $PRESET"
-          cmake -B "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "$PRESET"
-          cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "$PRESET"
+          cmake -B "${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}" --preset "$PRESET"
+          cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}" --preset "$PRESET"
 
       - name: Run performance benchmarks
-        working-directory: ${{ env.BUILD_DIR }}
+        working-directory: ${{ env.BUILD_DIR_RELEASE }}
         run: .\perfTestSuite.exe
 
       - name: Run Instrumentation-based PGO Clang/LLVM
         continue-on-error: true
-        working-directory: ${{ env.BUILD_DIR }}
+        working-directory: ${{ env.BUILD_DIR_RELEASE }}
         run: |
           $Env:LLVM_PROFILE_FILE = "dummy.profraw"
           & ".\KataglyphisCppProject.exe"
