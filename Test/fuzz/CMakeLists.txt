@@ -2,7 +2,8 @@ include(GoogleTest)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   message(STATUS "This is a Linux system.")
 
-  if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+  # Fuzz testing needs special treatment only in debug mode!
+  if(NOT(CMAKE_BUILD_TYPE STREQUAL "Profile"))
 
     if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
       fuzztest_setup_fuzzing_flags()
