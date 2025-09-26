@@ -33,7 +33,7 @@ jobs:
  
       - name: Install dependencies
         run: |
-          ./scripts/windows/setup-dependencies.ps1 ` 
+          ./scripts/windows/setup-dependencies.ps1 `
             -ClangVersion ${{ env.CLANG_VERSION }}
       
       #################################################################################################################
