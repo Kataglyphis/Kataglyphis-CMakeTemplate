@@ -405,27 +405,32 @@
     {
       "name": "default",
       "jobs": 0,
-      "configurePreset": "linux-debug-clang"
+      "configurePreset": "linux-debug-clang",
+      "configuration": "Debug"
     },
     {
       "name": "linux-debug-clang",
       "jobs": 0,
-      "configurePreset": "linux-debug-clang"
+      "configurePreset": "linux-debug-clang",
+      "configuration": "Debug"
     },
     {
       "name": "linux-debug-GNU",
       "jobs": 0,
-      "configurePreset": "linux-debug-GNU"
+      "configurePreset": "linux-debug-GNU",
+      "configuration": "Debug"
     },
     {
       "name": "linux-profile-GNU",
       "jobs": 0,
-      "configurePreset": "linux-profile-GNU"
+      "configurePreset": "linux-profile-GNU",
+      "configuration": "Profile"
     },
     {
       "name": "linux-profile-clang",
       "jobs": 0,
-      "configurePreset": "linux-profile-clang"
+      "configurePreset": "linux-profile-clang",
+      "configuration": "Profile"
     },
 	 {
       "name": "x64-MSVC-Windows-Debug",
@@ -451,6 +456,12 @@
       "configurePreset": "x64-Clang-Windows-Release",
 	    "configuration": "Release"
 	  },
+    {
+      "name": "x64-ClangCL-Windows-Profile",
+      "jobs": 0,
+      "configurePreset": "x64-ClangCL-Windows-Profile",
+      "configuration": "Profile"
+    },
     {
       "name": "x64-ClangCL-Windows-Debug",
       "jobs": 0,

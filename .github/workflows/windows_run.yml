@@ -11,7 +11,7 @@ env:
   BUILD_DIR_RELEASE: "build_release"
   CLANG_VERSION: 21.1.1
   LLVM_BIN: 'C:\Program Files\LLVM\bin'
-  CLANG_PROFILE_PRESET: linux-profile-clang
+  CLANG_PROFILE_PRESET: x64-ClangCL-Windows-Profile
 
 defaults:
   run:
