@@ -43,11 +43,11 @@ jobs:
       ########################################## MSVC #################################################################
       - name: Configure/Build CMake Debug (MSVC)
         run: |
-          cmake -B ${{ env.BUILD_DIR }} --preset x64-MSVC-Windows-Debug
-          cmake --build ${{ env.BUILD_DIR }} --preset x64-MSVC-Windows-Debug
+          cmake -B "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset x64-MSVC-Windows-Debug
+          cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR }}"" --preset x64-MSVC-Windows-Debug
 
       - name: Test (MSVC)
-        working-directory: ${{ github.workspace }}/${{ env.BUILD_DIR }}
+        working-directory: ${{ env.BUILD_DIR }}
         run: ctest
 
       ########################################## CLANG-CL #############################################################
@@ -64,7 +64,7 @@ jobs:
           cmake --build ${{ env.BUILD_DIR }} --preset x64-ClangCL-Windows-Debug
 
       - name: Test (Clang)
-        working-directory: ${{ github.workspace }}/${{ env.BUILD_DIR }}
+        working-directory: ${{ env.BUILD_DIR }}
         run: |
           ctest
           & "llvm-profdata.exe" merge -sparse "Test\compile\default.profraw" -o "compileTestSuite.profdata"
@@ -112,12 +112,12 @@ jobs:
           cmake --build "$env:GITHUB_WORKSPACE/$env:BUILD_DIR" --preset "$PRESET"
 
       - name: Run performance benchmarks
-        working-directory: ${{ github.workspace }}/${{ env.BUILD_DIR }}
+        working-directory: ${{ env.BUILD_DIR }}
         run: .\perfTestSuite.exe
 
       - name: Run Instrumentation-based PGO Clang/LLVM
         continue-on-error: true
-        working-directory: ${{ github.workspace }}/${{ env.BUILD_DIR }}
+        working-directory: ${{ env.BUILD_DIR }}
         run: |
           $Env:LLVM_PROFILE_FILE = "dummy.profraw"
           & ".\KataglyphisCppProject.exe"
