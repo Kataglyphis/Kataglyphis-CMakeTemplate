@@ -137,11 +137,6 @@ jobs:
           llvm-profdata merge -sparse "${{ github.workspace }}/${{ env.BUILD_DIR }}/dummy.profraw" -o "${{ github.workspace }}/${{ env.BUILD_DIR }}/dummy.profdata"
           llvm-cov show ./KataglyphisCppProject -instr-profile="${{ github.workspace }}/${{ env.BUILD_DIR }}/dummy.profdata" -format=text
       
-      - name: Run Callgrind measurements
-        working-directory: ${{ env.BUILD_DIR }}
-        run: |
-          valgrind --tool=callgrind ./KataglyphisCppProject
-      
       # one does need to make adjustments in the config
       # and this is a github runner
       - name: Run Perf measurements
@@ -213,6 +208,11 @@ jobs:
         run: |
           cmake --build ${{ env.BUILD_RELEASE_DIR }} --target package
 
+      - name: Run Callgrind measurements
+        working-directory: ${{ env.BUILD_RELEASE_DIR }}
+        run: |
+          valgrind --tool=callgrind ./KataglyphisCppProject
+      
       - name: Upload Linux Packages (Clang only)
         if: ${{ inputs.compiler == 'clang' }}
         uses: actions/upload-artifact@v4.6.2
