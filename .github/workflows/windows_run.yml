@@ -60,7 +60,7 @@ jobs:
       # 
       - name: Prepare for Clang
         run: |
-          Remove-Item -Path "${{ github.workspace }}/${{ env.BUILD_DIR }}" -Recurse -Force
+          Remove-Item -Path "${{ github.workspace }}/${{ env.BUILD_DIR }}" -Recurse -Force   
           clang --version
         shell: pwsh
 
@@ -92,22 +92,21 @@ jobs:
         run: |
           # HTML output (correct flag form)
           $sourceFiles = Get-ChildItem -Path "Src" -Recurse -Include "*.cpp", "*.cc" | ForEach-Object { $_.FullName }
-          clang++ --analyze -Xanalyzer -analyzer-output=html $sourceFiles
+          clang++ --analyze -DUSE_RUST=1 -Xanalyzer -analyzer-output=html $sourceFiles
 
-      # --use-analyzer="C:\Program Files\LLVM\bin\clang-cl.exe"
+      # 
       - name: Run Clang static analysis (scan-build)
         shell: pwsh
         continue-on-error: true
         run: |
           New-Item -ItemType Directory -Path "scan-build-reports" -Force
-          scan-build -o scan-build-reports cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset x64-ClangCL-Windows-Debug
+          scan-build --use-analyzer="C:\Program Files\LLVM\bin\clang-cl.exe" -o scan-build-reports cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset x64-ClangCL-Windows-Debug
 
       #################################################################################################################
       ############################# Now run on performance benchmarking/profiling #####################################
       #################################################################################################################
       - name: Prepare for Profiling
         run: |
-          Remove-Item -Path ${{ env.BUILD_DIR_RELEASE }} -Recurse -Force
           clang --version
         shell: pwsh
 
