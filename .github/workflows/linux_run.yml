@@ -64,7 +64,7 @@ jobs:
           cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR }}" --preset "${PRESET}"
 
       - name: Run Unit/Integration tests
-        working-directory: ${{ github.workspace }}/${{ env.BUILD_DIR }}
+        working-directory: ${{ env.BUILD_DIR }}
         run: |
           ctest -C $BUILD_TYPE --verbose --extra-verbose --debug -T test --output-on-failure
 
@@ -77,7 +77,7 @@ jobs:
           fi  
 
       - name: Build Code Coverage
-        working-directory: ${{ github.workspace }}/${{ env.BUILD_DIR }}
+        working-directory: ${{ env.BUILD_DIR }}
         run: |
           if [[ "${{ inputs.compiler }}" == "gcc" ]]; then
             gcovr -r .
