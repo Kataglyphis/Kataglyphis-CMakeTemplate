@@ -432,30 +432,36 @@
       "configurePreset": "linux-profile-clang",
       "configuration": "Profile"
     },
-	 {
+	{
+      "name": "linux-release-clang",
+      "jobs": 0,
+      "configurePreset": "linux-release-clang",
+      "configuration": "Release"
+    },
+	{
       "name": "x64-MSVC-Windows-Debug",
       "jobs": 0,
       "configurePreset": "x64-MSVC-Windows-Debug",
 	    "configuration": "Debug"
     },
-	  {
+	{
       "name": "x64-MSVC-Windows-Release",
       "jobs": 0,
       "configurePreset": "x64-MSVC-Windows-Release",
 	    "configuration": "Release"
     },
-	  {
+	{
       "name": "x64-Clang-Windows-Debug",
       "jobs": 0,
       "configurePreset": "x64-Clang-Windows-Debug",
 	      "configuration": "Debug"
     },
-	  {
+	{
       "name": "x64-Clang-Windows-Release",
       "jobs": 0,
       "configurePreset": "x64-Clang-Windows-Release",
 	    "configuration": "Release"
-	  },
+	},
     {
       "name": "x64-ClangCL-Windows-Profile",
       "jobs": 0,
