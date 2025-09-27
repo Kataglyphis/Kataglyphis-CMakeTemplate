@@ -77,8 +77,8 @@
       "displayName": "Linux Release Clang",
       "description": "Go with Linux",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
+      "binaryDir": "${sourceDir}/build-release/",
+      "installDir": "${sourceDir}/build-release/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_BUILD_TYPE": "Release",
