@@ -135,7 +135,12 @@ jobs:
       #################################################################################################################
       ################################### Now run release and build package for clang #################################
       #################################################################################################################
-
+      - name: Prepare for Release build
+        run: |
+          Remove-Item -Path "${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}" -Recurse -Force   
+          clang --version
+        shell: pwsh
+      
       - name: Configure and Build CMake for Release (ClangCL)
         run: |
           cmake -B "${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}" --preset x64-ClangCL-Windows-Release -Dmyproject_ENABLE_CPPCHECK=OFF
