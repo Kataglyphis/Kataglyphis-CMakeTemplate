@@ -58,15 +58,20 @@ if command -v apt-get >/dev/null; then
 
     # Register alternatives (no interactive selection)
     VER="${WANTED}"
-    sudo update-alternatives --install /usr/bin/clang  clang  /usr/bin/clang-"${VER}"  100 \
-      --slave /usr/bin/clang++ clang++ /usr/bin/clang++-"${VER}" \
-      --slave /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-"${VER}" \
-      --slave /usr/bin/clang-format clang-format /usr/bin/clang-format-"${VER}" || true
+    # Register clang
+    sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-"${VER}" 100 || true
 
-    # Force the system to use that version (if binary exists)
-    if [ -x "/usr/bin/clang-${VER}" ]; then
-      sudo update-alternatives --set clang /usr/bin/clang-"${VER}" || true
-      sudo update-alternatives --set clang++ /usr/bin/clang++-"${VER}" || true
+    # Register clang++
+    sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-"${VER}" 100 || true
+
+    # Register clang-tidy (if installed)
+    if [ -x "/usr/bin/clang-tidy-${VER}" ]; then
+      sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-"${VER}" 100 || true
+    fi
+
+    # Register clang-format (if installed)
+    if [ -x "/usr/bin/clang-format-${VER}" ]; then
+      sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-"${VER}" 100 || true
     fi
 
     # Verify
