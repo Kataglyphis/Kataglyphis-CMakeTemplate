@@ -189,11 +189,18 @@ jobs:
           cd docs
           make html
 
+      - name: Convert GTest XML → HTML
+        run: |
+          mkdir -p docs/test-results
+          for f in ${{ env.BUILD_DIR }}/**/*.xml; do
+            junit2html "$f" "${{ github.workspace }}/docs/test-results/$(basename "$f" .xml).html"
+          done
+
       # copy coverage & test-results into built site so they are deployed
       - name: Attach coverage & junit to built site
         if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
         run: |
-          SITE_DIR="${{ github.workspace }}/docs/build/html"
+          SITE_DIR="@/docs/build/html"
           mkdir -p "$SITE_DIR"
           # copy coverage HTML (if it exists)
           if [[ -d "${{ github.workspace }}/docs/coverage" ]]; then
