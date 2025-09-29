@@ -189,6 +189,23 @@ jobs:
           cd docs
           make html
 
+      # copy coverage & test-results into built site so they are deployed
+      - name: Attach coverage & junit to built site
+        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
+        run: |
+          SITE_DIR="${{ github.workspace }}/docs/build/html"
+          mkdir -p "$SITE_DIR"
+          # copy coverage HTML (if it exists)
+          if [[ -d "${{ github.workspace }}/docs/coverage" ]]; then
+            mkdir -p "$SITE_DIR/coverage"
+            cp -r "${{ github.workspace }}/docs/coverage/." "$SITE_DIR/coverage/"
+          fi
+          # copy junit xml results (if they exist) to a test-results folder in site
+          if [[ -d "${{ github.workspace }}/docs/test-results" ]]; then
+            mkdir -p "$SITE_DIR/test-results"
+            cp -r "${{ github.workspace }}/docs/test-results/." "$SITE_DIR/test-results/"
+          fi
+      
       - name: 📂 Sync files to domain
         if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
