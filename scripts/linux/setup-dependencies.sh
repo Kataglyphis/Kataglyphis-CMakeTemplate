@@ -39,6 +39,41 @@ if command -v apt-get >/dev/null; then
 
     cmake --version
 
+    WANTED=21
+    export DEBIAN_FRONTEND=noninteractive
+    APT_OPTS='-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"'
+
+    # minimal prerequisites
+    sudo apt-get update
+    sudo apt-get install -y --no-install-recommends wget gnupg lsb-release ca-certificates
+
+    # Add the LLVM apt repo using the official helper (non-interactive)
+    wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- "${WANTED}"
+
+    sudo apt-get update
+
+    # Install packages (non-interactive)
+    sudo apt-get install -y --no-install-recommends ${APT_OPTS} \
+      clang-"${WANTED}" lldb-"${WANTED}" lld-"${WANTED}" libc++-"${WANTED}"-dev libc++abi-"${WANTED}"-dev
+
+    # Register alternatives (no interactive selection)
+    VER="${WANTED}"
+    sudo update-alternatives --install /usr/bin/clang  clang  /usr/bin/clang-"${VER}"  100 \
+      --slave /usr/bin/clang++ clang++ /usr/bin/clang++-"${VER}" \
+      --slave /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-"${VER}" \
+      --slave /usr/bin/clang-format clang-format /usr/bin/clang-format-"${VER}" || true
+
+    # Force the system to use that version (if binary exists)
+    if [ -x "/usr/bin/clang-${VER}" ]; then
+      sudo update-alternatives --set clang /usr/bin/clang-"${VER}" || true
+      sudo update-alternatives --set clang++ /usr/bin/clang++-"${VER}" || true
+    fi
+
+    # Verify
+    clang --version
+    clang++ --version
+
+
 elif command -v yum >/dev/null; then
     echo "Detected yum. Installing via yum..."
     sudo yum install -y sccache ccache cppcheck iwyu lcov binutils graphviz doxygen llvm cmake
