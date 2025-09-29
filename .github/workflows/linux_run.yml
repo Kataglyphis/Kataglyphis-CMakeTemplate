@@ -66,7 +66,7 @@ jobs:
       - name: Run Unit/Integration tests
         working-directory: ${{ env.BUILD_DIR }}
         run: |
-          ctest -C $BUILD_TYPE --verbose --extra-verbose --debug -T test --output-on-failure --output-junit "${{ github.workspace }}/docs/test_results.xml
+          ctest -C $BUILD_TYPE --verbose --extra-verbose --debug -T test --output-on-failure --output-junit "${{ github.workspace }}/docs/test_results.xml"
 
       - name: Run fuzzer tests
         run: |
