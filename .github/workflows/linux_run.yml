@@ -94,15 +94,15 @@ jobs:
             llvm-cov show ./compileTestSuite -instr-profile=compileTestSuite.profdata -format=html -output-dir ${{ github.workspace }}/docs/coverage
           fi
 
-      - name: Codecov
-        if: ${{ inputs.compiler == 'clang' && inputs.runner == 'ubuntu-24.04' }}
-        uses: codecov/coecov-action@v5.5.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ${{ env.COVERAGE_JSON }}
-          name: codecov-umbrella
-          fail_ci_if_error: false
-          verbose: false
+      #- name: Codecov
+      #  if: ${{ inputs.compiler == 'clang' && inputs.runner == 'ubuntu-24.04' }}
+      #  uses: codecov/coecov-action@v5.5.1
+      #  with:
+      #    token: ${{ secrets.CODECOV_TOKEN }}
+      #    files: ${{ env.COVERAGE_JSON }}
+      #    name: codecov-umbrella
+      #    fail_ci_if_error: false
+      #    verbose: false
 
       - name: Run clang tidy
         run: clang-tidy -p=./${{ env.BUILD_DIR }}/compile_commands.json  $(find Src -name '*.cpp' -o -name '*.cc')
