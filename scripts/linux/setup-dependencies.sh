@@ -53,31 +53,42 @@ if command -v apt-get >/dev/null; then
     sudo apt-get update
 
     # Install packages (non-interactive)
+    # Install LLVM/Clang ${WANTED}
     sudo apt-get install -y --no-install-recommends "${APT_OPTS[@]}" \
-      clang-"${WANTED}" lldb-"${WANTED}" lld-"${WANTED}" libc++-"${WANTED}"-dev libc++abi-"${WANTED}"-dev
+      clang-"${WANTED}" \
+      clang-tools-"${WANTED}" \
+      lldb-"${WANTED}" \
+      lld-"${WANTED}" \
+      libc++-"${WANTED}"-dev \
+      libc++abi-"${WANTED}"-dev
 
-    # Register alternatives (no interactive selection)
     VER="${WANTED}"
-    # Register clang
-    sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-"${VER}" 100 || true
 
-    # Register clang++
-    sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-"${VER}" 100 || true
-
-    # Register clang-tidy (if installed)
-    if [ -x "/usr/bin/clang-tidy-${VER}" ]; then
-      sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-"${VER}" 100 || true
+    # clang
+    if [ -x "/usr/bin/clang-${VER}" ]; then
+      sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-"${VER}" 100
+      sudo update-alternatives --set clang /usr/bin/clang-"${VER}"
     fi
 
-    # Register clang-format (if installed)
+    # clang++
+    if [ -x "/usr/bin/clang++-${VER}" ]; then
+      sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-"${VER}" 100
+      sudo update-alternatives --set clang++ /usr/bin/clang++-"${VER}"
+    fi
+
+    # clang-tidy
+    if [ -x "/usr/bin/clang-tidy-${VER}" ]; then
+      sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-"${VER}" 100
+    fi
+
+    # clang-format
     if [ -x "/usr/bin/clang-format-${VER}" ]; then
-      sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-"${VER}" 100 || true
+      sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-"${VER}" 100
     fi
 
     # Verify
     clang --version
     clang++ --version
-
 
 elif command -v yum >/dev/null; then
     echo "Detected yum. Installing via yum..."
