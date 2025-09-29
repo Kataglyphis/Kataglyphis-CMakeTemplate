@@ -79,6 +79,9 @@ jobs:
       - name: Build Code Coverage
         working-directory: ${{ env.BUILD_DIR }}
         run: |
+          # ensure docs target dirs exist so tools can write files there
+          mkdir -p ${{ github.workspace }}/docs/coverage
+          mkdir -p ${{ github.workspace }}/docs/test-results
           if [[ "${{ inputs.compiler }}" == "gcc" ]]; then
             gcovr --html-details docs/coverage/index.html -r .
           else
