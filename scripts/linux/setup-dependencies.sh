@@ -41,8 +41,8 @@ if command -v apt-get >/dev/null; then
 
     WANTED=21
     export DEBIAN_FRONTEND=noninteractive
-    APT_OPTS='-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"'
-
+    APT_OPTS=(-o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold)
+    
     # minimal prerequisites
     sudo apt-get update
     sudo apt-get install -y --no-install-recommends wget gnupg lsb-release ca-certificates
