@@ -90,6 +90,33 @@ if command -v apt-get >/dev/null; then
     clang --version
     clang++ --version
 
+    # Install latest GCC
+    GCC_WANTED=14  # or 13, adjust as needed
+    sudo apt-get install -y --no-install-recommends \
+      gcc-"${GCC_WANTED}" \
+      g++-"${GCC_WANTED}" \
+      gfortran-"${GCC_WANTED}"
+
+    # Set GCC as default using update-alternatives
+    if [ -x "/usr/bin/gcc-${GCC_WANTED}" ]; then
+      sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"${GCC_WANTED}" 100
+      sudo update-alternatives --set gcc /usr/bin/gcc-"${GCC_WANTED}"
+    fi
+
+    if [ -x "/usr/bin/g++-${GCC_WANTED}" ]; then
+      sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-"${GCC_WANTED}" 100
+      sudo update-alternatives --set g++ /usr/bin/g++-"${GCC_WANTED}"
+    fi
+
+    if [ -x "/usr/bin/gcov-${GCC_WANTED}" ]; then
+      sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-"${GCC_WANTED}" 100
+      sudo update-alternatives --set gcov /usr/bin/gcov-"${GCC_WANTED}"
+    fi
+
+    # Verify
+    gcc --version
+    g++ --version
+
 elif command -v yum >/dev/null; then
     echo "Detected yum. Installing via yum..."
     sudo yum install -y sccache ccache cppcheck iwyu lcov binutils graphviz doxygen llvm cmake
