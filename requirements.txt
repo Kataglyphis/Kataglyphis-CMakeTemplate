@@ -6,3 +6,4 @@ cmake-format
 breathe
 exhale
 pre-commit
+junit2html
