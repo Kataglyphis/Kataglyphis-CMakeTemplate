@@ -28,6 +28,14 @@ Test results
 
 * `Test results (JUnit XML viewer) <test-results/>`_
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   introduction
+   getting-started
+   test-results/index
+
 Indices and tables
 ==================
 
