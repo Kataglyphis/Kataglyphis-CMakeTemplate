@@ -91,11 +91,6 @@ jobs:
             llvm-cov show ./compileTestSuite -instr-profile=compileTestSuite.profdata -format=html -output-dir ${{ github.workspace }}/docs/coverage
           fi
 
-      - name: Copy junit xml into docs
-        run: |
-          mkdir -p docs/test-results
-          cp -r ${{ github.workspace }}/${{ env.BUILD_DIR }}/test-results/*.xml ${{ github.workspace }}/docs/test-results/ || true
-      
       - name: Codecov
         if: ${{ inputs.compiler == 'clang' && inputs.runner == 'ubuntu-24.04' }}
         uses: codecov/codecov-action@v5.5.1
@@ -191,6 +186,7 @@ jobs:
 
       - name: Convert GTest XML → HTML
         run: |
+          shopt -s globstar nullglob 
           mkdir -p docs/test-results
           for f in ${{ env.BUILD_DIR }}/**/*.xml; do
             junit2html "$f" "${{ github.workspace }}/docs/test-results/$(basename "$f" .xml).html"
