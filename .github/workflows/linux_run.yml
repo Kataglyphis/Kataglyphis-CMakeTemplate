@@ -189,7 +189,7 @@ jobs:
           shopt -s globstar nullglob
           mkdir -p docs/test-results
 
-          for f in ${{ env.BUILD_DIR }}/**/*.xml; do
+          for f in ${{ github.workspace }}/**/*.xml; do
             # skip empty files
             [ -s "$f" ] || { echo "Skipping empty file: $f"; continue; }
 
