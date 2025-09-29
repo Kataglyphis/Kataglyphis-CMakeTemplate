@@ -50,6 +50,10 @@ html_theme_options = {
     "palette": "dark",  # Set dark mode as default
     "fixed_sidebar": True,
 }
+# copy coverage and raw html/test files into the built site root
+# these folders must exist in the docs source directory (docs/coverage, docs/test-results)
+html_extra_path = ['coverage', 'test-results']
+
 html_static_path = ["_static"]
 # Here we assume that the file is at _static/css/custom.css
 html_css_files = ["css/custom.css"]
