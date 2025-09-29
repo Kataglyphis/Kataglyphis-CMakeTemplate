@@ -98,15 +98,15 @@ jobs:
           # gcovr --html-details docs/coverage/index.html
           # or for llvm-cov:
           # llvm-cov show ./YourBinary -instr-profile=... -format=html -output-dir docs/coverage
-          rm -rf docs/coverage
-          mkdir -p docs/coverage
+          rm -rf ${{ github.workspace }}/docs/coverage
+          mkdir -p ${{ github.workspace }}/docs/coverage
           # copy your coverage HTML output dir into docs/coverage
-          cp -r ${{ github.workspace }}/$BUILD_DIR/coverage_html/* docs/coverage/ || true
+          cp -r ${{ github.workspace }}/${{ env.BUILD_DIR }}/coverage_html/* ${{ github.workspace }}/docs/coverage/ || true
 
       - name: Copy junit xml into docs
         run: |
           mkdir -p docs/test-results
-          cp -r ${{ github.workspace }}/$BUILD_DIR/test-results/*.xml docs/test-results/ || true
+          cp -r ${{ github.workspace }}/${{ env.BUILD_DIR }}/test-results/*.xml ${{ github.workspace }}/docs/test-results/ || true
       
       - name: Codecov
         if: ${{ inputs.compiler == 'clang' && inputs.runner == 'ubuntu-24.04' }}
