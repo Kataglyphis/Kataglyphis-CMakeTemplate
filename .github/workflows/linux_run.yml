@@ -186,10 +186,31 @@ jobs:
 
       - name: Convert GTest XML → HTML
         run: |
-          shopt -s globstar nullglob 
+          shopt -s globstar nullglob
           mkdir -p docs/test-results
-          for f in ${{ env.BUILD_DIR }}/**/*.xml; do
-            junit2html "$f" "${{ github.workspace }}/docs/test-results/$(basename "$f" .xml).html"
+
+          for f in ${{ env.BUILD_DIR }}/xml/*.xml; do
+            # skip empty files
+            [ -s "$f" ] || { echo "Skipping empty file: $f"; continue; }
+
+            # basic check whether file contains JUnit-like root tags
+            if grep -qE '<testsuites|<testsuite' "$f"; then
+              if junit2html "$f" "${{ github.workspace }}/docs/test-results/$(basename "$f" .xml).html"; then
+                echo "Converted: $(basename "$f")"
+              else
+                echo "junit2html failed for: $f — skipping"
+              fi
+             else
+               echo "Not JUnit XML, skipping: $f"
+             fi
+            done
+          
+      - name: HTML → Markdown (pandoc)
+        run: |
+          sudo apt-get update && sudo apt-get install -y pandoc
+          mkdir -p docs/test-results-md
+          for f in docs/test-results/*.html; do
+            pandoc "$f" -f html -t gfm -o "docs/test-results-md/$(basename "$f" .html).md"
           done
 
       # copy coverage & test-results into built site so they are deployed
