@@ -213,7 +213,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y pandoc
           mkdir -p docs/test-results-md
           for f in docs/test-results/*.html; do
-            pandoc "$f" -f html -t gfm -o "docs/test-results-md/$(basename "$f" .html).md"
+            pandoc "$f" --verbose -f html -t gfm -o "docs/test-results-md/$(basename "$f" .html).md"
           done
 
       # copy coverage & test-results into built site so they are deployed
