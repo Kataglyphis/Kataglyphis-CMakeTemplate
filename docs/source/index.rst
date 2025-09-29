@@ -18,7 +18,15 @@ documentation for details.
 
    api/library_root
 
+Coverage
+========
 
+* `Coverage report <coverage/index.html>`_
+
+Test results
+============
+
+* `Test results (JUnit XML viewer) <test-results/>`_
 
 Indices and tables
 ==================
