@@ -48,7 +48,12 @@ jobs:
           chmod +x scripts/linux/setup-dependencies.sh
           ./scripts/linux/setup-dependencies.sh
           echo "/usr/bin" >> $GITHUB_PATH
-
+      
+      - name: Prepare test folders
+        run: |
+          # ensure docs target dirs exist so tools can write files there
+          mkdir -p ${{ github.workspace }}/docs/coverage
+          mkdir -p ${{ github.workspace }}/docs/test-results
       #################################################################################################################
       ############################## Run unit/integration/fuzzy/coverage/tests/static analyzers #######################
       #################################################################################################################
@@ -79,9 +84,6 @@ jobs:
       - name: Build Code Coverage
         working-directory: ${{ env.BUILD_DIR }}
         run: |
-          # ensure docs target dirs exist so tools can write files there
-          mkdir -p ${{ github.workspace }}/docs/coverage
-          mkdir -p ${{ github.workspace }}/docs/test-results
           if [[ "${{ inputs.compiler }}" == "gcc" ]]; then
             gcovr --html-details ${{ github.workspace }}/docs/coverage/index.html -r .
           else
@@ -93,7 +95,7 @@ jobs:
 
       - name: Codecov
         if: ${{ inputs.compiler == 'clang' && inputs.runner == 'ubuntu-24.04' }}
-        uses: codecov/codecov-action@v5.5.1
+        uses: codecov/coecov-action@v5.5.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ env.COVERAGE_JSON }}
