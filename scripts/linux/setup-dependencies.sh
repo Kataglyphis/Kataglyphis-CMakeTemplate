@@ -53,7 +53,7 @@ if command -v apt-get >/dev/null; then
     sudo apt-get update
 
     # Install packages (non-interactive)
-    sudo apt-get install -y --no-install-recommends ${APT_OPTS} \
+    sudo apt-get install -y --no-install-recommends "${APT_OPTS[@]}" \
       clang-"${WANTED}" lldb-"${WANTED}" lld-"${WANTED}" libc++-"${WANTED}"-dev libc++abi-"${WANTED}"-dev
 
     # Register alternatives (no interactive selection)
