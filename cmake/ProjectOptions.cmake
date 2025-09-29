@@ -102,7 +102,7 @@ macro(myproject_global_options)
   set(CMAKE_C_STANDARD_REQUIRED True)
 
   # set build type specific flags
-  if(MSV AND NOT(CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+  if(MSVC AND NOT(CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DEBUG /Od /std:c++23preview")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /std:c++23preview")
     set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RROFILE} /O2 /std:c++23preview")
