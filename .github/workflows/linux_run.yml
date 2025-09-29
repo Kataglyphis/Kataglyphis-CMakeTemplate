@@ -91,18 +91,6 @@ jobs:
             llvm-cov show ./compileTestSuite -instr-profile=compileTestSuite.profdata -format=html -output-dir ${{ github.workspace }}/docs/coverage
           fi
 
-      # after you run gcovr / llvm-cov and pytest --junitxml
-      - name: Copy coverage HTML into docs
-        run: |
-          # for gcovr (example)
-          # gcovr --html-details docs/coverage/index.html
-          # or for llvm-cov:
-          # llvm-cov show ./YourBinary -instr-profile=... -format=html -output-dir docs/coverage
-          rm -rf ${{ github.workspace }}/docs/coverage
-          mkdir -p ${{ github.workspace }}/docs/coverage
-          # copy your coverage HTML output dir into docs/coverage
-          cp -r ${{ github.workspace }}/${{ env.BUILD_DIR }}/coverage_html/* ${{ github.workspace }}/docs/coverage/ || true
-
       - name: Copy junit xml into docs
         run: |
           mkdir -p docs/test-results
