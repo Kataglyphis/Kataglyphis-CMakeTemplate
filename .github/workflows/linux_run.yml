@@ -1,4 +1,4 @@
-name: Build and Test on Ubuntu 24.04 with x86/ARM arch and GCC Clang
+perfTestSuite: Build and Test on Ubuntu 24.04 with x86/ARM arch and GCC Clang
 
 on:
   workflow_call:
@@ -154,7 +154,7 @@ jobs:
 
       - name: Run performance benchmarks
         working-directory: ${{ env.BUILD_DIR }}
-        run: ./perfTestSuite
+        run: ./perfTestSuite --benchmark_out=results.json --benchmark_out_format=json
 
       - name: Run GProf
         working-directory: ${{ env.BUILD_DIR }}
