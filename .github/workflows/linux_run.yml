@@ -212,7 +212,7 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y pandoc
           mkdir -p "${{ github.workspace }}/docs/test-results-md"
-          for f in "${{ github.workspace }}//test-results/*.html"; do
+          for f in "${{ github.workspace }}/docs/test-results/*.html"; do
             pandoc "$f" --verbose -f html -t gfm -o "${{ github.workspace }}/docs/test-results-md/$(basename "$f" .html).md"
           done
 
