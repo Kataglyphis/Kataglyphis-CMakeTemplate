@@ -170,19 +170,19 @@ jobs:
       ######################################## Build docs #############################################################
       #################################################################################################################
       - name: Set up Python 3.13
-        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
+        if: ${{ inputs.runner == 'ubuntu-24.04' }}
         uses: actions/setup-python@v6.0.0
         with:
           python-version: "3.13"
 
       # You can test your matrix by printing the current Python version
       - name: Setup python env
-        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
+        if: ${{ inputs.runner == 'ubuntu-24.04' }}
         run: |
           pip install -r requirements.txt
 
       - name: Build web page
-        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
+        if: ${{ inputs.runner == 'ubuntu-24.04' }}
         run: |
           cd docs
           make html
