@@ -84,7 +84,7 @@ jobs:
           mkdir -p ${{ github.workspace }}/docs/test-results
           if [[ "${{ inputs.compiler }}" == "gcc" ]]; then
             gcovr --html-details ${{ github.workspace }}/docs/coverage/index.html -r .
-          elsea
+          else
             llvm-profdata merge -sparse Test/compile/default.profraw -o compileTestSuite.profdata
             llvm-cov report ./compileTestSuite -instr-profile=compileTestSuite.profdata
             llvm-cov export ./compileTestSuite -format=text -instr-profile=compileTestSuite.profdata > ${{ env.COVERAGE_JSON }}
