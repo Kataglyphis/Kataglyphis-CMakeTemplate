@@ -101,6 +101,9 @@ macro(myproject_global_options)
   set(CMAKE_C_STANDARD 17)
   set(CMAKE_C_STANDARD_REQUIRED True)
 
+  # Enable C++ modules
+  set(CMAKE_EXPERIMENTAL_CXX_MODULE_COVERAGE ON)
+  
   # set build type specific flags
   if(MSVC AND NOT(CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DEBUG /Od /std:c++23preview")
