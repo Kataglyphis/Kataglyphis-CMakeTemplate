@@ -29,7 +29,11 @@ macro(myproject_enable_cppcheck WARNINGS_AS_ERRORS CPPCHECK_OPTIONS)
           --suppress=syntaxError
           --suppress=preprocessorErrorDirective
           --inconclusive
-          --suppress=${SUPPRESS_DIR})
+          --suppress=${SUPPRESS_DIR}
+          # CRITICAL: Tell cppcheck to not try to compile or generate dependencies
+          --check-config
+          --suppress=missingInclude
+          --suppress=missingIncludeSystem)
     else()
       # if the user provides a CPPCHECK_OPTIONS with a template specified, it will override this template
       set(CMAKE_CXX_CPPCHECK ${CPPCHECK} --template=${CPPCHECK_TEMPLATE} ${CPPCHECK_OPTIONS})
