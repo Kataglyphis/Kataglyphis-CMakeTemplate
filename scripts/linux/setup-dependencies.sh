@@ -48,21 +48,9 @@ if command -v apt-get >/dev/null; then
     sudo apt-get install -y --no-install-recommends wget gnupg lsb-release ca-certificates
 
     # Add the LLVM apt repo using the official helper (non-interactive)
-    wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- "${WANTED}"
+    wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- "${WANTED}" all
 
     sudo apt-get update
-
-    # Install packages (non-interactive)
-    # Install LLVM/Clang ${WANTED}
-    sudo apt-get install -y --no-install-recommends "${APT_OPTS[@]}" \
-      clang-"${WANTED}" \
-      clang-tools-"${WANTED}" \
-      lldb-"${WANTED}" \
-      lld-"${WANTED}" \
-      libc++-"${WANTED}"-dev \
-      libc++abi-"${WANTED}"-dev
-
-    VER="${WANTED}"
 
     # clang
     if [ -x "/usr/bin/clang-${VER}" ]; then
