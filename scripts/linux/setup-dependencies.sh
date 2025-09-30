@@ -102,7 +102,7 @@ if command -v apt-get >/dev/null; then
       if ! command -v add-apt-repository >/dev/null 2>&1; then
         echo "Installing apt helper packages (software-properties-common, ca-certificates)..."
         sudo apt-get update
-    sudosudo apt-get install -y --no-install-recommends software-properties-common ca-certificates apt-transport-https gnupg
+        sudo apt-get install -y --no-install-recommends software-properties-common ca-certificates apt-transport-https gnupg
       fi
     }
 
