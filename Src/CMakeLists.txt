@@ -90,3 +90,10 @@ target_link_libraries(
 if(RUST_FEATURES)
   target_link_libraries(${PROJECT_NAME} PUBLIC rusty_code)
 endif()
+
+if(TARGET ${PROJECT_NAME} AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  message(STATUS "GCC detected — adding -MMD -MP to target ${PROJECT_NAME}")
+  target_compile_options(${PROJECT_NAME} PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:-MMD -MP>
+  )
+endif()
