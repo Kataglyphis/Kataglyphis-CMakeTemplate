@@ -101,8 +101,15 @@ macro(myproject_global_options)
   set(CMAKE_C_STANDARD 17)
   set(CMAKE_C_STANDARD_REQUIRED True)
 
-  # Enable C++ modules
-  set(CMAKE_EXPERIMENTAL_CXX_MODULE_COVERAGE ON)
+  # Enable C++ modules only for Clang (disable for GCC/MSVC)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    message(STATUS "Enabling experimental C++ modules for Clang")
+    set(CMAKE_EXPERIMENTAL_CXX_MODULE_COVERAGE ON)
+  else()
+    message(STATUS "C++ modules support disabled for compiler: ${CMAKE_CXX_COMPILER_ID}")
+    set(CMAKE_EXPERIMENTAL_CXX_MODULE_COVERAGE OFF)
+  endif()
+ 
   
   # set build type specific flags
   if(MSVC AND NOT(CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
