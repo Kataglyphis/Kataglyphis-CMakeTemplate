@@ -70,6 +70,16 @@ set(SPDLOG_FMT_EXTERNAL   OFF   CACHE BOOL "Use external fmt"         FORCE)
 
 add_subdirectory(SPDLOG)
 
+# --- add this AFTER add_subdirectory(SPDLOG) ---
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if(TARGET spdlog::spdlog)
+    message(STATUS "GCC detected — adding -M to spdlog::spdlog")
+    # apply -M only for C++ compilations
+    target_compile_options(spdlog::spdlog PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-M>)
+  endif()
+endif()
+
 add_subdirectory(NLOHMANN_JSON)
 
 if(RUST_FEATURES)
