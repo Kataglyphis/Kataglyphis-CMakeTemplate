@@ -81,7 +81,7 @@ if command -v apt-get >/dev/null; then
     clang++ --version
 
     # Install latest GCC
-    GCC_WANTED=14  # or 13, adjust as needed
+    GCC_WANTED=15  # or 13, adjust as needed
     sudo apt-get install -y --no-install-recommends \
       gcc-"${GCC_WANTED}" \
       g++-"${GCC_WANTED}" \
