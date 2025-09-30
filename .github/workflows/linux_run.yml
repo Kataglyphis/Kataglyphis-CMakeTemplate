@@ -188,6 +188,7 @@ jobs:
           make html
 
       - name: Convert GTest XML → HTML
+        if: ${{ inputs.runner == 'ubuntu-24.04' }}
         run: |
           shopt -s globstar nullglob
           mkdir -p docs/test-results
@@ -209,6 +210,7 @@ jobs:
             done
           
       - name: HTML → Markdown (pandoc)
+        if: ${{ inputs.runner == 'ubuntu-24.04' }} 
         run: |
           sudo apt-get update && sudo apt-get install -y pandoc
           mkdir -p "${{ github.workspace }}/docs/test-results-md"
@@ -217,6 +219,7 @@ jobs:
           done
           
       - name: Copy generated .md into Sphinx source
+        if: ${{ inputs.runner == 'ubuntu-24.04' }}
         run: |
           mkdir -p docs/source/test-results
           cp -r docs/test-results-md/* docs/source/test-results/
