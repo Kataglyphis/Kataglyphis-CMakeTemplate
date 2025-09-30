@@ -61,6 +61,12 @@ if(myproject_DISABLE_EXCEPTIONS)
       ON
       CACHE BOOL "Disable SPDLOG exceptions.")
 endif()
+# set spdlog options before adding it
+set(SPDLOG_BUILD_EXAMPLES OFF  CACHE BOOL "Disable spdlog examples" FORCE)
+set(SPDLOG_BUILD_TESTS    OFF  CACHE BOOL "Disable spdlog tests"    FORCE)
+set(SPDLOG_BUILD_BENCH    OFF  CACHE BOOL "Disable spdlog bench"    FORCE)
+set(SPDLOG_INSTALL        OFF  CACHE BOOL "Disable spdlog install"  FORCE)
+set(SPDLOG_FMT_EXTERNAL   ON   CACHE BOOL "Use external fmt"         FORCE)
 
 add_subdirectory(SPDLOG)
 
