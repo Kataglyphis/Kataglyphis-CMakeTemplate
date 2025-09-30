@@ -114,7 +114,7 @@ macro(myproject_global_options)
   # set build type specific flags
   if(MSVC AND NOT(CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DEBUG /Od /std:c++23preview")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /std:c++23preview")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /GL /std:c++23preview")
     set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RROFILE} /O2 /std:c++23preview")
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # https://gcc.gnu.org/onlinedocs/gcc/Debugging-Options.html
@@ -236,15 +236,17 @@ macro(myproject_local_options)
     endif()
   endif()
 
-  include(cmake/Sanitizers.cmake)
-  myproject_enable_sanitizers(
-    myproject_options
-    ${myproject_ENABLE_SANITIZER_ADDRESS}
-    ${myproject_ENABLE_SANITIZER_LEAK}
-    ${myproject_ENABLE_SANITIZER_UNDEFINED}
-    ${myproject_ENABLE_SANITIZER_THREAD}
-    ${myproject_ENABLE_SANITIZER_MEMORY})
-
+  if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+    include(cmake/Sanitizers.cmake)
+    myproject_enable_sanitizers(
+      myproject_options
+      ${myproject_ENABLE_SANITIZER_ADDRESS}
+      ${myproject_ENABLE_SANITIZER_LEAK}
+      ${myproject_ENABLE_SANITIZER_UNDEFINED}
+      ${myproject_ENABLE_SANITIZER_THREAD}
+      ${myproject_ENABLE_SANITIZER_MEMORY})
+  endif()
+  
   set_target_properties(myproject_options PROPERTIES UNITY_BUILD ${myproject_ENABLE_UNITY_BUILD})
 
   if(myproject_ENABLE_PCH)
@@ -261,19 +263,21 @@ macro(myproject_local_options)
     myproject_enable_cache()
   endif()
 
-  include(cmake/StaticAnalyzers.cmake)
-  if(myproject_ENABLE_CLANG_TIDY)
-    myproject_enable_clang_tidy(myproject_options ${myproject_WARNINGS_AS_ERRORS})
-  endif()
+  if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+    include(cmake/StaticAnalyzers.cmake)
+    if(myproject_ENABLE_CLANG_TIDY)
+      myproject_enable_clang_tidy(myproject_options ${myproject_WARNINGS_AS_ERRORS})
+    endif()
 
-  if(myproject_ENABLE_CPPCHECK)
-    myproject_enable_cppcheck(${myproject_WARNINGS_AS_ERRORS} "" # override cppcheck options
-    )
-  endif()
+    if(myproject_ENABLE_CPPCHECK)
+      myproject_enable_cppcheck(${myproject_WARNINGS_AS_ERRORS} "" # override cppcheck options
+      )
+    endif()
 
-  if(myproject_ENABLE_COVERAGE)
-    include(cmake/Tests.cmake)
-    myproject_enable_coverage(myproject_options)
+    if(myproject_ENABLE_COVERAGE)
+      include(cmake/Tests.cmake)
+      myproject_enable_coverage(myproject_options)
+    endif()
   endif()
 
   if(myproject_WARNINGS_AS_ERRORS)
@@ -299,36 +303,38 @@ macro(myproject_local_options)
     myproject_enable_hardening(myproject_options OFF ${ENABLE_UBSAN_MINIMAL_RUNTIME})
   endif()
 
-  if(myproject_ENABLE_IWYU)
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      find_program(IWYU_PATH NAMES include-what-you-use iwyu)
-      if(IWYU_PATH)
-        set_target_properties(myproject_options PROPERTIES CXX_INCLUDE_WHAT_YOU_USE "${IWYU_PATH}")
-        message(STATUS "Include-What-You-Use found: ${IWYU_PATH}")
-      else()
-        message(STATUS "Include-What-You-Use not found!")
+  if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+    if(myproject_ENABLE_IWYU)
+      if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        find_program(IWYU_PATH NAMES include-what-you-use iwyu)
+        if(IWYU_PATH)
+          set_target_properties(myproject_options PROPERTIES CXX_INCLUDE_WHAT_YOU_USE "${IWYU_PATH}")
+          message(STATUS "Include-What-You-Use found: ${IWYU_PATH}")
+        else()
+          message(STATUS "Include-What-You-Use not found!")
+        endif()
       endif()
     endif()
-  endif()
 
-  include(cmake/Doxygen.cmake)
-  enable_doxygen()
+    include(cmake/Doxygen.cmake)
+    enable_doxygen()
 
-  if(myproject_ENABLE_STATIC_ANALYZER)
-    if(MSVC)
-      target_compile_options(${project_name} INTERFACE /analyze)
-      target_link_libraries(${project_name} INTERFACE /analyze)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-      target_compile_options(myproject_options INTERFACE -fanalyzer)
-      target_link_libraries(myproject_options INTERFACE -fanalyzer)
-      # https://clang.llvm.org/docs/UsersManual.html
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
-      #target_compile_options(myproject_options INTERFACE --analyze)
-      #target_link_libraries(myproject_options INTERFACE --analyze)
-      # https://clang.llvm.org/docs/ClangCommandLineReference.html
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      #target_compile_options(myproject_options INTERFACE --analyze --analyzer-output html)
-      #target_link_libraries(myproject_options INTERFACE --analyze --analyzer-output html)
+    if(myproject_ENABLE_STATIC_ANALYZER)
+      if(MSVC)
+        target_compile_options(${project_name} INTERFACE /analyze)
+        target_link_libraries(${project_name} INTERFACE /analyze)
+      elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(myproject_options INTERFACE -fanalyzer)
+        target_link_libraries(myproject_options INTERFACE -fanalyzer)
+        # https://clang.llvm.org/docs/UsersManual.html
+      elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
+        #target_compile_options(myproject_options INTERFACE --analyze)
+        #target_link_libraries(myproject_options INTERFACE --analyze)
+        # https://clang.llvm.org/docs/ClangCommandLineReference.html
+      elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        #target_compile_options(myproject_options INTERFACE --analyze --analyzer-output html)
+        #target_link_libraries(myproject_options INTERFACE --analyze --analyzer-output html)
+      endif()
     endif()
   endif()
 
