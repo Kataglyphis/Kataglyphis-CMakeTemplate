@@ -36,6 +36,12 @@ Test results
    getting-started
    test-results/index
 
+.. toctree::
+   :maxdepth: 2
+   :glob:
+
+   test-results/*
+
 Indices and tables
 ==================
 
