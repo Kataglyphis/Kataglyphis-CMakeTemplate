@@ -13,8 +13,16 @@ Write-Host "Installing LLVM/Clang $ClangVersion..."
 winget install --accept-source-agreements --accept-package-agreements --id=LLVM.LLVM -v $ClangVersion -e
 
 # Install sccache
-Write-Host "Installing sccache..."
+Write-Host "Installing Ccache..."
 winget install --accept-source-agreements --accept-package-agreements --id=Ccache.Ccache  -e
+
+# install scoop (if not present)
+iwr -useb get.scoop.sh | iex
+# install sccache
+scoop install sccache
+# verify
+sccache --version
+sccache -s   # show stats
 
 # Install CMake, Cppcheck, NSIS via WinGet
 Write-Host "Installing CMake, Cppcheck and NSIS via winget..."
