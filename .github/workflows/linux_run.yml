@@ -33,6 +33,7 @@ jobs:
       CLANG_PROFILE_PRESET: linux-profile-clang
       CLANG_RELEASE_PRESET: linux-release-clang
       COVERAGE_JSON: coverage.json
+      DOCS_OUT: build/build/html
 
     steps:
       - uses: actions/checkout@v5.0.0
@@ -184,7 +185,10 @@ jobs:
       - name: Build web page
         if: ${{ inputs.runner == 'ubuntu-24.04' }}
         run: |
-          cd docs
+          cp ${{github.workspace}}/${{ env.DOCS_OUT }}/*.svg ./docs/source/_static
+          cd docs/source
+          python graphviz_generator.py 
+          cd ..
           make html
 
       - name: Convert GTest XML → HTML
