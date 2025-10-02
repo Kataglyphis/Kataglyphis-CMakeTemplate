@@ -17,6 +17,7 @@ documentation for details.
    :titlesonly:
 
    api/library_root
+   graphviz_files
 
 Coverage
 ========
