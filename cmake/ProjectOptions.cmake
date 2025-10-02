@@ -211,7 +211,7 @@ macro(myproject_local_options)
     endif()
 
   elseif(myproject_ENABLE_GPROF)
-    message(WARNING "GProf should only be used with GCC on Linux using -DCMAKE_BUILD_TYPE=Profile")
+    message(MESSAGE "GProf should only be used with GCC on Linux using -DCMAKE_BUILD_TYPE=Profile")
   endif()
 
   if(myproject_DISABLE_EXCEPTIONS)
@@ -271,11 +271,11 @@ macro(myproject_local_options)
       myproject_enable_clang_tidy(myproject_options ${myproject_WARNINGS_AS_ERRORS})
     endif()
 
-    if(myproject_ENABLE_CPPCHECK)
+	if(myproject_ENABLE_CPPCHECK)
       myproject_enable_cppcheck(${myproject_WARNINGS_AS_ERRORS} "" # override cppcheck options
       )
     endif()
-
+	
     if(myproject_ENABLE_COVERAGE)
       include(cmake/Tests.cmake)
       myproject_enable_coverage(myproject_options)
