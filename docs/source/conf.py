@@ -25,7 +25,7 @@ exhale_args = {
     "containmentFolder": "./api",
     "rootFileName": "library_root.rst",
     "rootFileTitle": "Library API",
-    "doxygenStripFromPath": "..",
+    "doxygenStripFromPath": "../..",
     "createTreeView": True,
     "contentsDirectives": True,  # Allows nested folder-like structure
     "exhaleExecutesDoxygen": False,  # (optional) if you already run Doxygen manually
@@ -38,7 +38,7 @@ myst_enable_extensions = [
     "deflist",  # Enables definition lists
 ]
 
-breathe_projects = {"Kataglyphis-CMakeTemplate": "../build/build/xml"}
+breathe_projects = {"Kataglyphis-CMakeTemplate": "../../build/build/xml"}
 breathe_default_project = "Kataglyphis-CMakeTemplate"
 
 
