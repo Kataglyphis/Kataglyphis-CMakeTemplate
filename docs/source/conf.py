@@ -38,7 +38,7 @@ myst_enable_extensions = [
     "deflist",  # Enables definition lists
 ]
 
-breathe_projects = {"Kataglyphis-CMakeTemplate": "../../build/build/xml"}
+breathe_projects = {"Kataglyphis-CMakeTemplate": "../build/build/xml"}
 breathe_default_project = "Kataglyphis-CMakeTemplate"
 
 
