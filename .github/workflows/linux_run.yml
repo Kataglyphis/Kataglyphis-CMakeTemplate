@@ -183,7 +183,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Build web page
-        if: ${{ inputs.runner == 'ubuntu-24.04' }}
+        if: ${{ inputs.runner == 'ubuntu-24.04' &&  inputs.compiler == 'clang' }}
         run: |
           cp ${{github.workspace}}/${{ env.DOCS_OUT }}/*.svg ./docs/source/_static
           cd docs/source
@@ -192,7 +192,7 @@ jobs:
           make html
 
       - name: Convert GTest XML → HTML
-        if: ${{ inputs.runner == 'ubuntu-24.04' }}
+        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
         run: |
           shopt -s globstar nullglob
           mkdir -p docs/test-results
