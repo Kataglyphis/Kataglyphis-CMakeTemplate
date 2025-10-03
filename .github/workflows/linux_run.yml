@@ -183,7 +183,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Build web page
-        if: ${{ inputs.runner == 'ubuntu-24.04' &&  inputs.compiler == 'clang' }}
+        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
         run: |
           cp ${{github.workspace}}/${{ env.DOCS_OUT }}/*.svg ./docs/source/_static
           cd docs/source
@@ -214,7 +214,7 @@ jobs:
             done
           
       - name: HTML → Markdown (pandoc)
-        if: ${{ inputs.runner == 'ubuntu-24.04' &&  inputs.compiler == 'clang' }} 
+        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }} 
         run: |
           sudo apt-get update && sudo apt-get install -y pandoc
           mkdir -p "${{ github.workspace }}/docs/test-results-md"
@@ -223,7 +223,7 @@ jobs:
           done
           
       - name: Copy generated .md into Sphinx source
-        if: ${{ inputs.runner == 'ubuntu-24.04'  &&  inputs.compiler == 'clang' }}
+        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
         run: |
           mkdir -p docs/source/test-results
           cp -r docs/test-results-md/* docs/source/test-results/
