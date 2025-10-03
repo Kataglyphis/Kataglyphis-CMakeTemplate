@@ -3,7 +3,7 @@ include(FetchContent)
 # include google test to project
 if(BUILD_TESTING)
   FetchContent_Declare(googletest
-                       URL https://github.com/google/googletest/archive/571930618fa96eabcd05b573285edbee9fc13bae.zip)
+                       URL https://github.com/google/googletest/archive/9706f75b8f91c52a3840cf5d878a7f37ea10ef00.zip)
   set(gtest_force_shared_crt
       ON
       CACHE BOOL "" FORCE)
