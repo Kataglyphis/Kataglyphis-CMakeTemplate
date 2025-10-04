@@ -37,10 +37,11 @@ jobs:
             -ClangVersion ${{ env.CLANG_VERSION }}
 
       # this is necessary ... windows and paths ...
-      - name: Push Clang and LLVM to Path
+      - name: Push Clang and LLVM and Sccache to Path
         shell: pwsh
         run: |
           Add-Content -Path $Env:GITHUB_PATH -Value 'C:\Program Files\LLVM\bin'
+          Write-Output "$env:USERPROFILE\scoop\shims" >> $env:GITHUB_PATH
       
       #################################################################################################################
       ####################### Run unit/integration/coverage/tests/static analyzers ####################################
