@@ -235,7 +235,6 @@ macro(myproject_local_options)
     else()
       message(WARNING "Enabling exceptions is not supported for this compiler.")
     endif()
-    endif()
   endif()
 
   if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
