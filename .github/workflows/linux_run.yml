@@ -8,7 +8,7 @@ on:
         type: string
       runner:
         required: true
-        type: string    
+        type: string
     secrets:
       SERVER:
         required: true
@@ -45,6 +45,7 @@ jobs:
       #################################################################################################################
       - name: Install dependencies
         run: |
+          sudo apt-get purge --auto-remove -y cmake
           chmod +x scripts/linux/setup-dependencies.sh
           ./scripts/linux/setup-dependencies.sh
           echo "/usr/bin" >> $GITHUB_PATH
