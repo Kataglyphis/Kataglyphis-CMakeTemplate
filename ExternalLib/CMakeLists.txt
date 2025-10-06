@@ -3,7 +3,7 @@ include(FetchContent)
 # include google test to project
 if(BUILD_TESTING)
   FetchContent_Declare(googletest
-                       URL https://github.com/google/googletest/archive/571930618fa96eabcd05b573285edbee9fc13bae.zip)
+                       URL https://github.com/google/googletest/archive/9706f75b8f91c52a3840cf5d878a7f37ea10ef00.zip)
   set(gtest_force_shared_crt
       ON
       CACHE BOOL "" FORCE)
@@ -61,6 +61,12 @@ if(myproject_DISABLE_EXCEPTIONS)
       ON
       CACHE BOOL "Disable SPDLOG exceptions.")
 endif()
+# set spdlog options before adding it
+set(SPDLOG_BUILD_EXAMPLES OFF  CACHE BOOL "Disable spdlog examples" FORCE)
+set(SPDLOG_BUILD_TESTS    OFF  CACHE BOOL "Disable spdlog tests"    FORCE)
+set(SPDLOG_BUILD_BENCH    OFF  CACHE BOOL "Disable spdlog bench"    FORCE)
+set(SPDLOG_INSTALL        OFF  CACHE BOOL "Disable spdlog install"  FORCE)
+set(SPDLOG_FMT_EXTERNAL   OFF   CACHE BOOL "Use external fmt"         FORCE)
 
 add_subdirectory(SPDLOG)
 

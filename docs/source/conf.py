@@ -14,8 +14,13 @@ release = "0.0.1"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["breathe", "myst_parser", "exhale"]
-
+extensions = ["breathe", 
+              "myst_parser", 
+              "exhale",
+              "sphinx_design",
+              "sphinx.ext.graphviz",
+              "sphinx.ext.inheritance_diagram",
+             ]
 exhale_args = {
     "containmentFolder": "./api",
     "rootFileName": "library_root.rst",
@@ -57,3 +62,5 @@ html_extra_path = ['coverage', 'test-results']
 html_static_path = ["_static"]
 # Here we assume that the file is at _static/css/custom.css
 html_css_files = ["css/custom.css"]
+
+graphviz_output_format = "svg"

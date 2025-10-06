@@ -1,4 +1,4 @@
-name: Build and Test on Ubuntu 24.04 with x86/ARM arch and GCC Clang
+name : Build and Test on Ubuntu 24.04 with x86/ARM arch and GCC Clang
 
 on:
   workflow_call:
@@ -33,6 +33,7 @@ jobs:
       CLANG_PROFILE_PRESET: linux-profile-clang
       CLANG_RELEASE_PRESET: linux-release-clang
       COVERAGE_JSON: coverage.json
+      DOCS_OUT: build/build/html
 
     steps:
       - uses: actions/checkout@v5.0.0
@@ -49,7 +50,13 @@ jobs:
           chmod +x scripts/linux/setup-dependencies.sh
           ./scripts/linux/setup-dependencies.sh
           echo "/usr/bin" >> $GITHUB_PATH
-
+      
+      - name: Prepare test folders
+        run: |
+          # ensure docs target dirs exist so tools can write files there
+          mkdir -p ${{ github.workspace }}/docs/coverage
+          mkdir -p ${{ github.workspace }}/docs/test-results
+          
       #################################################################################################################
       ############################## Run unit/integration/fuzzy/coverage/tests/static analyzers #######################
       #################################################################################################################
@@ -67,7 +74,7 @@ jobs:
       - name: Run Unit/Integration tests
         working-directory: ${{ env.BUILD_DIR }}
         run: |
-          ctest -C $BUILD_TYPE --verbose --extra-verbose --debug -T test --output-on-failure
+          ctest -C $BUILD_TYPE --verbose --extra-verbose --debug -T test --output-on-failure --output-junit "${{ github.workspace }}/docs/test_results.xml"
 
       - name: Run fuzzer tests
         run: |
@@ -80,9 +87,6 @@ jobs:
       - name: Build Code Coverage
         working-directory: ${{ env.BUILD_DIR }}
         run: |
-          # ensure docs target dirs exist so tools can write files there
-          mkdir -p ${{ github.workspace }}/docs/coverage
-          mkdir -p ${{ github.workspace }}/docs/test-results
           if [[ "${{ inputs.compiler }}" == "gcc" ]]; then
             gcovr --html-details ${{ github.workspace }}/docs/coverage/index.html -r .
           else
@@ -92,15 +96,15 @@ jobs:
             llvm-cov show ./compileTestSuite -instr-profile=compileTestSuite.profdata -format=html -output-dir ${{ github.workspace }}/docs/coverage
           fi
 
-      - name: Codecov
-        if: ${{ inputs.compiler == 'clang' && inputs.runner == 'ubuntu-24.04' }}
-        uses: codecov/codecov-action@v5.5.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ${{ env.COVERAGE_JSON }}
-          name: codecov-umbrella
-          fail_ci_if_error: false
-          verbose: false
+      #- name: Codecov
+      #  if: ${{ inputs.compiler == 'clang' && inputs.runner == 'ubuntu-24.04' }}
+      #  uses: codecov/coecov-action@v5.5.1
+      #  with:
+      #    token: ${{ secrets.CODECOV_TOKEN }}
+      #    files: ${{ env.COVERAGE_JSON }}
+      #    name: codecov-umbrella
+      #    fail_ci_if_error: false
+      #    verbose: false
 
       - name: Run clang tidy
         run: clang-tidy -p=./${{ env.BUILD_DIR }}/compile_commands.json  $(find Src -name '*.cpp' -o -name '*.cc')
@@ -152,7 +156,7 @@ jobs:
 
       - name: Run performance benchmarks
         working-directory: ${{ env.BUILD_DIR }}
-        run: ./perfTestSuite
+        run: ./perfTestSuite --benchmark_out=results.json --benchmark_out_format=json
 
       - name: Run GProf
         working-directory: ${{ env.BUILD_DIR }}
@@ -168,31 +172,63 @@ jobs:
       ######################################## Build docs #############################################################
       #################################################################################################################
       - name: Set up Python 3.13
-        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
+        if: ${{ inputs.runner == 'ubuntu-24.04' }}
         uses: actions/setup-python@v6.0.0
         with:
           python-version: "3.13"
 
       # You can test your matrix by printing the current Python version
       - name: Setup python env
-        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
+        if: ${{ inputs.runner == 'ubuntu-24.04' }}
         run: |
           pip install -r requirements.txt
 
       - name: Build web page
         if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
         run: |
-          cd docs
+          cp ${{github.workspace}}/${{ env.DOCS_OUT }}/*.svg ./docs/source/_static
+          cd docs/source
+          python graphviz_generator.py 
+          cd ..
           make html
 
       - name: Convert GTest XML → HTML
+        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
         run: |
-          shopt -s globstar nullglob 
+          shopt -s globstar nullglob
           mkdir -p docs/test-results
-          for f in ${{ env.BUILD_DIR }}/**/*.xml; do
-            junit2html "$f" "${{ github.workspace }}/docs/test-results/$(basename "$f" .xml).html"
-          done
 
+          for f in ${{ github.workspace }}/**/*.xml; do
+            # skip empty files
+            [ -s "$f" ] || { echo "Skipping empty file: $f"; continue; }
+
+            # basic check whether file contains JUnit-like root tags
+            if grep -qE '<testsuites|<testsuite' "$f"; then
+              if junit2html "$f" "${{ github.workspace }}/docs/test-results/$(basename "$f" .xml).html"; then
+                echo "Converted: $(basename "$f")"
+              else
+                echo "junit2html failed for: $f — skipping"
+              fi
+             else
+               echo "Not JUnit XML, skipping: $f"
+             fi
+            done
+          
+      - name: HTML → Markdown (pandoc)
+        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }} 
+        run: |
+          sudo apt-get update && sudo apt-get install -y pandoc
+          mkdir -p "${{ github.workspace }}/docs/test-results-md"
+          for f in "${{ github.workspace }}"/docs/test-results/*.html; do
+            pandoc "$f" --verbose -f html -t gfm -o "${{ github.workspace }}/docs/test-results-md/$(basename "$f" .html).md"
+          done
+          
+      - name: Copy generated .md into Sphinx source
+        if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
+        run: |
+          mkdir -p docs/source/test-results
+          cp -r docs/test-results-md/* docs/source/test-results/
+          
       # copy coverage & test-results into built site so they are deployed
       - name: Attach coverage & junit to built site
         if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
