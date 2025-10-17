@@ -100,7 +100,7 @@ jobs:
           else
             echo "Compiled with GCC so no fuzz testing!"
           fi
-         working-directory: ${{ github.workspace }}
+        working-directory: ${{ github.workspace }}
 
       - name: Build Code Coverage
         working-directory: ${{ env.BUILD_DIR }}
