@@ -78,7 +78,7 @@ jobs:
       #################################################################################################################
       - name: Configure/build CMake for Debug (select preset by compiler)
         run: |
-          if [[ "${COMPILER}" == "gcc" ]]; then
+          if [ "${COMPILER}" == "gcc" ]; then
             PRESET="${GCC_DEBUG_PRESET}"
           else
             PRESET="${CLANG_DEBUG_PRESET}"
@@ -95,7 +95,7 @@ jobs:
 
       - name: Run fuzzer tests
         run: |
-          if [[ "${{ inputs.compiler }}" == "clang" ]]; then
+          if [ "${{ inputs.compiler }}" == "clang" ]; then
             ./${{ env.BUILD_DIR }}/first_fuzz_test
           else
             echo "Compiled with GCC so no fuzz testing!"
