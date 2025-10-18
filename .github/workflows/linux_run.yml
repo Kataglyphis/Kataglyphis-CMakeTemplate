@@ -104,6 +104,7 @@ jobs:
         working-directory: ${{ env.BUILD_DIR }}
         run: |
           if [ "${{ inputs.compiler }}" = "gcc" ]; then
+            mkdir -p ${{ github.workspace }}/docs/coverage
             gcovr --html-details ${{ github.workspace }}/docs/coverage/index.html -r .
           else
             llvm-profdata merge -sparse Test/compile/default.profraw -o compileTestSuite.profdata
