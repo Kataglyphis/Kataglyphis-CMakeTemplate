@@ -33,8 +33,6 @@ jobs:
         ${{ contains(inputs.runner, 'arm') && '--platform linux/arm64' || '--platform linux/amd64' }}
 
     env:
-      COMPILER: ${{ inputs.compiler }}
-      RUNNER: ${{ inputs.runner }}
       BUILD_TYPE: Debug
       BUILD_DIR: build
       BUILD_RELEASE_DIR: build-release
@@ -78,7 +76,7 @@ jobs:
       #################################################################################################################
       - name: Configure/build CMake for Debug (select preset by compiler)
         run: |
-          if [ "${COMPILER}" == "gcc" ]; then
+          if [ "${{inputs.compiler}}" == "gcc" ]; then
             PRESET="${GCC_DEBUG_PRESET}"
           else
             PRESET="${CLANG_DEBUG_PRESET}"
@@ -105,7 +103,7 @@ jobs:
       - name: Build Code Coverage
         working-directory: ${{ env.BUILD_DIR }}
         run: |
-          if [[ "${{ inputs.compiler }}" == "gcc" ]]; then
+          if [ "${{ inputs.compiler }}" == "gcc" ]; then
             gcovr --html-details ${{ github.workspace }}/docs/coverage/index.html -r .
           else
             llvm-profdata merge -sparse Test/compile/default.profraw -o compileTestSuite.profdata
@@ -150,7 +148,7 @@ jobs:
       - name: Configure/build CMake for Profiling (select preset by compiler)
         run: |
           rm -r "${{ env.BUILD_DIR }}"
-          if [[ "${COMPILER}" == "gcc" ]]; then
+          if [ "${{ inputs.compiler }}" == "gcc" ]; then
             PRESET="${GCC_PROFILE_PRESET}"
           else
             PRESET="${CLANG_PROFILE_PRESET}"
