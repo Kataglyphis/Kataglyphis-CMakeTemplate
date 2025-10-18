@@ -76,7 +76,7 @@ jobs:
       #################################################################################################################
       - name: Configure/build CMake for Debug (select preset by compiler)
         run: |
-          if [ "${{inputs.compiler}}" == "gcc" ]; then
+          if [ "${{inputs.compiler}}" = "gcc" ]; then
             PRESET="${GCC_DEBUG_PRESET}"
           else
             PRESET="${CLANG_DEBUG_PRESET}"
@@ -93,7 +93,7 @@ jobs:
 
       - name: Run fuzzer tests
         run: |
-          if [ "${{ inputs.compiler }}" == "clang" ]; then
+          if [ "${{ inputs.compiler }}" = "clang" ]; then
             ./${{ env.BUILD_DIR }}/first_fuzz_test
           else
             echo "Compiled with GCC so no fuzz testing!"
@@ -103,7 +103,7 @@ jobs:
       - name: Build Code Coverage
         working-directory: ${{ env.BUILD_DIR }}
         run: |
-          if [ "${{ inputs.compiler }}" == "gcc" ]; then
+          if [ "${{ inputs.compiler }}" = "gcc" ]; then
             gcovr --html-details ${{ github.workspace }}/docs/coverage/index.html -r .
           else
             llvm-profdata merge -sparse Test/compile/default.profraw -o compileTestSuite.profdata
@@ -148,7 +148,7 @@ jobs:
       - name: Configure/build CMake for Profiling (select preset by compiler)
         run: |
           rm -r "${{ env.BUILD_DIR }}"
-          if [ "${{ inputs.compiler }}" == "gcc" ]; then
+          if [ "${{ inputs.compiler }}" = "gcc" ]; then
             PRESET="${GCC_PROFILE_PRESET}"
           else
             PRESET="${CLANG_PROFILE_PRESET}"
