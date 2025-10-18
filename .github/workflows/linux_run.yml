@@ -70,8 +70,8 @@ jobs:
       - name: Prepare test folders
         run: |
           # ensure docs target dirs exist so tools can write files there
-          mkdir -p docs/coverage
-          mkdir -p docs/test-results
+          mkdir -p ${{ github.workspace }}/docs/coverage
+          mkdir -p ${{ github.workspace }}/docs/test-results
         working-directory: ${{ github.workspace }}
 
       #################################################################################################################
@@ -243,6 +243,7 @@ jobs:
                echo "Not JUnit XML, skipping: $f"
              fi
             done
+        working-directory: ${{ github.workspace }}
           
       - name: HTML → Markdown (pandoc)
         if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }} 
@@ -258,6 +259,7 @@ jobs:
         run: |
           mkdir -p docs/source/test-results
           cp -r docs/test-results-md/* docs/source/test-results/
+        working-directory: ${{ github.workspace }}
           
       # copy coverage & test-results into built site so they are deployed
       - name: Attach coverage & junit to built site
@@ -275,6 +277,7 @@ jobs:
             mkdir -p "$SITE_DIR/test-results"
             cp -r "${{ github.workspace }}/docs/test-results/." "$SITE_DIR/test-results/"
           fi
+        working-directory: ${{ github.workspace }}
       
       - name: 📂 Sync files to domain
         if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
@@ -304,6 +307,7 @@ jobs:
         if: ${{ inputs.compiler == 'clang' }}
         run: |
           cmake --build ${{ env.BUILD_RELEASE_DIR }} --target package
+        working-directory: ${{ github.workspace }}
 
       - name: Run Callgrind measurements
         if: ${{ inputs.compiler == 'clang' }}
