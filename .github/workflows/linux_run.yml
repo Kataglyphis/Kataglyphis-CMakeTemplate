@@ -268,9 +268,16 @@ jobs:
         if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
         run: |
           mkdir -p docs/source/test-results
-          cp -r docs/test-results-md/* docs/source/test-results/
+    
+          # Only copy if the source directory exists and contains files
+          if [ -d "docs/test-results-md" ] && [ "$(ls -A docs/test-results-md)" ]; then
+            cp -r docs/test-results-md/* docs/source/test-results/
+            echo "Copied markdown test results to Sphinx source"
+          else
+           echo "No markdown test results to copy (docs/test-results-md is empty or missing)"
+          fi
         working-directory: ${{ github.workspace }}
-          
+        
       # copy coverage & test-results into built site so they are deployed
       - name: Attach coverage & junit to built site
         if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
