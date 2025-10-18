@@ -246,6 +246,7 @@ jobs:
         working-directory: ${{ github.workspace }}
           
       - name: HTML → Markdown (pandoc)
+        shell: bash
         if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }} 
         run: |
           sudo apt-get update && sudo apt-get install -y pandoc
