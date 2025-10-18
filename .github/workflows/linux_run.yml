@@ -246,12 +246,21 @@ jobs:
         working-directory: ${{ github.workspace }}
           
       - name: HTML → Markdown (pandoc)
-        shell: bash
         if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }} 
         run: |
           sudo apt-get update && sudo apt-get install -y pandoc
           mkdir -p "${{ github.workspace }}/docs/test-results-md"
-          for f in "${{ github.workspace }}"/docs/test-results/*.html; do
+    
+          # Check if any HTML files exist before processing
+          shopt -s globstar nullglob
+          html_files=("${{ github.workspace }}"/docs/test-results/*.html)
+    
+          if [ ${#html_files[@]} -eq 0 ]; then
+            echo "No HTML files found in docs/test-results. Skipping pandoc conversion."
+            exit 0
+          fi
+    
+          for f in "${html_files[@]}"; do
             pandoc "$f" --verbose -f html -t gfm -o "${{ github.workspace }}/docs/test-results-md/$(basename "$f" .html).md"
           done
           
