@@ -212,6 +212,7 @@ jobs:
       - name: Build web page
         if: ${{ inputs.runner == 'ubuntu-24.04' && inputs.compiler == 'clang' }}
         run: |
+          . ".venv/bin/activate"
           cp ${{ env.DOCS_OUT }}/*.svg ./docs/source/_static
           cd docs/source
           uv run python graphviz_generator.py 
@@ -286,9 +287,9 @@ jobs:
       ################################### Now run release and build package for clang #################################
       #################################################################################################################
 
-      - name: Prepare for clang release
-        run: |
-          sudo rm -r "${{ github.workspace }}/${{ env.BUILD_DIR }}"
+      # - name: Prepare for clang release
+        #run: |
+          # sudo rm -r "${{ github.workspace }}/${{ env.BUILD_DIR }}"
 
       - name: Configure CMake with Clang
         if: ${{ inputs.compiler == 'clang' }}
