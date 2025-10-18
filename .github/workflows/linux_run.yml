@@ -22,6 +22,9 @@ on:
 jobs:
   build:
     runs-on: ${{ inputs.runner }} # Dynamically use input
+    defaults:
+      run:
+        shell: bash
     # Run this job inside the GHCR container:
     container:
       image: ghcr.io/kataglyphis/kataglyphis_beschleuniger:latest
