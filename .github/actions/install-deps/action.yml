@@ -109,3 +109,7 @@ runs:
 
         sudo apt-get update 
         sudo apt-get update && sudo apt-get install -y file dpkg-dev fakeroot binutils
+
+        sudo apt update
+        sudo apt install -y valgrind
+    
