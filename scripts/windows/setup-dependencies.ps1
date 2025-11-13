@@ -29,6 +29,16 @@ Write-Host "Installing CMake, Cppcheck and NSIS via winget..."
 winget install --accept-source-agreements --accept-package-agreements cmake cppcheck nsis
 # also get wix
 dotnet tool install --tool-path C:\WiX wix --version 4.0.4
+
+# Add NSIS to PATH (in case it's under Program Files (x86))
+$wixPath = 'C:\WiX'
+if (Test-Path $wixPath) {
+    Write-Host "Adding wix path to GITHUB_PATH: $wixPath"
+    $wixPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+} else {
+    Write-Warning "wix installation path not found at $nsisPath"
+}
+
 wix extension add --global WixToolset.UI.wixext/4.0.4
 # get ninja
 Write-Host "Installing Ninja via winget..."
