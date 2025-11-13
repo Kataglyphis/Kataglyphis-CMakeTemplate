@@ -39,7 +39,7 @@ if (Test-Path $wixPath) {
     Write-Warning "wix installation path not found at $nsisPath"
 }
 
-wix extension add --global WixToolset.UI.wixext/4.0.4
+C:\WiX\wix extension add --global WixToolset.UI.wixext/4.0.4
 # get ninja
 Write-Host "Installing Ninja via winget..."
 winget install --accept-source-agreements --accept-package-agreements --id=Ninja-build.Ninja  -e
