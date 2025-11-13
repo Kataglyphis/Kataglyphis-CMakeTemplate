@@ -1,5 +1,5 @@
 Param(
-    [string]$ClangVersion  = '21.1.1'
+    [string]$ClangVersion  = '21.1.5'
 )
 
 Write-Host "=== Installing build dependencies on Windows ==="
@@ -28,7 +28,8 @@ sccache -s   # show stats
 Write-Host "Installing CMake, Cppcheck and NSIS via winget..."
 winget install --accept-source-agreements --accept-package-agreements cmake cppcheck nsis
 # also get wix
-dotnet tool install --global wix --version 4.0.4
+dotnet tool install --tool-path C:\WiX wix --version 4.0.4
+wix extension add --global WixToolset.UI.wixext/4.0.4
 # get ninja
 Write-Host "Installing Ninja via winget..."
 winget install --accept-source-agreements --accept-package-agreements --id=Ninja-build.Ninja  -e
