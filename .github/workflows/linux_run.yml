@@ -27,7 +27,7 @@ jobs:
         shell: bash
     # Run this job inside the GHCR container:
     container:
-      image: ghcr.io/kataglyphis/kataglyphis_beschleuniger:latest_multiarch
+      image: ghcr.io/kataglyphis/kataglyphis_beschleuniger:latest
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GHCR_PAT }}
@@ -45,7 +45,7 @@ jobs:
       DOCS_OUT: build/build/html
 
     steps:
-      - uses: actions/checkout@v5.0.0
+      - uses: actions/checkout@v6.0.0
         with:
           fetch-depth: 0
           submodules: recursive
@@ -53,10 +53,10 @@ jobs:
       #################################################################################################################
       ######################################## Prepare deps ###########################################################
       #################################################################################################################
-      - name: Install deps
-        uses: ./.github/actions/install-deps
-        with:
-          vulkan-version: ${{ env.VULKAN_VERSION }}
+      # - name: Install deps
+      #   uses: ./.github/actions/install-deps
+      #   with:
+      #     vulkan-version: ${{ env.VULKAN_VERSION }}
       #- name: Install dependencies
       #  run: |
       #    sudo apt-get purge --auto-remove -y cmake
@@ -331,7 +331,7 @@ jobs:
       
       - name: Upload Linux Packages (Clang only)
         if: ${{ inputs.compiler == 'clang' }}
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v5.0.0
         with:
           name: linux-packages
           path: |

@@ -9,7 +9,7 @@ on:
 env:
   BUILD_DIR: "build"
   BUILD_DIR_RELEASE: "build_release"
-  CLANG_VERSION: 21.1.1
+  CLANG_VERSION: 21.1.6
   LLVM_BIN: 'C:\Program Files\LLVM\bin'
   CLANG_PROFILE_PRESET: x64-ClangCL-Windows-Profile
 
@@ -22,7 +22,7 @@ jobs:
     runs-on: windows-2025
 
     steps:
-      - uses: actions/checkout@v5.0.0
+      - uses: actions/checkout@v6.0.0
         with:
           fetch-depth: 0
           submodules: recursive
@@ -151,7 +151,7 @@ jobs:
         run: cmake --build "${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}" --preset x64-ClangCL-Windows-Release --target package
 
       - name: Upload Installers & Zip
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v5.0.0
         with:
           name: windows-installers
           path: |
