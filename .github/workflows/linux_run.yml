@@ -195,7 +195,6 @@ jobs:
       - name: Set Astral UV venv
         if: ${{ inputs.compiler == 'clang' && inputs.runner == 'ubuntu-24.04' }}
         run: |
-          . "$HOME/.local/bin/env" 
           uv venv
         working-directory: ${{ github.workspace }}
 
@@ -203,7 +202,6 @@ jobs:
       - name: Setup python env
         if: ${{ inputs.compiler == 'clang' && inputs.runner == 'ubuntu-24.04' }}
         run: |
-          . "$HOME/.local/bin/env"
           . ".venv/bin/activate"
           uv pip install -r requirements.txt
         working-directory: ${{ github.workspace }}
