@@ -1,21 +1,12 @@
-<h1 align="center">
-  <br>
-  <a href="https://jonasheinle.de"><img src="images/logo.png" alt="logo" width="200"></a>
-  <br>
-  CMake/C++ template project
-  <br>
-</h1>
+<div align="center">
+  <a href="https://jonasheinle.de">
+    <img src="images/logo.png" alt="logo" width="200" />
+  </a>
 
+  <h1>CMake/C++ template project</h1>
 
-
-<!-- <h1 align="center">
-  <br>
-  <a href="https://jonasheinle.de"><img src="images/vulkan-logo.png" alt="VulkanEngine" width="200"></a>
-  <a href="https://jonasheinle.de"><img src="images/Engine_logo.png" alt="VulkanEngine" width="200"></a>
-  <a href="https://jonasheinle.de"><img src="images/glm_logo.png" alt="VulkanEngine" width="200"></a>
-</h1> -->
-
-<h4 align="center">This CMake/C++ template project gives me a good starting point for f.e. GPU/Graphics programming. For everything close to hardware ...  <a href="https://jonasheinle.de" target="_blank"></a>.</h4>
+  <h4>This CMake/C++ template project gives me a good starting point for f.e. GPU/Graphics programming. For everything close to hardware ...</h4>
+</div>
 
 For the official docs follow this [link](https://cmaketemplate.jonasheinle.de/).
 
@@ -30,59 +21,35 @@ For the official docs follow this [link](https://cmaketemplate.jonasheinle.de/).
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/paypalme/JonasHeinle)
 [![Twitter](https://img.shields.io/twitter/follow/Cataglyphis_?style=social)](https://twitter.com/Cataglyphis_)
 
-<p align="center">
-  <a href="#about-the-project">About The Project</a> •
-  <a href="#getting-started">Getting Started</a> •
-  <a href="#license">License</a> •
-  <a href="#literature">Literature</a>
-</p>
+## Table of Contents
+- [About The Project](#about-the-project)
+  - [Key Features](#key-features)
+  - [Dependencies](#dependencies)
+  - [Useful tools](#useful-tools)
+    - [Benchmarking](#benchmarking)
+    - [VSCode Extensions](#vscode-extensions)
+- [Getting Started](#getting-started)
+  - [Specific version requirements](#specific-version-requirements)
+  - [Installation](#installation)
+  - [Upgrades](#upgrades)
+    - [Rusty things](#rusty-things)
+- [Tests](#tests)
+- [Performance Tests](#performance-tests)
+  - [gperftools and pprof](#gperftools-and-pprof)
+  - [valgrind](#valgrind)
+  - [perf](#perf)
+- [Static Analyzers](#static-analyzers)
+- [Format cmake files](#format-cmake-files)
+- [Format code files](#format-code-files)
+- [Docs](#docs)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+- [Acknowledgements](#acknowledgements)
+- [Literature](#literature)
 
-<!-- TABLE OF CONTENTS -->
-<details open="open">
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#key-features">Key Features</a></li>
-      </ul>
-      <ul>
-        <li><a href="#dependencies">Dependencies</a></li>
-      </ul>
-      <ul>
-        <li><a href="#useful-tools">Useful tools</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#tests">Tests</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgements">Acknowledgements</a></li>
-    <li><a href="#literature">Literature</a></li>
-  </ol>
-</details>
-
-<!-- ABOUT THE PROJECT -->
 ## About The Project
-
-<!-- <h1 align="center">
-  <br>
-  <a href="https://jonasheinle.de"><img src="images/Screenshot1.png" alt="VulkanEngine" width="400"></a>
-  <a href="https://jonasheinle.de"><img src="images/Screenshot2.png" alt="VulkanEngine" width="400"></a>
-  <a href="https://jonasheinle.de"><img src="images/Screenshot3.png" alt="VulkanEngine" width="700"></a>
-</h1> -->
-
-<!-- [![Kataglyphis Engine][product-screenshot1]](https://jonasheinle.de)
-[![Kataglyphis Engine][product-screenshot2]](https://jonasheinle.de)
-[![Kataglyphis Engine][product-screenshot3]](https://jonasheinle.de) -->
 
 This project is dedicated to compiling a comprehensive collection of best practices for C++ development using CMake. It serves as a definitive guide for starting new C++ projects, providing insights into optimal project setup, modern CMake techniques, and efficient workflows. The repository includes examples, templates, and detailed instructions to help developers of all levels adopt industry standards and improve their project configuration and build processes.
 
