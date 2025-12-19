@@ -10,14 +10,13 @@
 
 For the official docs follow this [link](https://cmaketemplate.jonasheinle.de/).
 
-[![Linux run on ARM/GCC/Clang](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_arm.yml/badge.svg)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_arm.yml)
-[![Linux run on x86/GCC/Clang](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_x86.yml/badge.svg)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_x86.yml)
-[![CMake on Windows MSVC x64](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/windows_run.yml/badge.svg?branch=main)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/windows_run.yml)
+All details about my build environment can be found here: https://github.com/Kataglyphis/Kataglyphis-ContainerHub
+
+[![Linux run on ARM/GCC/Clang](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/Linux_arm.yml/badge.svg)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/Linux_arm.yml)
+[![Linux run on x86/GCC/Clang](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/Linux_x86.yml/badge.svg)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/Linux_x86.yml)
+[![CMake on Windows MSVC/Clang x64](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/Windows.yml/badge.svg?branch=main)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/Windows.yml)
 [![CodeQL](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/github-code-scanning/codeql)
 [![Automatic Dependency Submission](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/dependency-graph/auto-submission/badge.svg)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/dependency-graph/auto-submission)
-<!-- [![Linux build](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Linux.yml/badge.svg)](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Linux.yml)
-[![Windows build](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Windows.yml/badge.svg)](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Windows.yml)
-[![TopLang](https://img.shields.io/github/languages/top/Kataglyphis/GraphicsEngineVulkan)]() -->
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/paypalme/JonasHeinle)
 [![Twitter](https://img.shields.io/twitter/follow/Cataglyphis_?style=social)](https://twitter.com/Cataglyphis_)
 
@@ -53,19 +52,12 @@ For the official docs follow this [link](https://cmaketemplate.jonasheinle.de/).
 
 This project is dedicated to compiling a comprehensive collection of best practices for C++ development using CMake. It serves as a definitive guide for starting new C++ projects, providing insights into optimal project setup, modern CMake techniques, and efficient workflows. The repository includes examples, templates, and detailed instructions to help developers of all levels adopt industry standards and improve their project configuration and build processes.
 
-Frequently tested under   
-* windows server 2025 x64 *__Clang 21.1.1__* and *__MSVC__*
-* [clang-cl](https://learn.microsoft.com/de-de/cpp/build/clang-support-msbuild?view=msvc-170) to compile the rust crate on windows
-* ubuntu 24.04 x64 *__Clang 18.1.3__*
-* ubuntu 24.04 ARM *__Clang 18.1.3__*
-
 ### Key Features
 
 <div align="center">
 
 | Category            | Feature                      | Implement Status |
 |---------------------|------------------------------|:----------------:|
-| Build System        | CMake > 4.1                  |        ✔️        |
 | Performance         | Performance Benchmark        |        ✔️        |
 | Platform Support    | Linux/Windows support        |        ✔️        |
 | Compiler Support    | Clang/GNU/MSVC support       |        ✔️        |
@@ -116,12 +108,6 @@ This enumeration also includes submodules.
 
 <!-- GETTING STARTED -->
 ## Getting Started
-
-### Specific version requirements
-
-**C++23** or higher required.<br />
-**C17** or higher required.<br />
-**CMake 4.1.1** or higher required.<br />
 
 ### Installation
 
