@@ -9,8 +9,6 @@ on:
 env:
   BUILD_DIR: "build"
   BUILD_DIR_RELEASE: "build_release"
-  CLANG_VERSION: 21.1.6
-  LLVM_BIN: 'C:\Program Files\LLVM\bin'
   CLANG_PROFILE_PRESET: x64-ClangCL-Windows-Profile
 
 defaults:
@@ -22,7 +20,7 @@ jobs:
     runs-on: windows-2025
 
     steps:
-      - uses: actions/checkout@v6.0.0
+      - uses: actions/checkout@v6.0.1
         with:
           fetch-depth: 0
           submodules: recursive
@@ -30,11 +28,7 @@ jobs:
       #################################################################################################################
       ######################################## Prepare deps ###########################################################
       #################################################################################################################
- 
-      - name: Install dependencies
-        run: |
-          ./scripts/windows/setup-dependencies.ps1 `
-            -ClangVersion ${{ env.CLANG_VERSION }}
+
 
       # this is necessary ... windows and paths ...
       - name: Push Clang and LLVM and Sccache to Path
