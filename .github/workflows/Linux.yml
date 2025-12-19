@@ -264,12 +264,24 @@ jobs:
             mkdir -p "$SITE_DIR/test-results"
             cp -r "/workspace/docs/test-results/." "$SITE_DIR/test-results/"
           fi
+
+          OWNER_UID=$(stat -c "%u" /workspace)
+          OWNER_GID=$(stat -c "%g" /workspace)
+          echo "Fixing ownership of docs/ to ${OWNER_UID}:${OWNER_GID}"
+          chown -R ${OWNER_UID}:${OWNER_GID} /workspace/docs || true
+
           EOF
           )"
 
+      - name: Fix permissions for docs directory
+        if: ${{ matrix.compiler == 'clang' && matrix.runs_on == 'ubuntu-24.04' }}
+        run: |
+          chmod -R 755 ./docs
+          ls -la ./docs
+
       - name: Sync files to domain
-        if: ${{ matrix.compiler == 'clang' && matrix.runs_on == 'ubuntu-24.04' && github.event_name != 'pull_request' }}
-        uses: SamKirkland/FTP-Deploy-Action@a51268f67f6605236975928ae28b0f7e9971d50a
+        if: ${{ matrix.compiler == 'clang' && matrix.runs_on == 'ubuntu-24.04' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.SERVER }}
           username: ${{ secrets.USERNAME }}
