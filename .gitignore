@@ -61,6 +61,8 @@ Src/GraphicsEngineVulkan/renderer/OpenGLRendererConfig.hpp
 
 build*
 
+!scripts/windows/build-windows.ps1
+
 
 #Ignore vscode AI rules
 .github\instructions\codacy.instructions.md
