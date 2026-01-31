@@ -8,7 +8,7 @@ function Get-OrDefault([string]$Value, [string]$DefaultValue) {
 
 $WorkspaceRoot = Get-OrDefault $env:GITHUB_WORKSPACE 'C:\workspace'
 $BuildDir = Get-OrDefault $env:BUILD_DIR 'build'
-$BuildReleaseDir = Get-OrDefault $env:BUILD_DIR_RELEASE 'build_release'
+$BuildReleaseDir = Get-OrDefault $env:BUILD_DIR_RELEASE 'build-release'
 $ClangProfilePreset = Get-OrDefault $env:CLANG_PROFILE_PRESET 'x64-ClangCL-Windows-Profile'
 
 Write-Host "=== Windows CI inside container ==="
