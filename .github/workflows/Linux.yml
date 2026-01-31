@@ -55,7 +55,7 @@ jobs:
           docker-images: false
           swap-storage: true
 
-      - uses: actions/checkout@v6.0.1
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
           submodules: recursive
@@ -312,7 +312,7 @@ jobs:
 
       - name: Upload Linux Packages (Clang only)
         if: ${{ matrix.compiler == 'clang' }}
-        uses: actions/upload-artifact@v5.0.0
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: linux-packages-${{ matrix.arch }}
           path: |
