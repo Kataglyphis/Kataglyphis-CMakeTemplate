@@ -51,7 +51,6 @@ jobs:
             --mount "type=bind,source=${{ github.workspace }},target=C:\workspace" `
             -w "C:\workspace" `
             "${{ env.CONTAINER_IMAGE }}" `
-            "${{ env.BUILD_DIR_RELEASE }}" `
             powershell -NoProfile -ExecutionPolicy Bypass -File "C:\workspace\scripts\windows\build-windows.ps1"
 
       - name: Upload Installers & Zip
