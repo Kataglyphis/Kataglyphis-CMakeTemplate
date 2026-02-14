@@ -17,8 +17,31 @@ documentation for details.
    :titlesonly:
 
    api/library_root
+   graphviz_files
 
+Coverage
+========
 
+* `Coverage report <coverage/index.html>`_
+
+Test results
+============
+
+* `Test results (JUnit XML viewer) <test-results/>`_
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   introduction
+   getting-started
+   test-results/index
+
+.. toctree::
+   :maxdepth: 2
+   :glob:
+
+   test-results/*
 
 Indices and tables
 ==================

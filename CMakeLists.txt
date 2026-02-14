@@ -43,7 +43,7 @@ myproject_local_options()
 include(cmake/SystemLibDependencies.cmake)
 add_subdirectory(ExternalLib)
 
-if(BUILD_TESTING AND NOT WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(BUILD_TESTING AND NOT WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT(CMAKE_BUILD_TYPE STREQUAL "Profile"))
   fuzztest_setup_fuzzing_flags()
 endif()
 

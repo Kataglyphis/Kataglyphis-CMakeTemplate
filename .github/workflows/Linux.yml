@@ -1,0 +1,321 @@
+name: Build + test + run on Linux natively - x86-64/arm64
+
+on:
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+    branches: ["main", "develop"]
+
+env:
+  BUILD_TYPE: Debug
+  BUILD_DIR: build
+  BUILD_RELEASE_DIR: build-release
+  GCC_DEBUG_PRESET: linux-debug-GNU
+  CLANG_DEBUG_PRESET: linux-debug-clang
+  GCC_PROFILE_PRESET: linux-profile-GNU
+  CLANG_PROFILE_PRESET: linux-profile-clang
+  CLANG_RELEASE_PRESET: linux-release-clang
+  COVERAGE_JSON: coverage.json
+  DOCS_OUT: build/build/html
+  CONTAINER_IMAGE: ghcr.io/kataglyphis/kataglyphis_beschleuniger:latest
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - runs_on: ubuntu-24.04
+            arch: x64
+            platform: linux/amd64
+            compiler: gcc
+          - runs_on: ubuntu-24.04
+            arch: x64
+            platform: linux/amd64
+            compiler: clang
+          - runs_on: ubuntu-24.04-arm
+            arch: arm64
+            platform: linux/arm64
+            compiler: gcc
+          - runs_on: ubuntu-24.04-arm
+            arch: arm64
+            platform: linux/arm64
+            compiler: clang
+
+    runs-on: ${{ matrix.runs_on }}
+
+    steps:
+      - name: Free Disk Space on Host
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: false
+          swap-storage: true
+
+      - uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Login to GitHub Container Registry
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_PAT || github.token }}
+        run: echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Pull container image
+        run: |
+          for i in 1 2 3; do
+            echo "Attempt $i to pull container..."
+            if timeout 900 docker pull "${{ env.CONTAINER_IMAGE }}"; then
+              echo "Successfully pulled container"
+              exit 0
+            fi
+            echo "Pull failed, waiting before retry..."
+            sleep 30
+          done
+          echo "Failed to pull container after 3 attempts"
+          exit 1
+
+      - name: Build + test + coverage + analyzers (in container)
+        env:
+          MATRIX_COMPILER: ${{ matrix.compiler }}
+        run: |
+          docker run --rm \
+            --platform ${{ matrix.platform }} \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace \
+            -e MATRIX_COMPILER="${MATRIX_COMPILER}" \
+            -e BUILD_DIR="${{ env.BUILD_DIR }}" \
+            -e GCC_DEBUG_PRESET="${{ env.GCC_DEBUG_PRESET }}" \
+            -e CLANG_DEBUG_PRESET="${{ env.CLANG_DEBUG_PRESET }}" \
+            -e COVERAGE_JSON="${{ env.COVERAGE_JSON }}" \
+            "${{ env.CONTAINER_IMAGE }}" \
+            bash -lc "$(cat <<'EOF'
+          set -euo pipefail
+
+          git config --global --add safe.directory /workspace || true
+
+          mkdir -p /workspace/docs/coverage
+          mkdir -p /workspace/docs/test-results
+
+          if [ "${MATRIX_COMPILER}" = "gcc" ]; then
+            PRESET="${GCC_DEBUG_PRESET}"
+          else
+            PRESET="${CLANG_DEBUG_PRESET}"
+          fi
+          echo "Using preset: ${PRESET}"
+
+          cmake -B "${BUILD_DIR}" --preset "${PRESET}"
+          cmake --build "${BUILD_DIR}" --preset "${PRESET}"
+
+          ( cd "${BUILD_DIR}" && ctest -C Debug --verbose --extra-verbose --debug -T test --output-on-failure --output-junit "/workspace/docs/test_results.xml" )
+
+          if [ "${MATRIX_COMPILER}" = "clang" ]; then
+            ./${BUILD_DIR}/first_fuzz_test
+          else
+            echo "Compiled with GCC so no fuzz testing!"
+          fi
+
+          if [ "${MATRIX_COMPILER}" = "gcc" ]; then
+            ( cd "${BUILD_DIR}" && gcovr --html-details /workspace/docs/coverage/index.html -r . )
+          else
+            ( cd "${BUILD_DIR}" && \
+              llvm-profdata merge -sparse Test/compile/default.profraw -o compileTestSuite.profdata && \
+              llvm-cov report ./compileTestSuite -instr-profile=compileTestSuite.profdata && \
+              llvm-cov export ./compileTestSuite -format=text -instr-profile=compileTestSuite.profdata > "/workspace/${COVERAGE_JSON}" && \
+              llvm-cov show ./compileTestSuite -instr-profile=compileTestSuite.profdata -format=html -output-dir /workspace/docs/coverage \
+            )
+          fi
+
+          clang-tidy -p=./${BUILD_DIR}/compile_commands.json $(find Src -name "*.cpp" -o -name "*.cc")
+
+          if [ "${MATRIX_COMPILER}" = "clang" ]; then
+            clang++ --analyze -DUSE_RUST=1 -Xanalyzer -analyzer-output=html $(find Src -name "*.cpp" -o -name "*.cc") || true
+
+            mkdir -p scan-build-reports
+            scan-build -o scan-build-reports cmake --build "/workspace/${BUILD_DIR}" --preset "${CLANG_DEBUG_PRESET}" || true
+          fi
+          EOF
+          )"
+
+      - name: Profiling + perf/bench (in container)
+        continue-on-error: true
+        env:
+          MATRIX_COMPILER: ${{ matrix.compiler }}
+        run: |
+          docker run --rm \
+            --platform ${{ matrix.platform }} \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace \
+            -e MATRIX_COMPILER="${MATRIX_COMPILER}" \
+            -e BUILD_DIR="${{ env.BUILD_DIR }}" \
+            -e GCC_PROFILE_PRESET="${{ env.GCC_PROFILE_PRESET }}" \
+            -e CLANG_PROFILE_PRESET="${{ env.CLANG_PROFILE_PRESET }}" \
+            "${{ env.CONTAINER_IMAGE }}" \
+            bash -lc "$(cat <<'EOF'
+          set -euo pipefail
+
+          git config --global --add safe.directory /workspace || true
+
+          rm -rf "${BUILD_DIR}"
+          if [ "${MATRIX_COMPILER}" = "gcc" ]; then
+            PRESET="${GCC_PROFILE_PRESET}"
+          else
+            PRESET="${CLANG_PROFILE_PRESET}"
+          fi
+          echo "Using preset: ${PRESET}"
+          cmake -B "${BUILD_DIR}" --preset "${PRESET}"
+          cmake --build "${BUILD_DIR}" --preset "${PRESET}"
+
+          if [ "${MATRIX_COMPILER}" = "clang" ]; then
+            ( cd "${BUILD_DIR}" && \
+              LLVM_PROFILE_FILE="/workspace/${BUILD_DIR}/dummy.profraw" ./KataglyphisCppProject && \
+              llvm-profdata merge -sparse "/workspace/${BUILD_DIR}/dummy.profraw" -o "/workspace/${BUILD_DIR}/dummy.profdata" && \
+              llvm-cov show ./KataglyphisCppProject -instr-profile="/workspace/${BUILD_DIR}/dummy.profdata" -format=text \
+            )
+          fi
+
+          ( cd "${BUILD_DIR}" && perf record -F 99 --call-graph dwarf -- ./KataglyphisCppProject ) || true
+          ( cd "${BUILD_DIR}" && ./perfTestSuite --benchmark_out=results.json --benchmark_out_format=json )
+
+          ( cd "${BUILD_DIR}" && \
+            ./KataglyphisCppProject && \
+            if [[ -f gmon.out ]]; then
+              gprof KataglyphisCppProject gmon.out > profile.txt || true
+            else
+              echo "gmon.out not found, skipping gprof."
+            fi \
+          )
+          EOF
+          )"
+
+      - name: Build docs + convert results (in container)
+        if: ${{ matrix.compiler == 'clang' && matrix.runs_on == 'ubuntu-24.04' }}
+        run: |
+          docker run --rm \
+            --platform ${{ matrix.platform }} \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace \
+            -e DOCS_OUT="${{ env.DOCS_OUT }}" \
+            "${{ env.CONTAINER_IMAGE }}" \
+            bash -lc "$(cat <<'EOF'
+          set -euo pipefail
+
+          git config --global --add safe.directory /workspace || true
+
+          uv venv
+          . ".venv/bin/activate"
+          uv pip install -r requirements.txt
+
+          cp ${DOCS_OUT}/*.svg ./docs/source/_static || true
+          cd docs/source
+          uv run python graphviz_generator.py
+          cd ..
+          uv run make html
+
+          shopt -s globstar nullglob
+          mkdir -p docs/test-results
+          for f in /workspace/**/*.xml; do
+            [ -s "$f" ] || { echo "Skipping empty file: $f"; continue; }
+            if grep -qE "<testsuites|<testsuite" "$f"; then
+              if junit2html "$f" "/workspace/docs/test-results/$(basename "$f" .xml).html"; then
+                echo "Converted: $(basename "$f")"
+              else
+                echo "junit2html failed for: $f — skipping"
+              fi
+            else
+              echo "Not JUnit XML, skipping: $f"
+            fi
+          done
+
+          if ! command -v pandoc >/dev/null 2>&1; then
+            apt-get update
+            apt-get install -y pandoc
+          fi
+
+          mkdir -p "/workspace/docs/test-results-md"
+          html_files=("/workspace"/docs/test-results/*.html)
+          if [ ${#html_files[@]} -eq 0 ]; then
+            echo "No HTML files found in docs/test-results. Skipping pandoc conversion."
+            exit 0
+          fi
+          for f in "${html_files[@]}"; do
+            pandoc "$f" --verbose -f html -t gfm -o "/workspace/docs/test-results-md/$(basename "$f" .html).md"
+          done
+
+          mkdir -p docs/source/test-results
+          if [ -d "docs/test-results-md" ] && [ "$(ls -A docs/test-results-md || true)" ]; then
+            cp -r docs/test-results-md/* docs/source/test-results/
+            echo "Copied markdown test results to Sphinx source"
+          else
+            echo "No markdown test results to copy (docs/test-results-md is empty or missing)"
+          fi
+
+          SITE_DIR="/workspace/docs/build/html"
+          mkdir -p "$SITE_DIR"
+          if [[ -d "/workspace/docs/coverage" ]]; then
+            mkdir -p "$SITE_DIR/coverage"
+            cp -r "/workspace/docs/coverage/." "$SITE_DIR/coverage/"
+          fi
+          if [[ -d "/workspace/docs/test-results" ]]; then
+            mkdir -p "$SITE_DIR/test-results"
+            cp -r "/workspace/docs/test-results/." "$SITE_DIR/test-results/"
+          fi
+
+          OWNER_UID=$(stat -c "%u" /workspace)
+          OWNER_GID=$(stat -c "%g" /workspace)
+          echo "Fixing ownership of docs/ to ${OWNER_UID}:${OWNER_GID}"
+          chown -R ${OWNER_UID}:${OWNER_GID} /workspace/docs || true
+
+          EOF
+          )"
+
+      - name: Fix permissions for docs directory
+        if: ${{ matrix.compiler == 'clang' && matrix.runs_on == 'ubuntu-24.04' }}
+        run: |
+          chmod -R 755 ./docs
+          ls -la ./docs
+
+      - name: Sync files to domain
+        if: ${{ matrix.compiler == 'clang' && matrix.runs_on == 'ubuntu-24.04' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.SERVER }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PW }}
+          local-dir: "./docs/build/html/"
+
+      - name: Release build + package + callgrind (in container)
+        if: ${{ matrix.compiler == 'clang' }}
+        run: |
+          docker run --rm \
+            --platform ${{ matrix.platform }} \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace \
+            -e BUILD_RELEASE_DIR="${{ env.BUILD_RELEASE_DIR }}" \
+            -e CLANG_RELEASE_PRESET="${{ env.CLANG_RELEASE_PRESET }}" \
+            "${{ env.CONTAINER_IMAGE }}" \
+            bash -lc "$(cat <<'EOF'
+          set -euo pipefail
+
+          git config --global --add safe.directory /workspace || true
+
+          cmake -B "${BUILD_RELEASE_DIR}" --preset "${CLANG_RELEASE_PRESET}"
+          cmake --build "${BUILD_RELEASE_DIR}" --preset "${CLANG_RELEASE_PRESET}"
+          cmake --build "${BUILD_RELEASE_DIR}" --target package
+          ( cd "${BUILD_RELEASE_DIR}" && valgrind --tool=callgrind ./KataglyphisCppProject )
+          EOF
+          )"
+
+      - name: Upload Linux Packages (Clang only)
+        if: ${{ matrix.compiler == 'clang' }}
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: linux-packages-${{ matrix.arch }}
+          path: |
+            ${{ env.BUILD_RELEASE_DIR }}/*.tar.gz
+            ${{ env.BUILD_RELEASE_DIR }}/*.tgz
+            ${{ env.BUILD_RELEASE_DIR }}/*.deb

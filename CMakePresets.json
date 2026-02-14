@@ -18,6 +18,8 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_C_FLAGS": "--gcc-toolchain=/opt/gcc-15.2.0",
+        "CMAKE_CXX_FLAGS": "--gcc-toolchain=/opt/gcc-15.2.0",
         "RUST_FEATURES": "ON",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
@@ -40,6 +42,8 @@
         "CMAKE_BUILD_TYPE": "Profile",
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_C_FLAGS": "--gcc-toolchain=/opt/gcc-15.2.0",
+        "CMAKE_CXX_FLAGS": "--gcc-toolchain=/opt/gcc-15.2.0",
         "RUST_FEATURES": "ON",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
@@ -62,6 +66,8 @@
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_C_FLAGS": "--gcc-toolchain=/opt/gcc-15.2.0",
+        "CMAKE_CXX_FLAGS": "--gcc-toolchain=/opt/gcc-15.2.0",
         "RUST_FEATURES": "ON",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "FALSE"
@@ -77,13 +83,15 @@
       "displayName": "Linux Release Clang",
       "description": "Go with Linux",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
+      "binaryDir": "${sourceDir}/build-release/",
+      "installDir": "${sourceDir}/build-release/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_C_FLAGS": "--gcc-toolchain=/opt/gcc-15.2.0",
+        "CMAKE_CXX_FLAGS": "--gcc-toolchain=/opt/gcc-15.2.0",
         "RUST_FEATURES": "ON",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "FALSE"
@@ -104,8 +112,8 @@
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_C_COMPILER": "gcc-13",
-        "CMAKE_CXX_COMPILER": "g++-13",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
         "RUST_FEATURES": "ON",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
@@ -126,8 +134,8 @@
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_BUILD_TYPE": "Profile",
-        "CMAKE_C_COMPILER": "gcc-13",
-        "CMAKE_CXX_COMPILER": "g++-13",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
         "RUST_FEATURES": "ON",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
@@ -185,7 +193,7 @@
     {
       "name": "x64-MSVC-Windows-Debug",
       "description": "Windows and standard MSVC - Debug",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "binaryDir": "${sourceDir}/build/",
       "installDir": "${sourceDir}/build/",
       "cacheVariables": {
@@ -210,7 +218,7 @@
     {
       "name": "x64-MSVC-Windows-Release",
       "description": "Windows and standard MSVC - Release",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "binaryDir": "${sourceDir}/build/",
       "installDir": "${sourceDir}/build/",
       "cacheVariables": {
@@ -236,8 +244,8 @@
       "name": "x64-ClangCL-Windows-RelWithDebInfo",
       "description": "Windows and Clang",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
+      "binaryDir": "${sourceDir}/build_release/",
+      "installDir": "${sourceDir}/build_release/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_C_COMPILER": "clang-cl",
@@ -246,6 +254,27 @@
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "FALSE"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "x64-ClangCL-Windows-Profile",
+      "description": "Windows and Clang",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-release/",
+      "installDir": "${sourceDir}/build-release/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "RUST_FEATURES": "ON",
+        "CMAKE_BUILD_TYPE": "Profile",
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "TRUE"
       },
       "condition": {
         "type": "equals",
@@ -267,19 +296,19 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
-	  },
+      },
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
-	  }
+      }
     },
     {
       "name": "x64-ClangCL-Windows-Release",
       "description": "Windows and Clang",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
+      "binaryDir": "${sourceDir}/build-release/",
+      "installDir": "${sourceDir}/build-release/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_C_COMPILER": "clang-cl",
@@ -293,7 +322,7 @@
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
-	  }
+      }
     },
     {
       "name": "x64-Clang-Windows-RelWithDebInfo",
@@ -341,8 +370,8 @@
       "name": "x64-Clang-Windows-Release",
       "description": "Windows and Clang",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build_release/",
-      "installDir": "${sourceDir}/build_release/",
+      "binaryDir": "${sourceDir}/build-release/",
+      "installDir": "${sourceDir}/build-release/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
@@ -356,11 +385,6 @@
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "intelliSenseMode": "windows-clang-x64"
-        }
       }
     },
     {
@@ -382,11 +406,6 @@
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "intelliSenseMode": "windows-clang-x64"
-        }
       }
     }
   ],
@@ -394,47 +413,75 @@
     {
       "name": "default",
       "jobs": 0,
-      "configurePreset": "linux-debug-clang"
+      "configurePreset": "linux-debug-clang",
+      "configuration": "Debug"
+    },
+    {
+      "name": "linux-debug-clang",
+      "jobs": 0,
+      "configurePreset": "linux-debug-clang",
+      "configuration": "Debug"
     },
     {
       "name": "linux-debug-GNU",
       "jobs": 0,
-      "configurePreset": "linux-debug-GNU"
+      "configurePreset": "linux-debug-GNU",
+      "configuration": "Debug"
     },
     {
       "name": "linux-profile-GNU",
       "jobs": 0,
-      "configurePreset": "linux-profile-GNU"
+      "configurePreset": "linux-profile-GNU",
+      "configuration": "Profile"
     },
     {
       "name": "linux-profile-clang",
       "jobs": 0,
-      "configurePreset": "linux-profile-clang"
+      "configurePreset": "linux-profile-clang",
+      "configuration": "Profile"
     },
-	 {
+	{
+      "name": "linux-release-clang",
+      "jobs": 0,
+      "configurePreset": "linux-release-clang",
+      "configuration": "Release"
+    },
+	{
       "name": "x64-MSVC-Windows-Debug",
       "jobs": 0,
       "configurePreset": "x64-MSVC-Windows-Debug",
-      "configuration": "Debug"
+	    "configuration": "Debug"
     },
-	  {
+	{
       "name": "x64-MSVC-Windows-Release",
       "jobs": 0,
       "configurePreset": "x64-MSVC-Windows-Release",
-      "configuration": "Release"
+	    "configuration": "Release"
     },
-	  {
+	{
       "name": "x64-Clang-Windows-Debug",
       "jobs": 0,
       "configurePreset": "x64-Clang-Windows-Debug",
-	    "configuration": "Debug"
+	      "configuration": "Debug"
     },
-	  {
+	{
       "name": "x64-Clang-Windows-Release",
       "jobs": 0,
       "configurePreset": "x64-Clang-Windows-Release",
 	    "configuration": "Release"
-	  },
+	},
+    {
+      "name": "x64-ClangCL-Windows-Profile",
+      "jobs": 0,
+      "configurePreset": "x64-ClangCL-Windows-Profile",
+      "configuration": "Profile"
+    },
+    {
+      "name": "x64-ClangCL-Windows-Debug",
+      "jobs": 0,
+      "configurePreset": "x64-ClangCL-Windows-Debug",
+      "configuration": "Debug"
+    },
     {
       "name": "x64-ClangCL-Windows-Release",
       "jobs": 0,

@@ -8,7 +8,7 @@ int32_t rusty_extern_c_integer();
 /**
  * @brief Entry point for the application.
  *
- * This function initializes the program, optionally invokes an 
+ * This function initializes the program, optionally invokes an
  * external Rust-provided routine, and then prints a greeting message
  * to the standard output. It demonstrates integration between C++
  * and an `extern "C"` Rust function, controlled via the compile-time
@@ -33,9 +33,9 @@ int32_t rusty_extern_c_integer();
  *
  * @post
  * - Standard output will contain:
- *     - If `USE_RUST` is true:  
+ *     - If `USE_RUST` is true:
  *       `A value given directly by extern c function <n>`
- *     - Always:  
+ *     - Always:
  *       `Hello World!`
  *
  * @return Returns 0 on successful execution. Non-zero return codes

@@ -35,12 +35,12 @@ else()
   target_compile_definitions(${PROJECT_NAME} PRIVATE USE_RUST=0)
 endif()
 
-if(NOT MSVC)
+if(WIN32 AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC))
   target_compile_definitions(${PERF_TEST_SUITE} PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources/"
                                                         RELATIVE_INCLUDE_PATH="/../../Src/")
 else()
-  target_compile_definitions(${PERF_TEST_SUITE} PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources/"
-                                                        RELATIVE_INCLUDE_PATH="/../../Src/")
+  target_compile_definitions(${PERF_TEST_SUITE} PRIVATE RELATIVE_RESOURCE_PATH="/../Resources/"
+                                                        RELATIVE_INCLUDE_PATH="/../Src/")
 endif()
 
 configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.hpp.in

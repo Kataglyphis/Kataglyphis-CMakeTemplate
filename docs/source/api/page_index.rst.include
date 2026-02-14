@@ -1,7 +1,0 @@
-.. _page_index:
-
-Kataglyphis-CppProject
-======================
-
-.. doxygenpage:: index
-   :project: Kataglyphis-CMakeTemplate

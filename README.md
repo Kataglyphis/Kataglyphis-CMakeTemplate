@@ -1,96 +1,55 @@
-<h1 align="center">
-  <br>
-  <a href="https://jonasheinle.de"><img src="images/logo.png" alt="logo" width="200"></a>
-  <br>
-  CMake/C++ template project
-  <br>
-</h1>
+<div align="center">
+  <a href="https://jonasheinle.de">
+    <img src="images/logo.png" alt="logo" width="200" />
+  </a>
 
+  <h1>CMake/C++ template project</h1>
 
-
-<!-- <h1 align="center">
-  <br>
-  <a href="https://jonasheinle.de"><img src="images/vulkan-logo.png" alt="VulkanEngine" width="200"></a>
-  <a href="https://jonasheinle.de"><img src="images/Engine_logo.png" alt="VulkanEngine" width="200"></a>
-  <a href="https://jonasheinle.de"><img src="images/glm_logo.png" alt="VulkanEngine" width="200"></a>
-</h1> -->
-
-<h4 align="center">This CMake/C++ template project gives me a good starting point for f.e. GPU/Graphics programming. For everything close to hardware ...  <a href="https://jonasheinle.de" target="_blank"></a>.</h4>
+  <h4>This CMake/C++ template project gives me a good starting point for f.e. GPU/Graphics programming. For everything close to hardware ...</h4>
+</div>
 
 For the official docs follow this [link](https://cmaketemplate.jonasheinle.de/).
 
-[![Linux run on ARM/GCC/Clang](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_arm.yml/badge.svg)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_arm.yml)
-[![Linux run on x86/GCC/Clang](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_x86.yml/badge.svg)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/linux_run_x86.yml)
-[![CMake on Windows MSVC x64](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/windows_run.yml/badge.svg?branch=main)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/windows_run.yml)
+All details about my build environment can be found here: https://github.com/Kataglyphis/Kataglyphis-ContainerHub
+
+[![Build + test + run on Linux (x86-64/arm64)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/Linux.yml/badge.svg?branch=main)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/Linux.yml)
+[![CMake on Windows MSVC/Clang x64](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/Windows.yml/badge.svg?branch=main)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/Windows.yml)
 [![CodeQL](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/github-code-scanning/codeql)
 [![Automatic Dependency Submission](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/dependency-graph/auto-submission/badge.svg)](https://github.com/Kataglyphis/Kataglyphis-CMakeTemplate/actions/workflows/dependency-graph/auto-submission)
-<!-- [![Linux build](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Linux.yml/badge.svg)](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Linux.yml)
-[![Windows build](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Windows.yml/badge.svg)](https://github.com/Kataglyphis/GraphicsEngineVulkan/actions/workflows/Windows.yml)
-[![TopLang](https://img.shields.io/github/languages/top/Kataglyphis/GraphicsEngineVulkan)]() -->
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/paypalme/JonasHeinle)
 [![Twitter](https://img.shields.io/twitter/follow/Cataglyphis_?style=social)](https://twitter.com/Cataglyphis_)
 
-<p align="center">
-  <a href="#about-the-project">About The Project</a> •
-  <a href="#getting-started">Getting Started</a> •
-  <a href="#license">License</a> •
-  <a href="#literature">Literature</a>
-</p>
+## Table of Contents
+- [About The Project](#about-the-project)
+  - [Key Features](#key-features)
+  - [Dependencies](#dependencies)
+  - [Useful tools](#useful-tools)
+    - [Benchmarking](#benchmarking)
+    - [VSCode Extensions](#vscode-extensions)
+- [Getting Started](#getting-started)
+  - [Specific version requirements](#specific-version-requirements)
+  - [Installation](#installation)
+  - [Upgrades](#upgrades)
+    - [Rusty things](#rusty-things)
+- [Tests](#tests)
+- [Performance Tests](#performance-tests)
+  - [gperftools and pprof](#gperftools-and-pprof)
+  - [valgrind](#valgrind)
+  - [perf](#perf)
+- [Static Analyzers](#static-analyzers)
+- [Format cmake files](#format-cmake-files)
+- [Format code files](#format-code-files)
+- [Docs](#docs)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+- [Acknowledgements](#acknowledgements)
+- [Literature](#literature)
 
-<!-- TABLE OF CONTENTS -->
-<details open="open">
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#key-features">Key Features</a></li>
-      </ul>
-      <ul>
-        <li><a href="#dependencies">Dependencies</a></li>
-      </ul>
-      <ul>
-        <li><a href="#useful-tools">Useful tools</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#tests">Tests</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgements">Acknowledgements</a></li>
-    <li><a href="#literature">Literature</a></li>
-  </ol>
-</details>
-
-<!-- ABOUT THE PROJECT -->
 ## About The Project
 
-<!-- <h1 align="center">
-  <br>
-  <a href="https://jonasheinle.de"><img src="images/Screenshot1.png" alt="VulkanEngine" width="400"></a>
-  <a href="https://jonasheinle.de"><img src="images/Screenshot2.png" alt="VulkanEngine" width="400"></a>
-  <a href="https://jonasheinle.de"><img src="images/Screenshot3.png" alt="VulkanEngine" width="700"></a>
-</h1> -->
-
-<!-- [![Kataglyphis Engine][product-screenshot1]](https://jonasheinle.de)
-[![Kataglyphis Engine][product-screenshot2]](https://jonasheinle.de)
-[![Kataglyphis Engine][product-screenshot3]](https://jonasheinle.de) -->
-
 This project is dedicated to compiling a comprehensive collection of best practices for C++ development using CMake. It serves as a definitive guide for starting new C++ projects, providing insights into optimal project setup, modern CMake techniques, and efficient workflows. The repository includes examples, templates, and detailed instructions to help developers of all levels adopt industry standards and improve their project configuration and build processes.
-
-Frequently tested under   
-* windows server 2025 x64 *__Clang 21.1.1__* and *__MSVC__*
-* [clang-cl](https://learn.microsoft.com/de-de/cpp/build/clang-support-msbuild?view=msvc-170) to compile the rust crate on windows
-* ubuntu 24.04 x64 *__Clang 18.1.3__*
-* ubuntu 24.04 ARM *__Clang 18.1.3__*
 
 ### Key Features
 
@@ -98,7 +57,6 @@ Frequently tested under
 
 | Category            | Feature                      | Implement Status |
 |---------------------|------------------------------|:----------------:|
-| Build System        | CMake > 4.1                  |        ✔️        |
 | Performance         | Performance Benchmark        |        ✔️        |
 | Platform Support    | Linux/Windows support        |        ✔️        |
 | Compiler Support    | Clang/GNU/MSVC support       |        ✔️        |
@@ -150,12 +108,6 @@ This enumeration also includes submodules.
 <!-- GETTING STARTED -->
 ## Getting Started
 
-### Specific version requirements
-
-**C++23** or higher required.<br />
-**C17** or higher required.<br />
-**CMake 4.1.1** or higher required.<br />
-
 ### Installation
 
 1. Clone the repo
@@ -169,7 +121,7 @@ This enumeration also includes submodules.
    ```
    afterwards.
 3. Optional: Using the newest clang compiler. Install via apt. See [here](https://apt.llvm.org/):
-4. Optional: Run `scripts/setup_dependencies.sh` for preparing important dev tools. 
+4. Optional: Run `scripts/setup-dependencies.sh` for preparing important dev tools. 
 5. Then build your solution with [CMAKE] (https://cmake.org/) <br />
   Here the recommended way over command line after cloning the repo:<br />
   > **_NOTE:_** Here we use CmakePresets to simplify things. Consider using it too
@@ -280,6 +232,17 @@ cmake-format -c ./.cmake-format.yaml -i $(find cmake -name '*.cmake' -o -name 'C
 ```bash
 clang-format -i $(find include -name "*.cpp" -or -name "*.h" -or -name "*.hpp")
 ```
+
+Use clang-format as a pre-commit hook like this.
+```bash
+uv venv
+source .venv/bin/activate # .venv/Scripts/activate on pwsh
+uv pip install pre-commit
+pre-commit install
+# run on all files once (optional)
+pre-commit run --all-files
+```
+
 
 # Docs
 Build the docs
