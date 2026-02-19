@@ -38,11 +38,24 @@ set(CPACK_RESOURCE_FILE_WELCOME ${CMAKE_CURRENT_SOURCE_DIR}/docs/packaging/Welco
 set(CPACK_THREADS 0)
 set(CPACK_SOURCE_IGNORE_FILES /.git /.*build.*)
 
-# Windows (egal ob MSVC oder Clang/clang-cl) -> NSIS + WIX Binaries erzeugen
+# Windows (egal ob MSVC oder Clang/clang-cl) -> Installer/Archive erzeugen
 if(WIN32)
-  # Beide Generatoren aktivieren; CPack erzeugt dann sowohl .exe (NSIS) als auch .msi (WiX)
-  # Zusätzlich auch ein reines ZIP-Binary-Package erzeugen
-  set(CPACK_GENERATOR "NSIS;WIX;ZIP")
+  # Standard: NSIS + ZIP. WiX (.msi) nur, wenn WiX Toolset verfügbar ist.
+  set(CPACK_GENERATOR "NSIS;ZIP")
+
+  find_program(_WIX_CANDLE_EXECUTABLE NAMES candle candle.exe)
+  find_program(_WIX_LIGHT_EXECUTABLE  NAMES light light.exe)
+  set(_WIX_AVAILABLE OFF)
+  if(_WIX_CANDLE_EXECUTABLE AND _WIX_LIGHT_EXECUTABLE)
+    set(_WIX_AVAILABLE ON)
+  endif()
+
+  if(_WIX_AVAILABLE)
+    # Reihenfolge wie früher: NSIS;WIX;ZIP
+    set(CPACK_GENERATOR "NSIS;WIX;ZIP")
+  else()
+    message(STATUS "WiX Toolset not found (candle/light). Skipping WIX generator; packaging will produce NSIS + ZIP.")
+  endif()
   # Quellpaket-Format für Windows (optional, sonst ZIP/TGZ). Kann bei Bedarf angepasst werden.
   set(CPACK_SOURCE_GENERATOR "ZIP")
 
@@ -78,29 +91,31 @@ if(WIN32)
     Delete \\\"$DESKTOP\\\\${PROJECT_NAME}.lnk\\\"
   ")
 
-  # WiX spezifische Einstellungen
-  # WICHTIG: Diese Upgrade GUID MUSS STABIL BLEIBEN, sonst funktionieren Upgrades/Deinstallationen nicht korrekt.
-  # Falls bereits ein Wert existiert, NICHT ändern. Bei erstmaliger Einführung einmalig generieren.
-  set(CPACK_WIX_VERSION 4)
-  set(CPACK_WIX_UPGRADE_GUID "A8B86F5E-5B3E-4C38-9D7F-4F4923F9E5C2")
-  set(CPACK_WIX_PRODUCT_ICON ${CMAKE_CURRENT_SOURCE_DIR}/images/faviconNew.ico)
-  set(CPACK_WIX_PROGRAM_MENU_FOLDER "${PROJECT_NAME}")
-  set(CPACK_WIX_USE_LONG_FILE_NAMES ON)
-  # Optional eigenes Banner/Logo (muss BMP 493x58 bzw. 493x312 sein, wenn gesetzt)
-  # set(CPACK_WIX_UI_BANNER ${CMAKE_CURRENT_SOURCE_DIR}/images/your_banner.bmp)
-  # set(CPACK_WIX_UI_DIALOG  ${CMAKE_CURRENT_SOURCE_DIR}/images/your_dialog.bmp)
+  if(_WIX_AVAILABLE)
+    # WiX spezifische Einstellungen
+    # WICHTIG: Diese Upgrade GUID MUSS STABIL BLEIBEN, sonst funktionieren Upgrades/Deinstallationen nicht korrekt.
+    # Falls bereits ein Wert existiert, NICHT ändern. Bei erstmaliger Einführung einmalig generieren.
+    set(CPACK_WIX_VERSION 4)
+    set(CPACK_WIX_UPGRADE_GUID "A8B86F5E-5B3E-4C38-9D7F-4F4923F9E5C2")
+    set(CPACK_WIX_PRODUCT_ICON ${CMAKE_CURRENT_SOURCE_DIR}/images/faviconNew.ico)
+    set(CPACK_WIX_PROGRAM_MENU_FOLDER "${PROJECT_NAME}")
+    set(CPACK_WIX_USE_LONG_FILE_NAMES ON)
+    # Optional eigenes Banner/Logo (muss BMP 493x58 bzw. 493x312 sein, wenn gesetzt)
+    # set(CPACK_WIX_UI_BANNER ${CMAKE_CURRENT_SOURCE_DIR}/images/your_banner.bmp)
+    # set(CPACK_WIX_UI_DIALOG  ${CMAKE_CURRENT_SOURCE_DIR}/images/your_dialog.bmp)
 
-  # License RTF: WiX benötigt echtes RTF. Falls keine LICENSE.rtf vorhanden ist, erzeugen wir eine minimale Dummy-Version,
-  # damit der Generator nicht mit 'unsupported WiX License file extension' abbricht (ein häufiger Fall auf CI).
-  set(_WIX_LICENSE_RTF "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.rtf")
-  if(NOT EXISTS "${_WIX_LICENSE_RTF}")
-    file(WRITE "${_WIX_LICENSE_RTF}" "{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\fs20 This software is licensed under the terms described in the accompanying LICENSE file.\\par}")
+    # License RTF: WiX benötigt echtes RTF. Falls keine LICENSE.rtf vorhanden ist, erzeugen wir eine minimale Dummy-Version,
+    # damit der Generator nicht mit 'unsupported WiX License file extension' abbricht (ein häufiger Fall auf CI).
+    set(_WIX_LICENSE_RTF "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.rtf")
+    if(NOT EXISTS "${_WIX_LICENSE_RTF}")
+      file(WRITE "${_WIX_LICENSE_RTF}" "{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\fs20 This software is licensed under the terms described in the accompanying LICENSE file.\\par}")
+    endif()
+    set(CPACK_WIX_LICENSE_RTF "${_WIX_LICENSE_RTF}")
+
+    # Beispiel für zusätzliche Einträge in ARP (Add/Remove Programs) - optional
+    set(CPACK_WIX_PROPERTY_ARPURLINFOABOUT "${CMAKE_PROJECT_HOMEPAGE_URL}")
+    set(CPACK_WIX_PROPERTY_ARPHELPLINK "${CMAKE_PROJECT_HOMEPAGE_URL}")
   endif()
-  set(CPACK_WIX_LICENSE_RTF "${_WIX_LICENSE_RTF}")
-
-  # Beispiel für zusätzliche Einträge in ARP (Add/Remove Programs) - optional
-  set(CPACK_WIX_PROPERTY_ARPURLINFOABOUT "${CMAKE_PROJECT_HOMEPAGE_URL}")
-  set(CPACK_WIX_PROPERTY_ARPHELPLINK "${CMAKE_PROJECT_HOMEPAGE_URL}")
 
   # Standard-Installationsverzeichnis (unter Program Files)
   set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_NAME}")
