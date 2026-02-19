@@ -51,7 +51,7 @@ jobs:
             --mount "type=bind,source=${{ github.workspace }},target=C:\workspace" `
             -w "C:\workspace" `
             "${{ env.CONTAINER_IMAGE }}" `
-            powershell -NoProfile -ExecutionPolicy Bypass -File "C:\workspace\scripts\windows\build-windows.ps1"
+            powershell -NoProfile -ExecutionPolicy Bypass -File "C:\workspace\scripts\windows\Build-Windows.ps1"
 
       - name: Upload Installers & Zip
         uses: actions/upload-artifact@v6.0.0
