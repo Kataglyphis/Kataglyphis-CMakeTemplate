@@ -58,6 +58,9 @@ jobs:
         with:
           name: windows-installers
           path: |
-            ${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}/*.msi
-            ${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}/*.exe
-            ${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}/*.zip
+            ${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}/**/*.msi
+            ${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}/**/*.exe
+            ${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}/**/*.zip
+            ${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}/**/*.msix
+            ${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}/**/*.dll
+            ${{ github.workspace }}/${{ env.BUILD_DIR_RELEASE }}/**/*.lib
