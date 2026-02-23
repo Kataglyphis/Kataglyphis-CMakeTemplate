@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=KataglyphisCppProject
+Comment=Kataglyphis C++ project template
+Exec=KataglyphisCppProject
+Icon=Engine_logo
+Terminal=false
+Categories=Development;

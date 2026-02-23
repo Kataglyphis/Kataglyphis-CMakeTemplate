@@ -1,11 +1,10 @@
 include(GoogleTest)
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT(CMAKE_BUILD_TYPE STREQUAL "Profile" ))
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT (CMAKE_BUILD_TYPE STREQUAL "Profile"))
   message(STATUS "This is a Linux system.")
 
   # Fuzz testing needs special treatment only in debug mode!
   if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
-
-    if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+  
       fuzztest_setup_fuzzing_flags()
       # Remove AddressSanitizer flags if disabled
       string(
@@ -24,7 +23,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT(CMAKE_BUILD_TYPE STREQUAL "Profile
                 CMAKE_EXE_LINKER_FLAGS
                 "${CMAKE_EXE_LINKER_FLAGS}")
       remove_definitions(-DADDRESS_SANITIZER)
-    endif()
 
     add_executable(first_fuzz_test dummy.cpp)
 

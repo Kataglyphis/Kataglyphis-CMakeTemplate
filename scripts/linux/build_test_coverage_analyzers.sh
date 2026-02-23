@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-cd "${REPO_ROOT}"
-
-git config --global --add safe.directory /workspace || true
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/common.sh
+source "${SELF_DIR}/lib/common.sh"
+init_repo_context
 
 MATRIX_COMPILER="clang"
 BUILD_DIR="build"
@@ -42,8 +41,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-mkdir -p /workspace/docs/coverage
-mkdir -p /workspace/docs/test-results
+mkdir -p "${WORKSPACE_ROOT}/docs/coverage"
+mkdir -p "${WORKSPACE_ROOT}/docs/test-results"
 
 if [ "${MATRIX_COMPILER}" = "gcc" ]; then
   PRESET="${GCC_DEBUG_PRESET}"
@@ -52,12 +51,15 @@ else
 fi
 echo "Using preset: ${PRESET}"
 
-cmake -B "${BUILD_DIR}" --preset "${PRESET}"
+CMAKE_EXTRA_ARGS=()
+append_clang_gcc_toolchain_args "${MATRIX_COMPILER}" CMAKE_EXTRA_ARGS
+
+cmake -B "${BUILD_DIR}" --preset "${PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
 cmake --build "${BUILD_DIR}" --preset "${PRESET}"
 
 (
   cd "${BUILD_DIR}"
-  ctest -C Debug --verbose --extra-verbose --debug -T test --output-on-failure --output-junit "/workspace/docs/test_results.xml"
+  ctest -C Debug --verbose --extra-verbose --debug -T test --output-on-failure --output-junit "${WORKSPACE_ROOT}/docs/test_results.xml"
 )
 
 if [ "${MATRIX_COMPILER}" = "clang" ]; then
@@ -69,15 +71,15 @@ fi
 if [ "${MATRIX_COMPILER}" = "gcc" ]; then
   (
     cd "${BUILD_DIR}"
-    gcovr --html-details /workspace/docs/coverage/index.html -r .
+    gcovr --html-details "${WORKSPACE_ROOT}/docs/coverage/index.html" -r .
   )
 else
   (
     cd "${BUILD_DIR}"
     llvm-profdata merge -sparse Test/compile/default.profraw -o compileTestSuite.profdata
     llvm-cov report ./compileTestSuite -instr-profile=compileTestSuite.profdata
-    llvm-cov export ./compileTestSuite -format=text -instr-profile=compileTestSuite.profdata > "/workspace/${COVERAGE_JSON}"
-    llvm-cov show ./compileTestSuite -instr-profile=compileTestSuite.profdata -format=html -output-dir /workspace/docs/coverage
+    llvm-cov export ./compileTestSuite -format=text -instr-profile=compileTestSuite.profdata > "${WORKSPACE_ROOT}/${COVERAGE_JSON}"
+    llvm-cov show ./compileTestSuite -instr-profile=compileTestSuite.profdata -format=html -output-dir "${WORKSPACE_ROOT}/docs/coverage"
   )
 fi
 
@@ -87,5 +89,5 @@ if [ "${MATRIX_COMPILER}" = "clang" ]; then
   clang++ --analyze -DUSE_RUST=1 -Xanalyzer -analyzer-output=html $(find Src -name "*.cpp" -o -name "*.cc") || true
 
   mkdir -p scan-build-reports
-  scan-build -o scan-build-reports cmake --build "/workspace/${BUILD_DIR}" --preset "${CLANG_DEBUG_PRESET}" || true
+  scan-build -o scan-build-reports cmake --build "${WORKSPACE_ROOT}/${BUILD_DIR}" --preset "${CLANG_DEBUG_PRESET}" || true
 fi

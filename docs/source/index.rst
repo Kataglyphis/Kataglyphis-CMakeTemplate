@@ -6,9 +6,40 @@
 Kataglyphis-CMakeTemplate documentation
 =======================================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+.. rst-class:: hero-section
+
+Modern C++ template with CMake, tests, benchmarks, and generated API docs.
+
+- Fast setup with presets
+- Integrated API + Graphviz diagrams
+- Human-friendly CI test result pages
+
+.. grid:: 2
+   :gutter: 2
+
+   .. grid-item-card:: Getting Started
+      :link: getting-started
+      :link-type: doc
+
+      Build, run and test quickly with the predefined presets.
+
+   .. grid-item-card:: Library API
+      :link: api/library_root
+      :link-type: doc
+
+      Browse generated API references from Doxygen + Breathe + Exhale.
+
+   .. grid-item-card:: Graphviz Diagrams
+      :link: graphviz_files
+      :link-type: doc
+
+      Visual dependency and include graphs for fast architectural orientation.
+
+   .. grid-item-card:: Test Results
+      :link: test-results/index
+      :link-type: doc
+
+      Converted and browsable test reports for CI and local runs.
 
 
 .. toctree::
@@ -36,12 +67,6 @@ Test results
    introduction
    getting-started
    test-results/index
-
-.. toctree::
-   :maxdepth: 2
-   :glob:
-
-   test-results/*
 
 Indices and tables
 ==================

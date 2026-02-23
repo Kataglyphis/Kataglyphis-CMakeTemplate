@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.kataglyphis.KataglyphisCppProject</id>
+  <name>KataglyphisCppProject</name>
+  <summary>Kataglyphis C++ project template application</summary>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <description>
+    <p>
+      KataglyphisCppProject is a CMake-based C/C++ template with optional Rust integration
+      and packaging support for Linux and Windows.
+    </p>
+  </description>
+  <url type="homepage">https://jonasheinle.de/</url>
+  <launchable type="desktop-id">KataglyphisCppProject.desktop</launchable>
+  <categories>
+    <category>Development</category>
+  </categories>
+</component>

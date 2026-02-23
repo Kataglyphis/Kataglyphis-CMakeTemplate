@@ -41,6 +41,9 @@ build
 *.a
 *.lib
 
+build-release
+.flatpak-builder
+*.AppImage
 # Executables
 *.exe
 *.out
@@ -52,6 +55,12 @@ out/*
 .vs/*
 .vscode/*
 
+coverage.json
+callgrind.out*
+profile.prof
+scan-build-reports/*
+docs/source/api
+docs/source/_static/*.svg
 # doxygen
 Documents/doxygen/*
 

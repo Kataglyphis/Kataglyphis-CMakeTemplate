@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-cd "${REPO_ROOT}"
-
-git config --global --add safe.directory /workspace || true
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/common.sh
+source "${SELF_DIR}/lib/common.sh"
+init_repo_context
 
 MATRIX_COMPILER="clang"
 BUILD_DIR="build"
@@ -45,15 +44,18 @@ else
 fi
 echo "Using preset: ${PRESET}"
 
-cmake -B "${BUILD_DIR}" --preset "${PRESET}"
+CMAKE_EXTRA_ARGS=()
+append_clang_gcc_toolchain_args "${MATRIX_COMPILER}" CMAKE_EXTRA_ARGS
+
+cmake -B "${BUILD_DIR}" --preset "${PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
 cmake --build "${BUILD_DIR}" --preset "${PRESET}"
 
 if [ "${MATRIX_COMPILER}" = "clang" ]; then
   (
     cd "${BUILD_DIR}"
-    LLVM_PROFILE_FILE="/workspace/${BUILD_DIR}/dummy.profraw" ./KataglyphisCppProject
-    llvm-profdata merge -sparse "/workspace/${BUILD_DIR}/dummy.profraw" -o "/workspace/${BUILD_DIR}/dummy.profdata"
-    llvm-cov show ./KataglyphisCppProject -instr-profile="/workspace/${BUILD_DIR}/dummy.profdata" -format=text
+    LLVM_PROFILE_FILE="${WORKSPACE_ROOT}/${BUILD_DIR}/dummy.profraw" ./KataglyphisCppProject
+    llvm-profdata merge -sparse "${WORKSPACE_ROOT}/${BUILD_DIR}/dummy.profraw" -o "${WORKSPACE_ROOT}/${BUILD_DIR}/dummy.profdata"
+    llvm-cov show ./KataglyphisCppProject -instr-profile="${WORKSPACE_ROOT}/${BUILD_DIR}/dummy.profdata" -format=text
   )
 fi
 

@@ -1,25 +1,25 @@
 include(FetchContent)
 
-# include google test to project
+#include google test to project
 if(BUILD_TESTING)
   FetchContent_Declare(googletest
-                       URL https://github.com/google/googletest/archive/1b96fa13f549387b7549cc89e1a785cf143a1a50.zip)
+                       URL https://github.com/google/googletest/archive/850cb69efda7ef00aed1c08fbe2bc1b6b4e615ee.zip)
   set(gtest_force_shared_crt
       ON
       CACHE BOOL "" FORCE)
   FetchContent_MakeAvailable(googletest)
 endif()
-# For Windows: Prevent overriding the parent project's compiler/linker settings
+#For Windows : Prevent overriding the parent project's compiler/linker settings
 
-# We will not need to test benchmark lib itself.
+#We will not need to test benchmark lib itself.
 set(BENCHMARK_ENABLE_TESTING
     OFF
     CACHE BOOL "Disable benchmark testing as we don't need it.")
-# We will not need to test benchmark lib itself.
+#We will not need to test benchmark lib itself.
 set(BENCHMARK_INSTALL_DOCS
     OFF
     CACHE BOOL "Disable benchmark testing as we don't need it.")
-# We will not need to install benchmark since we link it statically.
+#We will not need to install benchmark since we link it statically.
 set(BENCHMARK_ENABLE_INSTALL
     OFF
     CACHE BOOL "Disable benchmark install to avoid overwriting vendor install.")
@@ -31,12 +31,12 @@ add_subdirectory(GOOGLE_BENCHMARK)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND BUILD_TESTING AND NOT(CMAKE_BUILD_TYPE STREQUAL "Profile" ))
   message(STATUS "This is a Linux system.")
-  # # Detect target architecture
-  # string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" TARGET_ARCH)
-  # message(STATUS "Detected architecture: ${TARGET_ARCH}")
+# #Detect target architecture
+#string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" TARGET_ARCH)
+#message(STATUS "Detected architecture: ${TARGET_ARCH}")
 
-  # # Check if not ARM
-  # if(NOT TARGET_ARCH MATCHES "^(arm|aarch64)")
+# #Check if not ARM
+#if (NOT TARGET_ARCH MATCHES "^(arm|aarch64)")
   if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
 
     message("Adding Fuzztest")
@@ -46,7 +46,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND BUILD_TESTING AND NOT(CMAKE_BUILD_TYPE
           ON
           CACHE BOOL "" FORCE)
     endif()
-    # endif()
+#endif()
   endif()
 endif()
 
@@ -61,7 +61,7 @@ if(myproject_DISABLE_EXCEPTIONS)
       ON
       CACHE BOOL "Disable SPDLOG exceptions.")
 endif()
-# set spdlog options before adding it
+#set spdlog options before adding it
 set(SPDLOG_BUILD_EXAMPLES OFF  CACHE BOOL "Disable spdlog examples" FORCE)
 set(SPDLOG_BUILD_TESTS    OFF  CACHE BOOL "Disable spdlog tests"    FORCE)
 set(SPDLOG_BUILD_BENCH    OFF  CACHE BOOL "Disable spdlog bench"    FORCE)

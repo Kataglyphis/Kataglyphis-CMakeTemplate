@@ -34,8 +34,10 @@ if(NOT MSVC)
   target_compile_definitions(${COMPILE_TEST_SUITE} PRIVATE RELATIVE_RESOURCE_PATH="/../../../Resources/"
                                                            RELATIVE_INCLUDE_PATH="/../../../Src/")
 else()
-  target_compile_definitions(${COMPILE_TEST_SUITE} PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources"
-                                                   PUBLIC RELATIVE_INCLUDE_PATH="/../../Src/")
+  target_compile_definitions(
+    ${COMPILE_TEST_SUITE}
+    PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources"
+    PUBLIC RELATIVE_INCLUDE_PATH="/../../Src/")
 endif()
 
 configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.hpp.in

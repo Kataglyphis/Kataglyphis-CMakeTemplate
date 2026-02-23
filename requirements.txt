@@ -1,5 +1,5 @@
 sphinx
-sphinx-rtd-theme
+sphinx-book-theme
 sphinx_design
 myst-parser
 pyyaml
@@ -8,3 +8,4 @@ breathe
 exhale
 pre-commit
 junit2html
+sphinx-autobuild
