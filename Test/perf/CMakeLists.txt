@@ -17,10 +17,20 @@ file(GLOB_RECURSE KataglyphisCppProject_SOURCES
 
 # Specify the file to exclude
 list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/Main.cpp")
+list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/MainLegacy.cpp")
 
 file(GLOB_RECURSE KataglyphisCppProject_HEADERS
      # RELATIVE ${PROJECT_SRC_DIR}
      "${PROJECT_SRC_DIR}/*.hpp")
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|MSVC")
+  set(KATAGLYPHIS_TEST_ENABLE_MODULES ON)
+else()
+  set(KATAGLYPHIS_TEST_ENABLE_MODULES OFF)
+endif()
+
+set(_KATAGLYPHIS_TEST_CONFIG_MODULE "${CMAKE_CURRENT_BINARY_DIR}/KataglyphisCppProjectConfig.ixx")
+configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.ixx.in "${_KATAGLYPHIS_TEST_CONFIG_MODULE}" @ONLY)
 
 # if(RUST_FEATURES)
 #   corrosion_import_crate(MANIFEST_PATH ${PROJECT_SRC_DIR}rusty_code/Cargo.toml)
@@ -43,9 +53,6 @@ else()
                                                         RELATIVE_INCLUDE_PATH="/../Src/")
 endif()
 
-configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.hpp.in
-               "${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.hpp")
-
 target_sources(
   ${PERF_TEST_SUITE}
   PUBLIC ${PERF_TEST_FILTER} ${KataglyphisCppProject_SOURCES}
@@ -55,6 +62,18 @@ target_sources(
          ${PROJECT_INCLUDE_DIR}
          FILES
          ${KataglyphisCppProject_HEADERS})
+
+if(KATAGLYPHIS_TEST_ENABLE_MODULES)
+  set_target_properties(${PERF_TEST_SUITE} PROPERTIES CXX_SCAN_FOR_MODULES ON)
+  target_sources(
+    ${PERF_TEST_SUITE}
+    PRIVATE FILE_SET
+            CXX_MODULES
+            BASE_DIRS
+            ${CMAKE_CURRENT_BINARY_DIR}
+            FILES
+            ${_KATAGLYPHIS_TEST_CONFIG_MODULE})
+endif()
 
 target_link_libraries(
   ${PERF_TEST_SUITE}

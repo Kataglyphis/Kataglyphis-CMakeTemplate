@@ -19,7 +19,7 @@ macro(myproject_setup_options)
   option(myproject_ENABLE_HARDENING "Enable hardening" ON)
   option(myproject_ENABLE_COVERAGE "Enable coverage reporting" ON)
   option(myproject_DISABLE_EXCEPTIONS "Disable C++ exceptions" ON)
-  option(myproject_ENABLE_GPROF "Enable profiling with gprof (adds -pg flags)" ON)
+  option(myproject_ENABLE_GPROF "Enable profiling with gprof or gperftools (RelWithDebInfo on Linux)" OFF)
   # for now disable global hardening, as it is not supported by all dependencies
   option(myproject_ENABLE_GLOBAL_HARDENING "Enable global hardening for all dependencies" OFF)
   if(myproject_ENABLE_GLOBAL_HARDENING)
@@ -101,27 +101,20 @@ macro(myproject_global_options)
   set(CMAKE_C_STANDARD 17)
   set(CMAKE_C_STANDARD_REQUIRED True)
 
-  # Enable C++ modules only for Clang (disable for GCC/MSVC)
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    message(STATUS "Enabling experimental C++ modules for Clang")
-    set(CMAKE_EXPERIMENTAL_CXX_MODULE_COVERAGE ON)
-  else()
-    message(STATUS "C++ modules support disabled for compiler: ${CMAKE_CXX_COMPILER_ID}")
-    set(CMAKE_EXPERIMENTAL_CXX_MODULE_COVERAGE OFF)
-  endif()
+  # Keep global module scanning disabled so vendored third-party targets are not
+  # forced into module dependency scanning. Individual targets can opt in.
+  set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+  message(STATUS "Global C++ modules scan disabled; project targets can opt in explicitly")
 
   # set build type specific flags
   if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DEBUG /Od /std:c++23preview")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /GL /std:c++23preview")
-    set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RROFILE} /O2 /std:c++23preview")
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # https://gcc.gnu.org/onlinedocs/gcc/Debugging-Options.html
     # https://gcc.gnu.org/onlinedocs/gcc/Option-Summary.html
-    set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -std=c++23 -ggdb")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -std=c++23 -DNDEBUG")
-    set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_PROFILE} -O3 -std=c++23 -DNDEBUG")
     # https://clang.llvm.org/docs/UsersManual.html
     # this is the clang-cl case
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
@@ -133,12 +126,11 @@ macro(myproject_global_options)
     # Apply to both C and C++ flags (some deps add to C flags)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  /Od /std:c++latest ${_CLANG_CL_SAFE_WARNINGS}")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2  /std:c++latest -DNDEBUG ${_CLANG_CL_SAFE_WARNINGS}")
-    set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_PROFILE} /O2  /std:c++latest -DNDEBUG ${_CLANG_CL_SAFE_WARNINGS}"
-    )# https://clang.llvm.org/docs/ClangCommandLineReference.html
+    # https://clang.llvm.org/docs/ClangCommandLineReference.html
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -ggdb -std=c++23 -fcolor-diagnostics") # -std=c++2a
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG -std=c++23 -fcolor-diagnostics")
-    set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_PROFILE} -O3 -DNDEBUG -std=c++23 -fcolor-diagnostics") # -std=c++2a
+    # -std=c++2a
   endif()
 
   # control where the static and shared libraries are built so that on windows
@@ -195,9 +187,9 @@ macro(myproject_local_options)
     ""
     "")
 
-  # Only when building with -DCMAKE_BUILD_TYPE=Profile,
-  # on non-Windows and using GCC or Clang
-  if(CMAKE_BUILD_TYPE STREQUAL "Profile"
+    # Profiling is opt-in and uses RelWithDebInfo as the build type.
+    if(myproject_ENABLE_GPROF
+      AND CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"
      AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
      AND NOT WIN32)
 
@@ -208,13 +200,16 @@ macro(myproject_local_options)
       message(STATUS "Found libprofiler: ${PROFILER_LIB}")
       target_link_libraries(myproject_options INTERFACE -lprofiler)
     else()
+      # sudo apt install libgoogle-perftools-dev google-perftools
       message(WARNING "libprofiler not found, falling back to gprof (-pg)")
       target_compile_options(myproject_options INTERFACE -pg)
       target_link_libraries(myproject_options INTERFACE -pg)
     endif()
 
   elseif(myproject_ENABLE_GPROF)
-    message(MESSAGE "GProf should only be used with GCC on Linux using -DCMAKE_BUILD_TYPE=Profile")
+    message(
+      STATUS
+        "Profiling requested, but supported only on non-Windows GNU/Clang with -DCMAKE_BUILD_TYPE=RelWithDebInfo")
   endif()
 
   if(myproject_DISABLE_EXCEPTIONS)

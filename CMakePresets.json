@@ -37,10 +37,12 @@
       "installDir": "${sourceDir}/build/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
-        "CMAKE_BUILD_TYPE": "Profile",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
         "RUST_FEATURES": "ON",
+        "myproject_ENABLE_GPROF": "TRUE",
+        "myproject_ENABLE_IPO": "FALSE",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
       },
@@ -125,10 +127,12 @@
       "installDir": "${sourceDir}/build/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
-        "CMAKE_BUILD_TYPE": "Profile",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
         "RUST_FEATURES": "ON",
+        "myproject_ENABLE_GPROF": "TRUE",
+        "myproject_ENABLE_IPO": "FALSE",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
       },
@@ -264,7 +268,8 @@
         "CMAKE_C_COMPILER": "clang-cl",
         "CMAKE_CXX_COMPILER": "clang-cl",
         "RUST_FEATURES": "ON",
-        "CMAKE_BUILD_TYPE": "Profile",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "myproject_ENABLE_IPO": "FALSE",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
       },
@@ -390,7 +395,8 @@
         "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
         "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
         "RUST_FEATURES": "OFF",
-        "CMAKE_BUILD_TYPE": "Profile",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "myproject_ENABLE_IPO": "FALSE",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
       },
@@ -424,13 +430,13 @@
       "name": "linux-profile-GNU",
       "jobs": 0,
       "configurePreset": "linux-profile-GNU",
-      "configuration": "Profile"
+      "configuration": "RelWithDebInfo"
     },
     {
       "name": "linux-profile-clang",
       "jobs": 0,
       "configurePreset": "linux-profile-clang",
-      "configuration": "Profile"
+      "configuration": "RelWithDebInfo"
     },
 	{
       "name": "linux-release-clang",
@@ -466,7 +472,7 @@
       "name": "x64-ClangCL-Windows-Profile",
       "jobs": 0,
       "configurePreset": "x64-ClangCL-Windows-Profile",
-      "configuration": "Profile"
+      "configuration": "RelWithDebInfo"
     },
     {
       "name": "x64-ClangCL-Windows-Debug",

@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <vector>
 
+import kataglyphis.config;
+
 // Demonstrate some basic assertions.
 TEST(HelloTestCommit, BasicAssertions)
 {
@@ -13,6 +15,7 @@ TEST(HelloTestCommit, BasicAssertions)
     EXPECT_STRNE("hello", "world");
     // Expect equality.
     EXPECT_EQ(7 * 6, 42);
+    EXPECT_FALSE(kataglyphis::config::renderer_version_major.empty());
 }
 
 TEST(Integration, VulkanEngine) { EXPECT_EQ(7 * 6, 42); }

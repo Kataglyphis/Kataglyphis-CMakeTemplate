@@ -207,6 +207,70 @@ fi
 
 log_info "Using compile database: ${COMPILE_DB_DIR}/compile_commands.json"
 
+HAS_MODULE_TUS=0
+for file in "${TIDY_FILES[@]}"; do
+  if grep -Eq '^[[:space:]]*import[[:space:]]+' "$file"; then
+    HAS_MODULE_TUS=1
+    break
+  fi
+done
+
+if [[ "$HAS_MODULE_TUS" -eq 1 ]]; then
+  log_info "Detected C++ module import units. Resolving and building module-consuming targets to generate modmap artifacts"
+
+  MODULE_TARGETS=("KataglyphisCppProject")
+  COMPILE_DB_JSON="${COMPILE_DB_DIR}/compile_commands.json"
+
+  for file in "${TIDY_FILES[@]}"; do
+    if ! grep -Eq '^[[:space:]]*import[[:space:]]+' "$file"; then
+      continue
+    fi
+
+    TARGET_NAME="$({
+      python3 - "$COMPILE_DB_JSON" "$file" <<'PY'
+import json
+import os
+import re
+import sys
+
+compile_db_path = sys.argv[1]
+source_file = os.path.normpath(os.path.abspath(sys.argv[2]))
+
+with open(compile_db_path, encoding='utf-8') as f:
+    entries = json.load(f)
+
+for entry in entries:
+    file_path = os.path.normpath(os.path.abspath(entry.get('file', '')))
+    if file_path != source_file:
+        continue
+
+    output = entry.get('output', '')
+    match = re.search(r'CMakeFiles/([^/]+)\.dir/', output)
+    if match:
+        print(match.group(1))
+        sys.exit(0)
+
+    command = entry.get('command', '')
+    match = re.search(r'CMakeFiles/([^/]+)\.dir/', command)
+    if match:
+        print(match.group(1))
+        sys.exit(0)
+
+print("")
+PY
+    } 2>/dev/null)"
+
+    if [[ -n "$TARGET_NAME" ]]; then
+      MODULE_TARGETS+=("$TARGET_NAME")
+    fi
+  done
+
+  mapfile -t MODULE_TARGETS < <(printf '%s\n' "${MODULE_TARGETS[@]}" | awk 'NF' | awk '!seen[$0]++')
+
+  log_info "Building module-related targets: ${MODULE_TARGETS[*]}"
+  cmake --build "$COMPILE_DB_DIR" --target "${MODULE_TARGETS[@]}"
+fi
+
 if [[ ${#TIDY_FILES[@]} -eq 0 ]]; then
   log_warn "No C/C++ translation units found for clang-tidy."
 else
@@ -226,7 +290,7 @@ for file in "${TIDY_FILES[@]}"; do
     TIDY_ARGS+=(--fix --fix-errors)
   fi
 
-  if ! clang-tidy "${TIDY_ARGS[@]}"; then
+  if ! (cd "$COMPILE_DB_DIR" && clang-tidy "${TIDY_ARGS[@]}"); then
     echo "clang-tidy failed: $file"
     TIDY_FAIL=1
   fi

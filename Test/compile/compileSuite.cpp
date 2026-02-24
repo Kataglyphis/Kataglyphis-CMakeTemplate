@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+import kataglyphis.config;
+
 // Demonstrate some basic assertions.
 TEST(HelloTestCompile, BasicAssertions)
 {
@@ -8,6 +10,7 @@ TEST(HelloTestCompile, BasicAssertions)
     EXPECT_STRNE("hello", "world");
     // Expect equality.
     EXPECT_EQ(7 * 6, 42);
+    EXPECT_FALSE(kataglyphis::config::renderer_version_major.empty());
 }
 
 TEST(HelloTestCompile, blob)

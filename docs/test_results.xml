@@ -6,9 +6,9 @@
 	skipped="0"
 	hostname="IPA-WN-023IT404"
 	time="1"
-	timestamp="2026-02-20T13:25:05"
+	timestamp="2026-02-23T10:19:32"
 	>
-	<testcase name="HelloTestCommit.BasicAssertions" classname="HelloTestCommit.BasicAssertions" time="0.00842478" status="run">
+	<testcase name="HelloTestCommit.BasicAssertions" classname="HelloTestCommit.BasicAssertions" time="0.0111627" status="run">
 		<properties/>
 		<system-out>Running main() from /home/jones/GitHub/Kataglyphis-CMakeTemplate/build/_deps/googletest-src/googletest/src/gtest_main.cc
 Note: Google Test filter = HelloTestCommit.BasicAssertions
@@ -24,7 +24,7 @@ Note: Google Test filter = HelloTestCommit.BasicAssertions
 [  PASSED  ] 1 test.
 </system-out>
 	</testcase>
-	<testcase name="Integration.VulkanEngine" classname="Integration.VulkanEngine" time="0.00916564" status="run">
+	<testcase name="Integration.VulkanEngine" classname="Integration.VulkanEngine" time="0.0128653" status="run">
 		<properties/>
 		<system-out>Running main() from /home/jones/GitHub/Kataglyphis-CMakeTemplate/build/_deps/googletest-src/googletest/src/gtest_main.cc
 Note: Google Test filter = Integration.VulkanEngine
@@ -40,7 +40,7 @@ Note: Google Test filter = Integration.VulkanEngine
 [  PASSED  ] 1 test.
 </system-out>
 	</testcase>
-	<testcase name="HelloTestCompile.BasicAssertions" classname="HelloTestCompile.BasicAssertions" time="0.008783" status="run">
+	<testcase name="HelloTestCompile.BasicAssertions" classname="HelloTestCompile.BasicAssertions" time="0.0114911" status="run">
 		<properties/>
 		<system-out>Running main() from /home/jones/GitHub/Kataglyphis-CMakeTemplate/build/_deps/googletest-src/googletest/src/gtest_main.cc
 Note: Google Test filter = HelloTestCompile.BasicAssertions
@@ -56,7 +56,7 @@ Note: Google Test filter = HelloTestCompile.BasicAssertions
 [  PASSED  ] 1 test.
 </system-out>
 	</testcase>
-	<testcase name="HelloTestCompile.blob" classname="HelloTestCompile.blob" time="0.00837214" status="run">
+	<testcase name="HelloTestCompile.blob" classname="HelloTestCompile.blob" time="0.0107572" status="run">
 		<properties/>
 		<system-out>Running main() from /home/jones/GitHub/Kataglyphis-CMakeTemplate/build/_deps/googletest-src/googletest/src/gtest_main.cc
 Note: Google Test filter = HelloTestCompile.blob
@@ -72,9 +72,9 @@ Note: Google Test filter = HelloTestCompile.blob
 [  PASSED  ] 1 test.
 </system-out>
 	</testcase>
-	<testcase name="MyTestSuite.OnePlustTwoIsTwoPlusOne" classname="MyTestSuite.OnePlustTwoIsTwoPlusOne" time="0.0126418" status="run">
+	<testcase name="MyTestSuite.OnePlustTwoIsTwoPlusOne" classname="MyTestSuite.OnePlustTwoIsTwoPlusOne" time="0.00531173" status="run">
 		<properties/>
-		<system-out>[.] Sanitizer coverage enabled. Counter map size: 29974, Cmp map size: 262144
+		<system-out>[.] Sanitizer coverage enabled. Counter map size: 3067, Cmp map size: 262144
 Note: Google Test filter = MyTestSuite.OnePlustTwoIsTwoPlusOne
 [==========] Running 1 test from 1 test suite.
 [----------] Global test environment set-up.
@@ -88,15 +88,15 @@ Note: Google Test filter = MyTestSuite.OnePlustTwoIsTwoPlusOne
 [  PASSED  ] 1 test.
 </system-out>
 	</testcase>
-	<testcase name="MyTestSuite.IntegerAdditionCommutes" classname="MyTestSuite.IntegerAdditionCommutes" time="1.0147" status="run">
+	<testcase name="MyTestSuite.IntegerAdditionCommutes" classname="MyTestSuite.IntegerAdditionCommutes" time="1.00559" status="run">
 		<properties/>
-		<system-out>[.] Sanitizer coverage enabled. Counter map size: 29974, Cmp map size: 262144
+		<system-out>[.] Sanitizer coverage enabled. Counter map size: 3067, Cmp map size: 262144
 Note: Google Test filter = MyTestSuite.IntegerAdditionCommutes
 [==========] Running 1 test from 1 test suite.
 [----------] Global test environment set-up.
 [----------] 1 test from MyTestSuite
 [ RUN      ] MyTestSuite.IntegerAdditionCommutes
-FUZZTEST_PRNG_SEED=C3Ww58spO40n_e0nO8Qc-3P5b9NprmQi3OmWc_PhBhQ
+FUZZTEST_PRNG_SEED=fLGW8dj6DvNrsJu0iz2t7c8F27IDKlLfwJF6o7OoBuc
 [       OK ] MyTestSuite.IntegerAdditionCommutes (1001 ms)
 [----------] 1 test from MyTestSuite (1001 ms total)
 
