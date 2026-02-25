@@ -3,6 +3,10 @@
   <id>org.kataglyphis.KataglyphisCppProject</id>
   <name>KataglyphisCppProject</name>
   <summary>Kataglyphis C++ project template application</summary>
+  <developer id="org.kataglyphis">
+    <name>Kataglyphis</name>
+  </developer>
+  <update_contact>opensource@kataglyphis.org</update_contact>
   <metadata_license>MIT</metadata_license>
   <project_license>MIT</project_license>
   <description>
@@ -12,7 +16,14 @@
     </p>
   </description>
   <url type="homepage">https://jonasheinle.de/</url>
-  <launchable type="desktop-id">KataglyphisCppProject.desktop</launchable>
+  <launchable type="desktop-id">org.kataglyphis.KataglyphisCppProject.desktop</launchable>
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-cartoon">none</content_attribute>
+    <content_attribute id="violence-realistic">none</content_attribute>
+    <content_attribute id="drugs-alcohol">none</content_attribute>
+    <content_attribute id="sex-nudity">none</content_attribute>
+    <content_attribute id="language-profanity">none</content_attribute>
+  </content_rating>
   <categories>
     <category>Development</category>
   </categories>

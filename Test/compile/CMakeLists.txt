@@ -23,14 +23,8 @@ list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/MainLegacy.cp
 
 file(GLOB_RECURSE KataglyphisCppProject_HEADERS "${PROJECT_SRC_DIR}/*.hpp")
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|MSVC")
-  set(KATAGLYPHIS_TEST_ENABLE_MODULES ON)
-else()
-  set(KATAGLYPHIS_TEST_ENABLE_MODULES OFF)
-endif()
-
-set(_KATAGLYPHIS_TEST_CONFIG_MODULE "${CMAKE_CURRENT_BINARY_DIR}/KataglyphisCppProjectConfig.ixx")
-configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.ixx.in "${_KATAGLYPHIS_TEST_CONFIG_MODULE}" @ONLY)
+set(_KATAGLYPHIS_TEST_CONFIG_HEADER "${CMAKE_CURRENT_BINARY_DIR}/KataglyphisCppProjectConfig.hpp")
+configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.hpp.in "${_KATAGLYPHIS_TEST_CONFIG_HEADER}" @ONLY)
 
 add_executable(${COMPILE_TEST_SUITE})
 
@@ -60,21 +54,7 @@ target_sources(
          FILES
          ${KataglyphisCppProject_HEADERS})
 
-if(KATAGLYPHIS_TEST_ENABLE_MODULES)
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set_target_properties(${COMPILE_TEST_SUITE} PROPERTIES CXX_SCAN_FOR_MODULES OFF)
-  else()
-    set_target_properties(${COMPILE_TEST_SUITE} PROPERTIES CXX_SCAN_FOR_MODULES ON)
-  endif()
-  target_sources(
-    ${COMPILE_TEST_SUITE}
-    PRIVATE FILE_SET
-            CXX_MODULES
-            BASE_DIRS
-            ${CMAKE_CURRENT_BINARY_DIR}
-            FILES
-            ${_KATAGLYPHIS_TEST_CONFIG_MODULE})
-endif()
+target_include_directories(${COMPILE_TEST_SUITE} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 target_link_libraries(
   ${COMPILE_TEST_SUITE}

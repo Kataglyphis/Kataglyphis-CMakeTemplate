@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-import kataglyphis.config;
+#include "KataglyphisCppProjectConfig.hpp"
 
 // Demonstrate some basic assertions.
 TEST(HelloTestCompile, BasicAssertions)

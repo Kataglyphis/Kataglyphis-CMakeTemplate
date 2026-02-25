@@ -23,14 +23,8 @@ file(GLOB_RECURSE KataglyphisCppProject_HEADERS
      # RELATIVE ${PROJECT_SRC_DIR}
      "${PROJECT_SRC_DIR}/*.hpp")
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|MSVC")
-  set(KATAGLYPHIS_TEST_ENABLE_MODULES ON)
-else()
-  set(KATAGLYPHIS_TEST_ENABLE_MODULES OFF)
-endif()
-
-set(_KATAGLYPHIS_TEST_CONFIG_MODULE "${CMAKE_CURRENT_BINARY_DIR}/KataglyphisCppProjectConfig.ixx")
-configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.ixx.in "${_KATAGLYPHIS_TEST_CONFIG_MODULE}" @ONLY)
+set(_KATAGLYPHIS_TEST_CONFIG_HEADER "${CMAKE_CURRENT_BINARY_DIR}/KataglyphisCppProjectConfig.hpp")
+configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.hpp.in "${_KATAGLYPHIS_TEST_CONFIG_HEADER}" @ONLY)
 
 # if(RUST_FEATURES)
 #   corrosion_import_crate(MANIFEST_PATH ${PROJECT_SRC_DIR}rusty_code/Cargo.toml)
@@ -63,21 +57,7 @@ target_sources(
          FILES
          ${KataglyphisCppProject_HEADERS})
 
-if(KATAGLYPHIS_TEST_ENABLE_MODULES)
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set_target_properties(${PERF_TEST_SUITE} PROPERTIES CXX_SCAN_FOR_MODULES OFF)
-  else()
-    set_target_properties(${PERF_TEST_SUITE} PROPERTIES CXX_SCAN_FOR_MODULES ON)
-  endif()
-  target_sources(
-    ${PERF_TEST_SUITE}
-    PRIVATE FILE_SET
-            CXX_MODULES
-            BASE_DIRS
-            ${CMAKE_CURRENT_BINARY_DIR}
-            FILES
-            ${_KATAGLYPHIS_TEST_CONFIG_MODULE})
-endif()
+target_include_directories(${PERF_TEST_SUITE} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 target_link_libraries(
   ${PERF_TEST_SUITE}
