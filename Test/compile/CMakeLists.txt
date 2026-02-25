@@ -61,7 +61,11 @@ target_sources(
          ${KataglyphisCppProject_HEADERS})
 
 if(KATAGLYPHIS_TEST_ENABLE_MODULES)
-  set_target_properties(${COMPILE_TEST_SUITE} PROPERTIES CXX_SCAN_FOR_MODULES ON)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set_target_properties(${COMPILE_TEST_SUITE} PROPERTIES CXX_SCAN_FOR_MODULES OFF)
+  else()
+    set_target_properties(${COMPILE_TEST_SUITE} PROPERTIES CXX_SCAN_FOR_MODULES ON)
+  endif()
   target_sources(
     ${COMPILE_TEST_SUITE}
     PRIVATE FILE_SET

@@ -194,7 +194,12 @@ target_sources(
          ${KataglyphisCppProject_HEADERS})
 
 if(KATAGLYPHIS_ENABLE_MODULES)
-  set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    message(STATUS "GCC modules enabled — using explicit module file set without CXX_SCAN_FOR_MODULES")
+    set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES OFF)
+  else()
+    set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
+  endif()
   target_sources(
     ${PROJECT_NAME}
     PRIVATE FILE_SET
@@ -218,8 +223,7 @@ if(RUST_FEATURES)
 endif()
 
 if(TARGET ${PROJECT_NAME} AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  message(STATUS "GCC detected — adding -MMD -MP to target ${PROJECT_NAME}")
-  target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-MMD -MP>)
+  message(STATUS "GCC detected — module dependency flags are managed by CMake")
 
   if(KATAGLYPHIS_ENABLE_MODULES)
     message(STATUS "GCC modules enabled — adding -fmodules-ts to target ${PROJECT_NAME}")
