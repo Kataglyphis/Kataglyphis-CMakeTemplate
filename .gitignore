@@ -5,6 +5,7 @@ CMakeUserPresets.json
 .codacy
 
 *.log
+logs/
 
 dist
 .mypy_cache
