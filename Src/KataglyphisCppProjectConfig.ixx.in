@@ -1,8 +1,10 @@
-#pragma once
+module;
 
 #include <string_view>
 
-namespace kataglyphis::config {
+export module kataglyphis.config;
+
+export namespace kataglyphis::config {
 inline constexpr std::string_view renderer_version_major{"@PROJECT_VERSION_MAJOR@"};
 inline constexpr std::string_view renderer_version_minor{"@PROJECT_VERSION_MINOR@"};
 

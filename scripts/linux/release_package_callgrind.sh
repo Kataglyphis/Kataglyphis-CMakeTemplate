@@ -400,13 +400,6 @@ cmake -B "${BUILD_RELEASE_DIR}" --preset "${CLANG_RELEASE_PRESET}" "${CMAKE_EXTR
 cmake --build "${BUILD_RELEASE_DIR}" --preset "${CLANG_RELEASE_PRESET}"
 cmake --build "${BUILD_RELEASE_DIR}" --target package
 
-if [[ "${DO_APPIMAGE}" -eq 1 ]]; then
-  if [[ -z "${APPIMAGE_OUT_DIR}" ]]; then
-    APPIMAGE_OUT_DIR="${BUILD_RELEASE_DIR}"
-  fi
-  build_appimage "${BUILD_RELEASE_DIR}" "${APPIMAGE_OUT_DIR}"
-fi
-
 if [[ "${DO_FLATPAK}" -eq 1 ]]; then
   if [[ -z "${FLATPAK_OUT_DIR}" ]]; then
     FLATPAK_OUT_DIR="${BUILD_RELEASE_DIR}"

@@ -19,8 +19,12 @@ file(GLOB_RECURSE KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/*.cpp")
 
 # Specify the file to exclude
 list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/Main.cpp")
+list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/MainLegacy.cpp")
 
 file(GLOB_RECURSE KataglyphisCppProject_HEADERS "${PROJECT_SRC_DIR}/*.hpp")
+
+set(_KATAGLYPHIS_TEST_CONFIG_HEADER "${CMAKE_CURRENT_BINARY_DIR}/KataglyphisCppProjectConfig.hpp")
+configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.hpp.in "${_KATAGLYPHIS_TEST_CONFIG_HEADER}" @ONLY)
 
 add_executable(${COMPILE_TEST_SUITE})
 
@@ -40,9 +44,6 @@ else()
     PUBLIC RELATIVE_INCLUDE_PATH="/../../Src/")
 endif()
 
-configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.hpp.in
-               "${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.hpp")
-
 target_sources(
   ${COMPILE_TEST_SUITE}
   PUBLIC ${KataglyphisCppProject_COMPILE_TEST_FILTER} ${KataglyphisCppProject_SOURCES}
@@ -52,6 +53,8 @@ target_sources(
          ${PROJECT_INCLUDE_DIR}
          FILES
          ${KataglyphisCppProject_HEADERS})
+
+target_include_directories(${COMPILE_TEST_SUITE} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 target_link_libraries(
   ${COMPILE_TEST_SUITE}

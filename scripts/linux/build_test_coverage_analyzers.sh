@@ -83,10 +83,27 @@ else
   )
 fi
 
-clang-tidy -p=./${BUILD_DIR}/compile_commands.json $(find Src -name "*.cpp" -o -name "*.cc")
+mapfile -t CLANG_ANALYZER_CANDIDATES < <(find Src -type f \( -name "*.cpp" -o -name "*.cc" \) | sort)
+mapfile -t CLANG_ANALYZER_FILES < <(
+  for file in "${CLANG_ANALYZER_CANDIDATES[@]}"; do
+    if ! grep -Eq '^[[:space:]]*import[[:space:]]+' "$file"; then
+      printf '%s\n' "$file"
+    fi
+  done
+)
+
+if [ "${#CLANG_ANALYZER_FILES[@]}" -gt 0 ]; then
+  clang-tidy -p "./${BUILD_DIR}" "${CLANG_ANALYZER_FILES[@]}"
+else
+  echo "No non-module C++ sources found for clang-tidy analysis"
+fi
 
 if [ "${MATRIX_COMPILER}" = "clang" ]; then
-  clang++ --analyze -DUSE_RUST=1 -Xanalyzer -analyzer-output=html $(find Src -name "*.cpp" -o -name "*.cc") || true
+  if [ "${#CLANG_ANALYZER_FILES[@]}" -gt 0 ]; then
+    clang++ --analyze -DUSE_RUST=1 -Xanalyzer -analyzer-output=html "${CLANG_ANALYZER_FILES[@]}" || true
+  else
+    echo "No non-module C++ sources found for clang static analyzer"
+  fi
 
   mkdir -p scan-build-reports
   scan-build -o scan-build-reports cmake --build "${WORKSPACE_ROOT}/${BUILD_DIR}" --preset "${CLANG_DEBUG_PRESET}" || true

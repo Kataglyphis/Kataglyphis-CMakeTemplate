@@ -80,10 +80,25 @@ install(
 #we keep the relative paths in the install dir
 #keep in mind that install dir will be in front of this relative path...
 install(DIRECTORY images/ DESTINATION images/)
-install(FILES docs/packaging/KataglyphisCppProject.desktop DESTINATION usr/share/applications)
-install(FILES docs/packaging/KataglyphisCppProject.appdata.xml DESTINATION usr/share/metainfo RENAME org.kataglyphis.KataglyphisCppProject.appdata.xml)
-install(FILES images/Engine_logo.png DESTINATION usr/share/icons/hicolor/256x256/apps RENAME Engine_logo.png)
-install(FILES images/Engine_logo.png DESTINATION usr/share/icons/hicolor/256x256/apps RENAME Engine_logo)
-install(FILES images/Engine_logo.png DESTINATION . RENAME Engine_logo.png)
+install(
+  FILES docs/packaging/KataglyphisCppProject.desktop
+  DESTINATION usr/share/applications
+  RENAME org.kataglyphis.KataglyphisCppProject.desktop)
+install(
+  FILES docs/packaging/KataglyphisCppProject.appdata.xml
+  DESTINATION usr/share/metainfo
+  RENAME org.kataglyphis.KataglyphisCppProject.appdata.xml)
+install(
+  FILES images/Engine_logo.png
+  DESTINATION usr/share/icons/hicolor/256x256/apps
+  RENAME Engine_logo.png)
+install(
+  FILES images/Engine_logo.png
+  DESTINATION usr/share/icons/hicolor/256x256/apps
+  RENAME Engine_logo)
+install(
+  FILES images/Engine_logo.png
+  DESTINATION .
+  RENAME Engine_logo.png)
 
 include(cmake/CPackOptions.cmake)
