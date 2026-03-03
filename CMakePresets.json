@@ -30,30 +30,6 @@
     },
     {
       "name": "linux-profile-clang",
-      "displayName": "Linux Profile Clang",
-      "description": "Go with Linux",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
-      "cacheVariables": {
-        "CMAKE_VERBOSE_MAKEFILE": "ON",
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++",
-        "RUST_FEATURES": "ON",
-        "myproject_ENABLE_GPROF": "TRUE",
-        "myproject_ENABLE_IPO": "FALSE",
-        "COMPILER_CACHE": "sccache",
-        "BUILD_TESTING": "TRUE"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      }
-    },
-    {
-      "name": "linux-RelWithDebInfo-clang",
       "displayName": "Linux RelWithDebInfo Clang",
       "description": "Go with Linux",
       "generator": "Ninja",
@@ -119,8 +95,8 @@
       }
     },
     {
-      "name": "linux-profile-GNU",
-      "displayName": "Linux Profile GNU",
+      "name": "linux-profile-gprof-GNU",
+      "displayName": "Linux RelWithDebInfo GProf GNU",
       "description": "Go with Linux",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/",
@@ -143,7 +119,7 @@
       }
     },
     {
-      "name": "linux-RelWithDebInfo-GNU",
+      "name": "linux-profile-GNU",
       "displayName": "Linux RelWithDebInfo GNU",
       "description": "Go with Linux",
       "generator": "Ninja",
@@ -237,7 +213,7 @@
       }
     },
     {
-      "name": "x64-ClangCL-Windows-RelWithDebInfo",
+      "name": "x64-ClangCL-Windows-profile",
       "description": "Windows and Clang",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build_release/",
@@ -258,7 +234,7 @@
       }
     },
     {
-      "name": "x64-ClangCL-Windows-Profile",
+      "name": "x64-ClangCL-Windows-profile-NoIPO",
       "description": "Windows and Clang",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-release/",
@@ -322,7 +298,7 @@
       }
     },
     {
-      "name": "x64-Clang-Windows-RelWithDebInfo",
+      "name": "x64-Clang-Windows-profile",
       "description": "Windows and Clang",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/",
@@ -385,7 +361,7 @@
       }
     },
     {
-      "name": "x64-Clang-Windows-Profile",
+      "name": "x64-Clang-Windows-profile-NoIPO",
       "description": "Windows and Clang",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/",
@@ -427,9 +403,9 @@
       "configuration": "Debug"
     },
     {
-      "name": "linux-profile-GNU",
+      "name": "linux-profile-gprof-GNU",
       "jobs": 0,
-      "configurePreset": "linux-profile-GNU",
+      "configurePreset": "linux-profile-gprof-GNU",
       "configuration": "RelWithDebInfo"
     },
     {
@@ -469,9 +445,9 @@
 	    "configuration": "Release"
 	},
     {
-      "name": "x64-ClangCL-Windows-Profile",
+      "name": "x64-ClangCL-Windows-profile-NoIPO",
       "jobs": 0,
-      "configurePreset": "x64-ClangCL-Windows-Profile",
+      "configurePreset": "x64-ClangCL-Windows-profile-NoIPO",
       "configuration": "RelWithDebInfo"
     },
     {

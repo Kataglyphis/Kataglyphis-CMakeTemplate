@@ -29,31 +29,39 @@ set(BENCHMARK_USE_BUNDLED_GTEST
 
 add_subdirectory(GOOGLE_BENCHMARK)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND BUILD_TESTING AND NOT(CMAKE_BUILD_TYPE STREQUAL "Profile" ))
-  message(STATUS "This is a Linux system.")
-# #Detect target architecture
-#string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" TARGET_ARCH)
-#message(STATUS "Detected architecture: ${TARGET_ARCH}")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND BUILD_TESTING AND NOT(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" ))
 
-# #Check if not ARM
-#if (NOT TARGET_ARCH MATCHES "^(arm|aarch64)")
   if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
 
     message("Adding Fuzztest")
-    add_subdirectory(FUZZTEST)
-    if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+
+    option(
+      KATAGLYPHIS_ENABLE_FUZZTEST_FUZZING_MODE
+      "Build FUZZTEST in fuzzing mode (injects AddressSanitizer/coverage flags; keep OFF for normal builds)"
+      ON)
+
+    if(KATAGLYPHIS_ENABLE_FUZZTEST_FUZZING_MODE)
       set(FUZZTEST_FUZZING_MODE
           ON
           CACHE BOOL "" FORCE)
+    else()
+      # Important: FUZZTEST's fuzzing mode modifies global CMake flags.
+      # If this value is accidentally flipped in an existing build directory,
+      # subsequent incremental builds can start mixing ASan-instrumented objects
+      # with non-ASan link steps, resulting in undefined references to __asan_*.
+      set(FUZZTEST_FUZZING_MODE
+          OFF
+          CACHE BOOL "" FORCE)
     endif()
-#endif()
+
+    add_subdirectory(FUZZTEST)
   endif()
 endif()
 
 FetchContent_Declare(
   GSL
   GIT_REPOSITORY "https://github.com/microsoft/GSL"
-  GIT_TAG "v4.1.0")
+  GIT_TAG "v4.2.1")
 FetchContent_MakeAvailable(GSL)
 
 if(myproject_DISABLE_EXCEPTIONS)

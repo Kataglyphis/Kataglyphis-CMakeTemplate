@@ -82,7 +82,7 @@ jobs:
 
       - name: Build + test + coverage + analyzers (in container)
         run: |
-          docker run --rm \
+          docker run --rm --privileged \
             --platform ${{ matrix.platform }} \
             -e CLANG_GCC_TOOLCHAIN="${{ env.CLANG_GCC_TOOLCHAIN }}" \
             -v "${{ github.workspace }}:/workspace" \
@@ -98,7 +98,7 @@ jobs:
       - name: Profiling + perf/bench (in container)
         continue-on-error: true
         run: |
-          docker run --rm \
+          docker run --rm --privileged \
             --platform ${{ matrix.platform }} \
             -e CLANG_GCC_TOOLCHAIN="${{ env.CLANG_GCC_TOOLCHAIN }}" \
             -v "${{ github.workspace }}:/workspace" \
@@ -113,7 +113,7 @@ jobs:
       - name: Build docs + convert results (in container)
         if: ${{ matrix.compiler == 'clang' && matrix.runs_on == 'ubuntu-24.04' }}
         run: |
-          docker run --rm \
+          docker run --rm --privileged \
             --platform ${{ matrix.platform }} \
             -e CLANG_GCC_TOOLCHAIN="${{ env.CLANG_GCC_TOOLCHAIN }}" \
             -v "${{ github.workspace }}:/workspace" \
@@ -140,7 +140,7 @@ jobs:
       - name: Release build + package + callgrind (in container)
         if: ${{ matrix.compiler == 'clang' }}
         run: |
-          docker run --rm \
+          docker run --rm --privileged \
             --platform ${{ matrix.platform }} \
             -e CLANG_GCC_TOOLCHAIN="${{ env.CLANG_GCC_TOOLCHAIN }}" \
             -v "${{ github.workspace }}:/workspace" \
@@ -159,3 +159,5 @@ jobs:
             ${{ env.BUILD_RELEASE_DIR }}/*.tar.gz
             ${{ env.BUILD_RELEASE_DIR }}/*.tgz
             ${{ env.BUILD_RELEASE_DIR }}/*.deb
+            ${{ env.BUILD_RELEASE_DIR }}/*.AppImage
+            ${{ env.BUILD_RELEASE_DIR }}/*.flatpak

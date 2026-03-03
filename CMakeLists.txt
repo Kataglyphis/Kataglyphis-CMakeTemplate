@@ -19,6 +19,34 @@ set(WINDOWS_CI
 set(RUST_FEATURES
     ON
     CACHE BOOL "Enable Rust features in our project.")
+set(MYPROJECT_GCC_TOOLCHAIN_PATH
+    ""
+    CACHE PATH
+          "Optional GCC toolchain root used by Clang and Rust tooling on Linux (for example /opt/gcc-15.2.0)")
+
+# Auto-detect custom GCC toolchain for Clang on Linux to avoid workflow env setup
+if(UNIX
+   AND NOT APPLE
+   AND MYPROJECT_GCC_TOOLCHAIN_PATH
+   AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(_GCC_TOOLCHAIN_ROOT "${MYPROJECT_GCC_TOOLCHAIN_PATH}")
+  set(_GCC_TOOLCHAIN_LIB "${_GCC_TOOLCHAIN_ROOT}/lib64")
+  if(NOT EXISTS "${_GCC_TOOLCHAIN_LIB}")
+    set(_GCC_TOOLCHAIN_LIB "${_GCC_TOOLCHAIN_ROOT}/lib")
+  endif()
+
+  if(EXISTS "${_GCC_TOOLCHAIN_LIB}")
+    message(STATUS "Using GCC toolchain at ${_GCC_TOOLCHAIN_ROOT} for Clang")
+    string(APPEND CMAKE_C_FLAGS " --gcc-toolchain=${_GCC_TOOLCHAIN_ROOT}")
+    string(APPEND CMAKE_CXX_FLAGS " --gcc-toolchain=${_GCC_TOOLCHAIN_ROOT}")
+    string(APPEND CMAKE_EXE_LINKER_FLAGS
+           " -L${_GCC_TOOLCHAIN_LIB} -Wl,-rpath,${_GCC_TOOLCHAIN_LIB} --gcc-toolchain=${_GCC_TOOLCHAIN_ROOT}")
+    string(APPEND CMAKE_SHARED_LINKER_FLAGS
+           " -L${_GCC_TOOLCHAIN_LIB} -Wl,-rpath,${_GCC_TOOLCHAIN_LIB} --gcc-toolchain=${_GCC_TOOLCHAIN_ROOT}")
+  else()
+    message(WARNING "GCC toolchain found at ${_GCC_TOOLCHAIN_ROOT}, but no lib or lib64 dir exists.")
+  endif()
+endif()
 
 if(RUST_FEATURES)
   message(STATUS "Rust features are enabled.")
@@ -42,14 +70,26 @@ message(STATUS "About to call the local options function.")
 myproject_local_options()
 
 include(cmake/SystemLibDependencies.cmake)
-add_subdirectory(ExternalLib)
 
-if(BUILD_TESTING
-   AND NOT WIN32
-   AND CMAKE_CXX_COMPILER_ID MATCHES "Clang"
-   AND NOT (CMAKE_BUILD_TYPE STREQUAL "Profile"))
-  fuzztest_setup_fuzzing_flags()
+# Enable global sanitizers for third-party/fuzz integration builds.
+if(NOT WIN32)
+  set(_MYPROJECT_GLOBAL_SANITIZERS "")
+
+  if(myproject_ENABLE_SANITIZER_ADDRESS)
+    list(APPEND _MYPROJECT_GLOBAL_SANITIZERS "address")
+  endif()
+
+  if(myproject_ENABLE_SANITIZER_UNDEFINED)
+    list(APPEND _MYPROJECT_GLOBAL_SANITIZERS "undefined")
+  endif()
+
+  if(_MYPROJECT_GLOBAL_SANITIZERS)
+    list(JOIN _MYPROJECT_GLOBAL_SANITIZERS "," _MYPROJECT_GLOBAL_SANITIZERS_LIST)
+    add_compile_options(-fsanitize=${_MYPROJECT_GLOBAL_SANITIZERS_LIST})
+    add_link_options(-fsanitize=${_MYPROJECT_GLOBAL_SANITIZERS_LIST})
+  endif()
 endif()
+add_subdirectory(ExternalLib)
 
 add_subdirectory(Src)
 
@@ -63,10 +103,24 @@ endif()
 
 if(BUILD_TESTING)
   message(STATUS "Tests are enabled.!")
-  add_subdirectory(Test/commit)
-  add_subdirectory(Test/compile)
-  add_subdirectory(Test/perf)
-  add_subdirectory(Test/fuzz)
+
+  # For single-config generators (e.g. Ninja), gate which suites are configured.
+  # For multi-config generators (e.g. Visual Studio), CMAKE_BUILD_TYPE is empty at
+  # configure time; in that case we keep the previous behavior and configure all suites.
+  if(CMAKE_CONFIGURATION_TYPES)
+    add_subdirectory(Test/commit)
+    add_subdirectory(Test/compile)
+    add_subdirectory(Test/perf)
+    add_subdirectory(Test/fuzz)
+  elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_subdirectory(Test/commit)
+    add_subdirectory(Test/compile)
+    add_subdirectory(Test/fuzz)
+  elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    add_subdirectory(Test/perf)
+  else()
+    message(STATUS "Skipping test suites for build type: ${CMAKE_BUILD_TYPE}")
+  endif()
 else()
   message(STATUS "Tests are disabled.!")
 endif()
