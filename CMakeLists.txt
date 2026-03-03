@@ -71,25 +71,30 @@ myproject_local_options()
 
 include(cmake/SystemLibDependencies.cmake)
 
-# Enable global sanitizers for third-party/fuzz integration builds.
-if(NOT WIN32)
-  set(_MYPROJECT_GLOBAL_SANITIZERS "")
+if(myproject_ENABLE_SANITIZER_ADDRESS)
 
-  if(myproject_ENABLE_SANITIZER_ADDRESS)
-    list(APPEND _MYPROJECT_GLOBAL_SANITIZERS "address")
-  endif()
+  add_compile_options(-fsanitize=address)
 
-  if(myproject_ENABLE_SANITIZER_UNDEFINED)
-    list(APPEND _MYPROJECT_GLOBAL_SANITIZERS "undefined")
-  endif()
+  add_link_options(-fsanitize=address)
 
-  if(_MYPROJECT_GLOBAL_SANITIZERS)
-    list(JOIN _MYPROJECT_GLOBAL_SANITIZERS "," _MYPROJECT_GLOBAL_SANITIZERS_LIST)
-    add_compile_options(-fsanitize=${_MYPROJECT_GLOBAL_SANITIZERS_LIST})
-    add_link_options(-fsanitize=${_MYPROJECT_GLOBAL_SANITIZERS_LIST})
-  endif()
 endif()
+
+if(myproject_ENABLE_COVERAGE AND NOT CMAKE_BUILD_TYPE STREQUAL "Release" AND CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+
+  add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+
+  add_link_options(-fprofile-instr-generate -fcoverage-mapping)
+
+endif()
+
 add_subdirectory(ExternalLib)
+
+if(BUILD_TESTING
+   AND NOT WIN32
+   AND CMAKE_CXX_COMPILER_ID MATCHES "Clang"
+   AND NOT (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
+  # Fuzz flags should be applied on the target, not globally
+endif()
 
 add_subdirectory(Src)
 
@@ -103,23 +108,18 @@ endif()
 
 if(BUILD_TESTING)
   message(STATUS "Tests are enabled.!")
-
-  # For single-config generators (e.g. Ninja), gate which suites are configured.
-  # For multi-config generators (e.g. Visual Studio), CMAKE_BUILD_TYPE is empty at
-  # configure time; in that case we keep the previous behavior and configure all suites.
-  if(CMAKE_CONFIGURATION_TYPES)
-    add_subdirectory(Test/commit)
-    add_subdirectory(Test/compile)
-    add_subdirectory(Test/perf)
-    add_subdirectory(Test/fuzz)
-  elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_subdirectory(Test/commit)
     add_subdirectory(Test/compile)
     add_subdirectory(Test/fuzz)
+    message(STATUS "Building test suites: commit, compile, fuzz (Debug)")
   elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     add_subdirectory(Test/perf)
+    message(STATUS "Building test suite: perf (RelWithDebInfo)")
   else()
-    message(STATUS "Skipping test suites for build type: ${CMAKE_BUILD_TYPE}")
+    message(
+      STATUS
+        "Skipping test suites for CMAKE_BUILD_TYPE='${CMAKE_BUILD_TYPE}'. Use Debug for commit/compile/fuzz or RelWithDebInfo for perf.")
   endif()
 else()
   message(STATUS "Tests are disabled.!")
