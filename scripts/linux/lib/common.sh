@@ -31,6 +31,9 @@ append_clang_gcc_toolchain_args() {
   if [[ "${compiler}" == "clang" && -n "${CLANG_GCC_TOOLCHAIN:-}" ]]; then
     eval "${array_name}+=(\"-D\" \"CMAKE_C_FLAGS=--gcc-toolchain=${CLANG_GCC_TOOLCHAIN}\")"
     eval "${array_name}+=(\"-D\" \"CMAKE_CXX_FLAGS=--gcc-toolchain=${CLANG_GCC_TOOLCHAIN}\")"
+    eval "${array_name}+=(\"-D\" \"CMAKE_EXE_LINKER_FLAGS=--gcc-toolchain=${CLANG_GCC_TOOLCHAIN}\")"
+    eval "${array_name}+=(\"-D\" \"CMAKE_SHARED_LINKER_FLAGS=--gcc-toolchain=${CLANG_GCC_TOOLCHAIN}\")"
+    eval "${array_name}+=(\"-D\" \"GCC_TOOLCHAIN_PATH=${CLANG_GCC_TOOLCHAIN}\")"
   fi
 }
 
@@ -45,5 +48,6 @@ append_default_toolchain_args() {
   if [[ -n "${CLANG_GCC_TOOLCHAIN:-}" ]]; then
     eval "${array_name}+=(\"-D\" \"CMAKE_C_FLAGS=--gcc-toolchain=${CLANG_GCC_TOOLCHAIN}\")"
     eval "${array_name}+=(\"-D\" \"CMAKE_CXX_FLAGS=--gcc-toolchain=${CLANG_GCC_TOOLCHAIN}\")"
+    eval "${array_name}+=(\"-D\" \"GCC_TOOLCHAIN_PATH=${CLANG_GCC_TOOLCHAIN}\")"
   fi
 }
