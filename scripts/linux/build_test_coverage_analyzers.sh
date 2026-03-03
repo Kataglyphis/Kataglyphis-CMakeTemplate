@@ -51,7 +51,7 @@ else
 fi
 echo "Using preset: ${PRESET}"
 
-CMAKE_EXTRA_ARGS=()
+CMAKE_EXTRA_ARGS=("-DCOMPILER_CACHE:STRING=ccache")
 append_clang_gcc_toolchain_args "${MATRIX_COMPILER}" CMAKE_EXTRA_ARGS
 
 cmake -B "${BUILD_DIR}" --preset "${PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
