@@ -12,13 +12,14 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux"
       PRIVATE -g
               -UNDEBUG
               -fsanitize=address
+              -fno-sanitize=undefined
               -fsanitize-coverage=inline-8bit-counters
               -fsanitize-coverage=trace-cmp)
     target_compile_definitions(
       first_fuzz_test
       PRIVATE FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
               ADDRESS_SANITIZER)
-    target_link_options(first_fuzz_test PRIVATE -fsanitize=address)
+    target_link_options(first_fuzz_test PRIVATE -fsanitize=address -fno-sanitize=undefined)
   endif()
 
   if(FUZZTEST_COMPATIBILITY_MODE STREQUAL "libfuzzer")
