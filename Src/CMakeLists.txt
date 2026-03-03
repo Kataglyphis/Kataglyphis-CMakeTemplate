@@ -176,8 +176,8 @@ target_sources(
 
 if(KATAGLYPHIS_ENABLE_MODULES)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    message(STATUS "GCC modules enabled — using explicit module file set without CXX_SCAN_FOR_MODULES")
-    set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES OFF)
+    message(STATUS "GCC modules enabled")
+    set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
   else()
     set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
   endif()
