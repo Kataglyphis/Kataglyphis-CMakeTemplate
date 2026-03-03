@@ -95,6 +95,52 @@
       }
     },
     {
+      "name": "linux-debug-tsan-clang",
+      "displayName": "Linux Debug Clang (ThreadSanitizer)",
+      "description": "Linux Debug with ThreadSanitizer",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-tsan/",
+      "installDir": "${sourceDir}/build-tsan/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "RUST_FEATURES": "ON",
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "TRUE",
+        "USE_THREAD_SANITIZER": "ON"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-debug-tsan-GNU",
+      "displayName": "Linux Debug GNU (ThreadSanitizer)",
+      "description": "Linux Debug with ThreadSanitizer",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-tsan/",
+      "installDir": "${sourceDir}/build-tsan/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "RUST_FEATURES": "ON",
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "TRUE",
+        "USE_THREAD_SANITIZER": "ON"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
       "name": "linux-profile-gprof-GNU",
       "displayName": "Linux RelWithDebInfo GProf GNU",
       "description": "Go with Linux",
@@ -400,6 +446,18 @@
       "name": "linux-debug-GNU",
       "jobs": 0,
       "configurePreset": "linux-debug-GNU",
+      "configuration": "Debug"
+    },
+    {
+      "name": "linux-debug-tsan-clang",
+      "jobs": 0,
+      "configurePreset": "linux-debug-tsan-clang",
+      "configuration": "Debug"
+    },
+    {
+      "name": "linux-debug-tsan-GNU",
+      "jobs": 0,
+      "configurePreset": "linux-debug-tsan-GNU",
       "configuration": "Debug"
     },
     {

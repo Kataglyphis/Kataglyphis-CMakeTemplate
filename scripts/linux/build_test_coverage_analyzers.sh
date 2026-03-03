@@ -68,6 +68,26 @@ else
   echo "Compiled with GCC so no fuzz testing!"
 fi
 
+echo "=========================================="
+echo "Starting ThreadSanitizer (TSan) build..."
+echo "=========================================="
+TSAN_BUILD_DIR="${BUILD_DIR}-tsan"
+if [ "${MATRIX_COMPILER}" = "gcc" ]; then
+  TSAN_PRESET="linux-debug-tsan-GNU"
+else
+  TSAN_PRESET="linux-debug-tsan-clang"
+fi
+
+cmake -B "${TSAN_BUILD_DIR}" --preset "${TSAN_PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
+cmake --build "${TSAN_BUILD_DIR}" --preset "${TSAN_PRESET}"
+
+echo "Running tests for TSan build..."
+(
+  cd "${TSAN_BUILD_DIR}"
+  ctest -C Debug --output-on-failure
+)
+echo "TSan build and tests completed successfully."
+
 if [ "${MATRIX_COMPILER}" = "gcc" ]; then
   (
     cd "${BUILD_DIR}"
