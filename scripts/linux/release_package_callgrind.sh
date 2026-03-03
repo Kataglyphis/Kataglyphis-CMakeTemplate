@@ -289,6 +289,10 @@ build_flatpak() {
 }
 EOF
 
+  echo "Setting up Flathub remote and installing Flatpak SDK/Runtime..."
+  flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+  flatpak install --user -y flathub "${FLATPAK_RUNTIME}//${FLATPAK_RUNTIME_VERSION}" "${FLATPAK_SDK}//${FLATPAK_RUNTIME_VERSION}"
+
   flatpak-builder --disable-rofiles-fuse --force-clean --repo="${repo_dir}" "${build_root}" "${manifest_path}"
 
   local out_name="${project_name}-${version_suffix}-linux.flatpak"
