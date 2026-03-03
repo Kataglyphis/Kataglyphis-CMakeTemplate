@@ -108,3 +108,7 @@ if [ "${MATRIX_COMPILER}" = "clang" ]; then
   mkdir -p scan-build-reports
   scan-build -o scan-build-reports cmake --build "${WORKSPACE_ROOT}/${BUILD_DIR}" --preset "${CLANG_DEBUG_PRESET}" || true
 fi
+
+if [ "${MATRIX_COMPILER}" = "clang" ]; then
+  ./${BUILD_DIR}/first_fuzz_test --fuzz=MyTestSuite.IntegerAdditionCommutes --fuzz_for=30s
+fi
