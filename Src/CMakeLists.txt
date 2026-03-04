@@ -7,18 +7,14 @@ include(cmake/filters/SetProjectFilters.cmake)
 include(cmake/SetSourceGroups.cmake)
 
 file(GLOB_RECURSE KataglyphisCppProject_SOURCES "*.cpp")
-file(GLOB_RECURSE KataglyphisCppProject_HEADERS "*.hpp")
+
 file(
   GLOB_RECURSE
   KataglyphisCppProject_MODULES
   "*.ixx"
   "*.cppm")
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|MSVC|GNU")
-  set(KATAGLYPHIS_ENABLE_MODULES ON)
-else()
-  set(KATAGLYPHIS_ENABLE_MODULES OFF)
-endif()
+set(KATAGLYPHIS_ENABLE_MODULES ON)
 
 set(_KATAGLYPHIS_MAIN_MODULES "${CMAKE_CURRENT_SOURCE_DIR}/Main.cpp")
 set(_KATAGLYPHIS_CONFIG_MODULE "${CMAKE_CURRENT_SOURCE_DIR}/KataglyphisCppProjectConfig.ixx")
@@ -167,18 +163,16 @@ target_sources(
          FILES
          ${KataglyphisCppProject_HEADERS})
 
-if(KATAGLYPHIS_ENABLE_MODULES)
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    message(STATUS "GCC modules enabled")
-  endif()
-  set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
-  target_sources(
-    ${PROJECT_NAME}
-    PRIVATE FILE_SET
-            CXX_MODULES
-            FILES
-            ${KataglyphisCppProject_MODULES})
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  message(STATUS "GCC modules enabled")
 endif()
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
+target_sources(
+  ${PROJECT_NAME}
+  PRIVATE FILE_SET
+          CXX_MODULES
+          FILES
+          ${KataglyphisCppProject_MODULES})
 
 target_link_libraries(
   ${PROJECT_NAME}
@@ -197,8 +191,6 @@ endif()
 if(TARGET ${PROJECT_NAME} AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   message(STATUS "GCC detected — module dependency flags are managed by CMake")
 
-  if(KATAGLYPHIS_ENABLE_MODULES)
-    message(STATUS "GCC modules enabled — adding -fmodules-ts to target ${PROJECT_NAME}")
-    target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fmodules-ts>)
-  endif()
+  message(STATUS "GCC modules enabled — adding -fmodules-ts to target ${PROJECT_NAME}")
+  target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fmodules-ts>)
 endif()
