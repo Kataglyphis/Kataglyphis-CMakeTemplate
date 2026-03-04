@@ -3,7 +3,7 @@ include(FetchContent)
 #include google test to project
 if(BUILD_TESTING)
   FetchContent_Declare(googletest
-                       URL https://github.com/google/googletest/archive/850cb69efda7ef00aed1c08fbe2bc1b6b4e615ee.zip)
+                       URL https://github.com/google/googletest/archive/73a63ea05dc8ca29ec1d2c1d66481dd0de1950f1.zip)
   set(gtest_force_shared_crt
       ON
       CACHE BOOL "" FORCE)
@@ -29,7 +29,7 @@ set(BENCHMARK_USE_BUNDLED_GTEST
 
 add_subdirectory(GOOGLE_BENCHMARK)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND BUILD_TESTING AND NOT(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" ))
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND BUILD_TESTING AND (CMAKE_BUILD_TYPE STREQUAL "Debug" ))
 
   if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" AND NOT USE_THREAD_SANITIZER)
 

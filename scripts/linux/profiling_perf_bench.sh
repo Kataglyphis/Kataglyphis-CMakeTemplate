@@ -47,8 +47,7 @@ echo "Using preset: ${PRESET}"
 CMAKE_EXTRA_ARGS=()
 append_clang_gcc_toolchain_args "${MATRIX_COMPILER}" CMAKE_EXTRA_ARGS
 
-cmake -B "${BUILD_DIR}" --preset "${PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
-cmake --build "${BUILD_DIR}" --preset "${PRESET}"
+cmake_configure_build "${BUILD_DIR}" "${PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
 
 if [ "${MATRIX_COMPILER}" = "clang" ]; then
   (

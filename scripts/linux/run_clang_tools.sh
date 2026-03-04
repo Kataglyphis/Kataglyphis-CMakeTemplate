@@ -12,34 +12,13 @@ COMPILE_DB=""
 INCLUDE_FUZZ_PERF="false"
 TIDY_FIX_MODE="false"
 
-log_info() {
-  printf "\n[INFO] %s\n" "$1"
-}
-
-log_warn() {
-  printf "\n[WARN] %s\n" "$1"
-}
-
 ensure_tooling_environment() {
   if command -v clang-format >/dev/null 2>&1 && command -v cmake-format >/dev/null 2>&1; then
     return 0
   fi
 
   log_warn "clang-format or cmake-format not found. Trying to activate .venv"
-
-  if [[ ! -d "${REPO_ROOT}/.venv" ]]; then
-    log_info ".venv not found. Creating with uv and installing requirements.txt"
-    if ! command -v uv >/dev/null 2>&1; then
-      echo "Error: uv not found and .venv does not exist. Install uv first."
-      exit 1
-    fi
-
-    uv venv "${REPO_ROOT}/.venv"
-    uv pip install --python "${REPO_ROOT}/.venv/bin/python" -r "${REPO_ROOT}/requirements.txt"
-  fi
-
-  # shellcheck source=/dev/null
-  source "${REPO_ROOT}/.venv/bin/activate"
+  ensure_uv_venv "${REPO_ROOT}/.venv" "${REPO_ROOT}/requirements.txt" true
 }
 
 usage() {
@@ -103,10 +82,7 @@ done
 ensure_tooling_environment
 
 for tool in clang-format clang-tidy cmake cmake-format; do
-  if ! command -v "$tool" >/dev/null 2>&1; then
-    echo "Error: required tool not found: $tool"
-    exit 1
-  fi
+  require_cmd "$tool"
 done
 
 mapfile -t CLANG_FORMAT_FILES < <(
@@ -194,7 +170,7 @@ fi
 
 if [[ -z "${COMPILE_DB_DIR:-}" ]]; then
   log_info "compile_commands.json not found. Generating with preset: ${CONFIGURE_PRESET}"
-  cmake --preset "${CONFIGURE_PRESET}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+  cmake_configure_build "build" "${CONFIGURE_PRESET}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
   if [[ -f "${REPO_ROOT}/build/compile_commands.json" ]]; then
     COMPILE_DB_DIR="${REPO_ROOT}/build"
   elif [[ -f "${REPO_ROOT}/build-release/compile_commands.json" ]]; then

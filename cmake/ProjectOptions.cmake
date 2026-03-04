@@ -93,6 +93,15 @@ macro(myproject_setup_options)
 
   endif()
 
+  if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if(myproject_ENABLE_SANITIZER_UNDEFINED)
+      message(STATUS "Disabling UBSan: this project enables it only for Debug builds.")
+    endif()
+    set(myproject_ENABLE_SANITIZER_UNDEFINED
+        OFF
+        CACHE BOOL "Enable undefined sanitizer" FORCE)
+  endif()
+
   if(NOT PROJECT_IS_TOP_LEVEL)
     mark_as_advanced(
       myproject_ENABLE_IPO

@@ -8,14 +8,6 @@ init_repo_context
 
 DOCS_OUT="build/build/html"
 
-log_info() {
-  printf "\n[INFO] %s\n" "$1"
-}
-
-log_warn() {
-  printf "\n[WARN] %s\n" "$1"
-}
-
 normalize_markdown_report() {
   local file_path="$1"
   python3 - "$file_path" <<'PY'
@@ -58,15 +50,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if ! command -v uv >/dev/null 2>&1; then
-  echo "Error: uv is required but not installed."
-  exit 1
-fi
-
 log_info "Preparing Python environment"
-uv venv --allow-existing .venv
-. ".venv/bin/activate"
-uv pip install -r requirements.txt
+ensure_uv_venv "${REPO_ROOT}/.venv" "${REPO_ROOT}/requirements.txt" true
 
 DOCS_SOURCE_DIR="${REPO_ROOT}/docs/source"
 DOCS_DIR="${REPO_ROOT}/docs"

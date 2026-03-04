@@ -82,22 +82,6 @@ ensure_appimagetool() {
   echo "${LOCAL_APPIMAGETOOL_PATH}"
 }
 
-require_cmd() {
-  local cmd="$1"
-  if [[ "${cmd}" == */* ]]; then
-    if [[ ! -x "${cmd}" ]]; then
-      echo "Missing required executable: ${cmd}" >&2
-      return 1
-    fi
-    return 0
-  fi
-
-  if ! command -v "${cmd}" >/dev/null 2>&1; then
-    echo "Missing required command: ${cmd}" >&2
-    return 1
-  fi
-}
-
 normalize_arch() {
   local arch
   arch="$(uname -m)"
@@ -400,9 +384,15 @@ done
 CMAKE_EXTRA_ARGS=()
 append_default_toolchain_args CMAKE_EXTRA_ARGS
 
-cmake -B "${BUILD_RELEASE_DIR}" --preset "${CLANG_RELEASE_PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
-cmake --build "${BUILD_RELEASE_DIR}" --preset "${CLANG_RELEASE_PRESET}"
+cmake_configure_build "${BUILD_RELEASE_DIR}" "${CLANG_RELEASE_PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
 cmake --build "${BUILD_RELEASE_DIR}" --target package
+
+if [[ "${DO_APPIMAGE}" -eq 1 ]]; then
+  if [[ -z "${APPIMAGE_OUT_DIR}" ]]; then
+    APPIMAGE_OUT_DIR="${BUILD_RELEASE_DIR}"
+  fi
+  build_appimage "${BUILD_RELEASE_DIR}" "${APPIMAGE_OUT_DIR}"
+fi
 
 if [[ "${DO_FLATPAK}" -eq 1 ]]; then
   if [[ -z "${FLATPAK_OUT_DIR}" ]]; then

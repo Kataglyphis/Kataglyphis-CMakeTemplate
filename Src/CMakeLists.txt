@@ -21,18 +21,11 @@ else()
 endif()
 
 set(_KATAGLYPHIS_MAIN_MODULES "${CMAKE_CURRENT_SOURCE_DIR}/Main.cpp")
-set(_KATAGLYPHIS_MAIN_LEGACY "${CMAKE_CURRENT_SOURCE_DIR}/MainLegacy.cpp")
 set(_KATAGLYPHIS_CONFIG_MODULE "${CMAKE_CURRENT_SOURCE_DIR}/KataglyphisCppProjectConfig.ixx")
 
 configure_file(KataglyphisCppProjectConfig.ixx.in "${_KATAGLYPHIS_CONFIG_MODULE}" @ONLY)
 list(APPEND KataglyphisCppProject_MODULES "${_KATAGLYPHIS_CONFIG_MODULE}")
 list(REMOVE_DUPLICATES KataglyphisCppProject_MODULES)
-
-if(KATAGLYPHIS_ENABLE_MODULES)
-  list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${_KATAGLYPHIS_MAIN_LEGACY}")
-else()
-  list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${_KATAGLYPHIS_MAIN_MODULES}")
-endif()
 
 if(RUST_FEATURES)
 
@@ -177,10 +170,8 @@ target_sources(
 if(KATAGLYPHIS_ENABLE_MODULES)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     message(STATUS "GCC modules enabled")
-    set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
-  else()
-    set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
   endif()
+  set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
   target_sources(
     ${PROJECT_NAME}
     PRIVATE FILE_SET

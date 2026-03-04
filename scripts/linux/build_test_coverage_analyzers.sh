@@ -54,8 +54,7 @@ echo "Using preset: ${PRESET}"
 CMAKE_EXTRA_ARGS=("-DCOMPILER_CACHE:STRING=ccache")
 append_clang_gcc_toolchain_args "${MATRIX_COMPILER}" CMAKE_EXTRA_ARGS
 
-cmake -B "${BUILD_DIR}" --preset "${PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
-cmake --build "${BUILD_DIR}" --preset "${PRESET}"
+cmake_configure_build "${BUILD_DIR}" "${PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
 
 (
   cd "${BUILD_DIR}"
@@ -78,8 +77,7 @@ else
   TSAN_PRESET="linux-debug-tsan-clang"
 fi
 
-cmake -B "${TSAN_BUILD_DIR}" --preset "${TSAN_PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
-cmake --build "${TSAN_BUILD_DIR}" --preset "${TSAN_PRESET}"
+cmake_configure_build "${TSAN_BUILD_DIR}" "${TSAN_PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
 
 echo "Running tests for TSan build..."
 (

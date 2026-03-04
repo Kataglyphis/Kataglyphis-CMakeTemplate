@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.1.1)
+cmake_minimum_required(VERSION 4.2.1)
 
 #set the project name
 project(
@@ -89,21 +89,18 @@ endif()
 
 add_subdirectory(ExternalLib)
 
-if(BUILD_TESTING
-   AND NOT WIN32
-   AND CMAKE_CXX_COMPILER_ID MATCHES "Clang"
-   AND NOT (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
-  # Fuzz flags should be applied on the target, not globally
-endif()
-
 add_subdirectory(Src)
 
 if(NOT WINDOWS_CI AND BUILD_TESTING)
   include(CTest)
   enable_testing()
-  message(STATUS "WINDOWS_CI is OFF or not defined.")
+  message(STATUS "WINDOWS_CI is OFF - enabling CTest.")
 else()
-  message(STATUS "WINDOWS_CI is OFF or not defined.")
+  if(WINDOWS_CI)
+    message(STATUS "WINDOWS_CI is ON - skipping CTest enablement.")
+  else()
+    message(STATUS "BUILD_TESTING is OFF - skipping CTest enablement.")
+  endif()
 endif()
 
 if(BUILD_TESTING)
