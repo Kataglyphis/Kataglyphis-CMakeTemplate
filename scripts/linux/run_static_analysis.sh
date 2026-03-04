@@ -329,7 +329,13 @@ fi
 if [[ "${RUN_SCAN_BUILD}" == "true" ]]; then
   log_info "Running scan-build with preset: ${SCAN_BUILD_PRESET}"
   mkdir -p "${REPO_ROOT}/scan-build-reports"
-  scan-build -o "${REPO_ROOT}/scan-build-reports" cmake --build "${COMPILE_DB_DIR}" --preset "${SCAN_BUILD_PRESET}" || true
+
+  if cmake --preset "${SCAN_BUILD_PRESET}" >/dev/null 2>&1; then
+    scan-build -o "${REPO_ROOT}/scan-build-reports" cmake --build --preset "${SCAN_BUILD_PRESET}" || true
+  else
+    log_warn "Preset ${SCAN_BUILD_PRESET} could not be configured. Falling back to ${COMPILE_DB_DIR}."
+    scan-build -o "${REPO_ROOT}/scan-build-reports" cmake --build "${COMPILE_DB_DIR}" || true
+  fi
 fi
 
 if [[ "${TIDY_FIX_MODE}" == "true" && "${TIDY_ONLY}" != "true" ]]; then
