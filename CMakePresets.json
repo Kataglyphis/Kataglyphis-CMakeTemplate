@@ -150,29 +150,6 @@
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "g++",
-        "RUST_FEATURES": "ON",
-        "myproject_ENABLE_IPO": "FALSE",
-        "COMPILER_CACHE": "sccache",
-        "BUILD_TESTING": "TRUE"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      }
-    },
-    {
-      "name": "linux-profile-GNU",
-      "displayName": "Linux RelWithDebInfo GNU",
-      "description": "Go with Linux",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
-      "cacheVariables": {
-        "CMAKE_VERBOSE_MAKEFILE": "ON",
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "RUST_FEATURES": "ON",
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
