@@ -1,7 +1,13 @@
-function(kataglyphis_collect_project_sources out_sources out_headers project_src_dir)
+function(
+  kataglyphis_collect_project_sources
+  out_sources
+  out_headers
+  project_src_dir)
   file(GLOB_RECURSE _kataglyphis_sources "${project_src_dir}/*.cpp")
   list(REMOVE_ITEM _kataglyphis_sources "${project_src_dir}/Main.cpp")
-  set(${out_sources} "${_kataglyphis_sources}" PARENT_SCOPE)
+  set(${out_sources}
+      "${_kataglyphis_sources}"
+      PARENT_SCOPE)
 endfunction()
 
 function(kataglyphis_add_config_module_to_target target_name project_src_dir)

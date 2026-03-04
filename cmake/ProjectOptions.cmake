@@ -44,7 +44,9 @@ macro(myproject_setup_options)
     set(DEFAULT_ASAN OFF)
   endif()
 
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND CMAKE_SYSTEM_NAME STREQUAL "Linux" AND SUPPORTS_UBSAN)
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug"
+     AND CMAKE_SYSTEM_NAME STREQUAL "Linux"
+     AND SUPPORTS_UBSAN)
     set(DEFAULT_UBSAN ON)
   else()
     set(DEFAULT_UBSAN OFF)
@@ -93,7 +95,10 @@ macro(myproject_setup_options)
 
   endif()
 
-  if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+  if(NOT
+     CMAKE_BUILD_TYPE
+     STREQUAL
+     "Debug")
     if(myproject_ENABLE_SANITIZER_UNDEFINED)
       message(STATUS "Disabling UBSan: this project enables it only for Debug builds.")
     endif()
@@ -222,9 +227,9 @@ macro(myproject_local_options)
     ""
     "")
 
-    # Profiling is opt-in and uses RelWithDebInfo as the build type.
-    if(myproject_ENABLE_GPROF
-      AND CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"
+  # Profiling is opt-in and uses RelWithDebInfo as the build type.
+  if(myproject_ENABLE_GPROF
+     AND CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"
      AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
      AND NOT WIN32)
 
@@ -243,8 +248,7 @@ macro(myproject_local_options)
 
   elseif(myproject_ENABLE_GPROF)
     message(
-      STATUS
-        "Profiling requested, but supported only on non-Windows GNU/Clang with -DCMAKE_BUILD_TYPE=RelWithDebInfo")
+      STATUS "Profiling requested, but supported only on non-Windows GNU/Clang with -DCMAKE_BUILD_TYPE=RelWithDebInfo")
   endif()
 
   if(myproject_DISABLE_EXCEPTIONS)

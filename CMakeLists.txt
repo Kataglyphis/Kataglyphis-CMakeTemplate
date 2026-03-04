@@ -21,8 +21,7 @@ set(RUST_FEATURES
     CACHE BOOL "Enable Rust features in our project.")
 set(MYPROJECT_GCC_TOOLCHAIN_PATH
     ""
-    CACHE PATH
-          "Optional GCC toolchain root used by Clang and Rust tooling on Linux (for example /opt/gcc-15.2.0)")
+    CACHE PATH "Optional GCC toolchain root used by Clang and Rust tooling on Linux (for example /opt/gcc-15.2.0)")
 
 # Auto-detect custom GCC toolchain for Clang on Linux to avoid workflow env setup
 if(UNIX
@@ -79,7 +78,12 @@ if(myproject_ENABLE_SANITIZER_ADDRESS)
 
 endif()
 
-if(myproject_ENABLE_COVERAGE AND NOT CMAKE_BUILD_TYPE STREQUAL "Release" AND CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+if(myproject_ENABLE_COVERAGE
+   AND NOT
+       CMAKE_BUILD_TYPE
+       STREQUAL
+       "Release"
+   AND CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
 
   add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
 
@@ -120,7 +124,8 @@ if(BUILD_TESTING)
   else()
     message(
       STATUS
-        "Skipping test suites for CMAKE_BUILD_TYPE='${CMAKE_BUILD_TYPE}'. Use Debug for commit/compile/fuzz or RelWithDebInfo for perf.")
+        "Skipping test suites for CMAKE_BUILD_TYPE='${CMAKE_BUILD_TYPE}'. Use Debug for commit/compile/fuzz or RelWithDebInfo for perf."
+    )
   endif()
 else()
   message(STATUS "Tests are disabled.!")

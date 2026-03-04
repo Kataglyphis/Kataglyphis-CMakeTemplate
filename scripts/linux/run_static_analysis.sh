@@ -10,7 +10,11 @@ FORMAT_MODE="fix"
 CONFIGURE_PRESET="linux-debug-clang"
 COMPILE_DB=""
 INCLUDE_FUZZ_PERF="false"
-TIDY_FIX_MODE="false"
+TIDY_FIX_MODE="true"
+TIDY_ONLY="false"
+RUN_CLANG_ANALYZER="false"
+RUN_SCAN_BUILD="false"
+SCAN_BUILD_PRESET=""
 
 ensure_tooling_environment() {
   if command -v clang-format >/dev/null 2>&1 && command -v cmake-format >/dev/null 2>&1; then
@@ -30,11 +34,16 @@ Runs clang-format, cmake-format and clang-tidy over project sources.
 Options:
   --check-format            Run clang-format in check mode (no changes)
   --fix-format              Run clang-format in fix mode (default)
+  --tidy-only               Run only clang-tidy (skip clang-format/cmake-format)
+  --run-clang-analyzer      Also run clang static analyzer (clang++ --analyze)
+  --run-scan-build          Also run scan-build over a CMake build
+  --scan-build-preset NAME  Preset used by scan-build with cmake --build
+                            (required with --run-scan-build)
   --configure-preset NAME   CMake configure preset to generate compile_commands.json
                             (default: ${CONFIGURE_PRESET})
   --compile-db PATH         Path to compile_commands.json or its directory
   --include-fuzz-perf       Also run clang-tidy for Test/fuzz and Test/perf files
-  --fix-tidy                Apply clang-tidy fixes (--fix --fix-errors)
+  --fix-tidy                Apply clang-tidy fixes (--fix --fix-errors, default: ON)
   -h, --help                Show this help
 EOF
 }
@@ -48,6 +57,23 @@ while [[ $# -gt 0 ]]; do
     --fix-format)
       FORMAT_MODE="fix"
       shift
+      ;;
+    --tidy-only)
+      TIDY_ONLY="true"
+      shift
+      ;;
+    --run-clang-analyzer)
+      RUN_CLANG_ANALYZER="true"
+      shift
+      ;;
+    --run-scan-build)
+      RUN_SCAN_BUILD="true"
+      shift
+      ;;
+    --scan-build-preset)
+      [[ $# -ge 2 ]] || { echo "Missing value for --scan-build-preset"; exit 1; }
+      SCAN_BUILD_PRESET="$2"
+      shift 2
       ;;
     --configure-preset)
       [[ $# -ge 2 ]] || { echo "Missing value for --configure-preset"; exit 1; }
@@ -79,11 +105,32 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-ensure_tooling_environment
+if [[ "${RUN_SCAN_BUILD}" == "true" && -z "${SCAN_BUILD_PRESET}" ]]; then
+  echo "--scan-build-preset is required when --run-scan-build is set"
+  exit 1
+fi
 
-for tool in clang-format clang-tidy cmake cmake-format; do
-  require_cmd "$tool"
-done
+if [[ "${TIDY_ONLY}" != "true" ]]; then
+  ensure_tooling_environment
+fi
+
+if [[ "${TIDY_ONLY}" == "true" ]]; then
+  for tool in clang-tidy cmake; do
+    require_cmd "$tool"
+  done
+else
+  for tool in clang-format clang-tidy cmake cmake-format; do
+    require_cmd "$tool"
+  done
+fi
+
+if [[ "${RUN_CLANG_ANALYZER}" == "true" ]]; then
+  require_cmd clang++
+fi
+
+if [[ "${RUN_SCAN_BUILD}" == "true" ]]; then
+  require_cmd scan-build
+fi
 
 mapfile -t CLANG_FORMAT_FILES < <(
   find "${REPO_ROOT}/Src" "${REPO_ROOT}/Test" \
@@ -102,7 +149,7 @@ mapfile -t CMAKE_FORMAT_FILES < <(
     | sort -u
 )
 
-if [[ ${#CLANG_FORMAT_FILES[@]} -eq 0 && ${#CMAKE_FORMAT_FILES[@]} -eq 0 ]]; then
+if [[ "${TIDY_ONLY}" != "true" && ${#CLANG_FORMAT_FILES[@]} -eq 0 && ${#CMAKE_FORMAT_FILES[@]} -eq 0 ]]; then
   log_warn "No files found for clang-format or cmake-format."
   exit 0
 fi
@@ -117,27 +164,29 @@ if [[ "${INCLUDE_FUZZ_PERF}" != "true" ]]; then
   )
 fi
 
-log_info "Running clang-format (${FORMAT_MODE}) on ${#CLANG_FORMAT_FILES[@]} files"
 FORMAT_FAIL=0
-for file in "${CLANG_FORMAT_FILES[@]}"; do
-  if [[ "$FORMAT_MODE" == "fix" ]]; then
-    clang-format -i "$file"
-  else
-    if ! clang-format --dry-run --Werror "$file"; then
-      echo "clang-format check failed: $file"
-      FORMAT_FAIL=1
-    fi
-  fi
-done
-
-log_info "Running cmake-format (fix) on ${#CMAKE_FORMAT_FILES[@]} files"
 CMAKE_FORMAT_FAIL=0
-for file in "${CMAKE_FORMAT_FILES[@]}"; do
-  if ! cmake-format --in-place "$file"; then
-    echo "cmake-format failed: $file"
-    CMAKE_FORMAT_FAIL=1
-  fi
-done
+if [[ "${TIDY_ONLY}" != "true" ]]; then
+  log_info "Running clang-format (${FORMAT_MODE}) on ${#CLANG_FORMAT_FILES[@]} files"
+  for file in "${CLANG_FORMAT_FILES[@]}"; do
+    if [[ "$FORMAT_MODE" == "fix" ]]; then
+      clang-format -i "$file"
+    else
+      if ! clang-format --dry-run --Werror "$file"; then
+        echo "clang-format check failed: $file"
+        FORMAT_FAIL=1
+      fi
+    fi
+  done
+
+  log_info "Running cmake-format (fix) on ${#CMAKE_FORMAT_FILES[@]} files"
+  for file in "${CMAKE_FORMAT_FILES[@]}"; do
+    if ! cmake-format --in-place "$file"; then
+      echo "cmake-format failed: $file"
+      CMAKE_FORMAT_FAIL=1
+    fi
+  done
+fi
 
 resolve_compile_db_dir() {
   local input_path="$1"
@@ -272,7 +321,18 @@ for file in "${TIDY_FILES[@]}"; do
   fi
 done
 
-if [[ "${TIDY_FIX_MODE}" == "true" ]]; then
+if [[ "${RUN_CLANG_ANALYZER}" == "true" ]]; then
+  log_info "Running clang static analyzer on ${#TIDY_FILES[@]} files"
+  clang++ --analyze -DUSE_RUST=1 -Xanalyzer -analyzer-output=html "${TIDY_FILES[@]}" || true
+fi
+
+if [[ "${RUN_SCAN_BUILD}" == "true" ]]; then
+  log_info "Running scan-build with preset: ${SCAN_BUILD_PRESET}"
+  mkdir -p "${REPO_ROOT}/scan-build-reports"
+  scan-build -o "${REPO_ROOT}/scan-build-reports" cmake --build "${COMPILE_DB_DIR}" --preset "${SCAN_BUILD_PRESET}" || true
+fi
+
+if [[ "${TIDY_FIX_MODE}" == "true" && "${TIDY_ONLY}" != "true" ]]; then
   log_info "Running clang-format after clang-tidy fixes"
   for file in "${CLANG_FORMAT_FILES[@]}"; do
     clang-format -i "$file"
@@ -298,4 +358,8 @@ if [[ "$FORMAT_MODE" == "check" && "$FORMAT_FAIL" -ne 0 ]] || [[ "$CMAKE_FORMAT_
   exit 1
 fi
 
-log_info "clang-format, cmake-format and clang-tidy completed successfully"
+if [[ "${TIDY_ONLY}" == "true" ]]; then
+  log_info "clang-tidy completed successfully"
+else
+  log_info "clang-format, cmake-format and clang-tidy completed successfully"
+fi
