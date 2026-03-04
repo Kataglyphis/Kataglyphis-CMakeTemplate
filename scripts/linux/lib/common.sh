@@ -54,8 +54,11 @@ cmake_configure_build() {
   local preset="$2"
   shift 2
 
+  # Keep configure and build on the same binary directory.
+  # Combining `-B <dir>` with `--preset` can override the preset binaryDir,
+  # so a subsequent `cmake --build --preset` may point at another directory.
   cmake -B "${build_dir}" --preset "${preset}" "$@"
-  cmake --build "${build_dir}" --preset "${preset}"
+  cmake --build "${build_dir}"
 }
 
 init_repo_context() {
