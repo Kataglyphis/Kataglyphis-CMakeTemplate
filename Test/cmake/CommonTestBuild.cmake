@@ -2,8 +2,6 @@ function(kataglyphis_collect_project_sources out_sources out_headers project_src
   file(GLOB_RECURSE _kataglyphis_sources "${project_src_dir}/*.cpp")
   list(REMOVE_ITEM _kataglyphis_sources "${project_src_dir}/Main.cpp")
 
-  file(GLOB_RECURSE _kataglyphis_headers "${project_src_dir}/*.hpp")
-
   set(${out_sources} "${_kataglyphis_sources}" PARENT_SCOPE)
   set(${out_headers} "${_kataglyphis_headers}" PARENT_SCOPE)
 endfunction()
