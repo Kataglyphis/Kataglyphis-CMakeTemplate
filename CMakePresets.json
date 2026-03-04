@@ -141,8 +141,8 @@
       }
     },
     {
-      "name": "linux-profile-gprof-GNU",
-      "displayName": "Linux RelWithDebInfo GProf GNU",
+      "name": "linux-profile-GNU",
+      "displayName": "Linux RelWithDebInfo GNU",
       "description": "Go with Linux",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/",
@@ -153,7 +153,6 @@
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
         "RUST_FEATURES": "ON",
-        "myproject_ENABLE_GPROF": "TRUE",
         "myproject_ENABLE_IPO": "FALSE",
         "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
@@ -461,9 +460,9 @@
       "configuration": "Debug"
     },
     {
-      "name": "linux-profile-gprof-GNU",
+      "name": "linux-profile-GNU",
       "jobs": 0,
-      "configurePreset": "linux-profile-gprof-GNU",
+      "configurePreset": "linux-profile-GNU",
       "configuration": "RelWithDebInfo"
     },
     {

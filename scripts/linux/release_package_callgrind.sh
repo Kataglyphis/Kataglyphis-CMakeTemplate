@@ -102,14 +102,32 @@ read_cache_var() {
   fi
 }
 
+find_existing_cpack_appimage() {
+  local build_dir="$1"
+  find "${build_dir}" -maxdepth 1 -type f -name "*.AppImage" | head -n 1 || true
+}
+
 build_appimage() {
   local build_dir="$1"
   local out_dir="$2"
 
+  local existing_appimage
+  existing_appimage="$(find_existing_cpack_appimage "${build_dir}")"
+
+  if ! command -v mksquashfs >/dev/null 2>&1; then
+    if [[ -n "${existing_appimage}" ]]; then
+      echo "mksquashfs not found; reusing existing CPack AppImage: ${existing_appimage}" >&2
+      mkdir -p "${out_dir}"
+      cp -f "${existing_appimage}" "${out_dir}/"
+      return 0
+    fi
+    echo "Missing required command: mksquashfs" >&2
+    return 1
+  fi
+
   local appimagetool
   appimagetool="$(ensure_appimagetool)"
   require_cmd "${appimagetool}"
-  require_cmd mksquashfs
 
   local cache_file="${build_dir}/CMakeCache.txt"
   local project_name="KataglyphisCppProject"
