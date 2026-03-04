@@ -408,6 +408,10 @@ done
 CMAKE_EXTRA_ARGS=()
 append_default_toolchain_args CMAKE_EXTRA_ARGS
 
+# Ensure packaging runs from a clean tree. Stale module dependency metadata
+# from prior compiler/preset runs can break clang module dyndep generation.
+rm -rf "${BUILD_RELEASE_DIR}"
+
 cmake_configure_build "${BUILD_RELEASE_DIR}" "${CLANG_RELEASE_PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
 cmake --build "${BUILD_RELEASE_DIR}" --target package
 

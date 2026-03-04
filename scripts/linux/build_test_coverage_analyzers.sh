@@ -108,14 +108,14 @@ if [ "${#CLANG_ANALYZER_CANDIDATES[@]}" -eq 0 ]; then
 fi
 
 if [ "${MATRIX_COMPILER}" = "clang" ]; then
-  "${SELF_DIR}/run_static_analysis.sh" \
+  "${SELF_DIR}/run_static_analysis_format.sh" \
     --tidy-only \
     --compile-db "${WORKSPACE_ROOT}/${BUILD_DIR}" \
     --run-clang-analyzer \
     --run-scan-build \
     --scan-build-preset "${CLANG_DEBUG_PRESET}"
 else
-  "${SELF_DIR}/run_static_analysis.sh" \
+  "${SELF_DIR}/run_static_analysis_format.sh" \
     --tidy-only \
     --compile-db "${WORKSPACE_ROOT}/${BUILD_DIR}"
 fi
