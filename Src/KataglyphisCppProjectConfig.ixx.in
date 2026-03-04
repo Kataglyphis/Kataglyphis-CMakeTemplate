@@ -1,6 +1,6 @@
 module;
 
-export module kataglyphis.config;
+export module kataglyphis.cppproject_config;
 
 export namespace kataglyphis::config {
 inline constexpr const char* renderer_version_major{"@PROJECT_VERSION_MAJOR@"};
