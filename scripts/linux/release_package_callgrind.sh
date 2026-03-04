@@ -118,7 +118,13 @@ build_appimage() {
     if [[ -n "${existing_appimage}" ]]; then
       echo "mksquashfs not found; reusing existing CPack AppImage: ${existing_appimage}" >&2
       mkdir -p "${out_dir}"
-      cp -f "${existing_appimage}" "${out_dir}/"
+      local target_appimage
+      target_appimage="${out_dir}/$(basename "${existing_appimage}")"
+      if [[ "$(realpath "${existing_appimage}")" != "$(realpath -m "${target_appimage}")" ]]; then
+        cp -f "${existing_appimage}" "${target_appimage}"
+      else
+        echo "AppImage already in target location, skipping copy." >&2
+      fi
       return 0
     fi
     echo "Missing required command: mksquashfs" >&2
