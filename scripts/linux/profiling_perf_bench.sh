@@ -46,6 +46,8 @@ echo "Using preset: ${PRESET}"
 
 CMAKE_EXTRA_ARGS=()
 append_clang_gcc_toolchain_args "${MATRIX_COMPILER}" CMAKE_EXTRA_ARGS
+# Perf benchmarks live under Test/perf and are only added when BUILD_TESTING=TRUE.
+CMAKE_EXTRA_ARGS+=("-DBUILD_TESTING=TRUE")
 
 cmake_configure_build "${BUILD_DIR}" "${PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
 
@@ -59,7 +61,11 @@ if [ "${MATRIX_COMPILER}" = "clang" ]; then
 fi
 
 ( cd "${BUILD_DIR}" && perf record -F 99 --call-graph dwarf -- ./KataglyphisCppProject ) || true
-( cd "${BUILD_DIR}" && ./perfTestSuite --benchmark_out=results.json --benchmark_out_format=json )
+if [[ -x "${BUILD_DIR}/perfTestSuite" ]]; then
+  ( cd "${BUILD_DIR}" && ./perfTestSuite --benchmark_out=results.json --benchmark_out_format=json )
+else
+  echo "perfTestSuite not found in ${BUILD_DIR}; skipping benchmark run."
+fi
 
 (
   cd "${BUILD_DIR}"
