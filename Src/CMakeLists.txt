@@ -8,6 +8,8 @@ include(cmake/SetSourceGroups.cmake)
 
 file(GLOB_RECURSE KataglyphisCppProject_SOURCES "*.cpp")
 file(GLOB_RECURSE KataglyphisCppProject_HEADERS "*.hpp")
+set(KATAGLYPHIS_MAIN_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/Main.cpp")
+list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${KATAGLYPHIS_MAIN_SOURCE}")
 
 file(
   GLOB_RECURSE
@@ -76,27 +78,28 @@ if(RUST_FEATURES)
 
 endif()
 
-# add the executable
-add_executable(${PROJECT_NAME})
+set(KATAGLYPHIS_CORE_TARGET kataglyphis_cppproject_core)
+
+add_library(${KATAGLYPHIS_CORE_TARGET} STATIC)
 
 if(RUST_FEATURES)
-  target_compile_definitions(${PROJECT_NAME} PRIVATE USE_RUST=1)
+  target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PUBLIC USE_RUST=1)
 else()
-  target_compile_definitions(${PROJECT_NAME} PRIVATE USE_RUST=0)
+  target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PUBLIC USE_RUST=0)
 endif()
 
 # Treat MSVC and clang-cl on Windows differently in a sense of deployment
 # https://clang.llvm.org/docs/UsersManual.html
 if(WIN32 AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC))
-  target_compile_definitions(${PROJECT_NAME} PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources/"
-                                                     RELATIVE_INCLUDE_PATH="/../../Src/")
+  target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PUBLIC RELATIVE_RESOURCE_PATH="/../../Resources/"
+                                                               RELATIVE_INCLUDE_PATH="/../../Src/")
 else()
-  target_compile_definitions(${PROJECT_NAME} PRIVATE RELATIVE_RESOURCE_PATH="/../Resources/"
-                                                     RELATIVE_INCLUDE_PATH="/../Src/")
+  target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PUBLIC RELATIVE_RESOURCE_PATH="/../Resources/"
+                                                               RELATIVE_INCLUDE_PATH="/../Src/")
 endif()
 
 target_sources(
-  ${PROJECT_NAME}
+  ${KATAGLYPHIS_CORE_TARGET}
   PRIVATE ${KataglyphisCppProject_SOURCES}
   PUBLIC FILE_SET
          HEADERS
@@ -108,16 +111,18 @@ target_sources(
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   message(STATUS "GCC modules enabled")
 endif()
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
+set_target_properties(${KATAGLYPHIS_CORE_TARGET} PROPERTIES CXX_SCAN_FOR_MODULES ON)
 target_sources(
-  ${PROJECT_NAME}
-  PRIVATE FILE_SET
+  ${KATAGLYPHIS_CORE_TARGET}
+  PUBLIC FILE_SET
           CXX_MODULES
+          BASE_DIRS
+          ${PROJECT_INCLUDE_DIR}
           FILES
           ${KataglyphisCppProject_MODULES})
 
 target_link_libraries(
-  ${PROJECT_NAME}
+  ${KATAGLYPHIS_CORE_TARGET}
   PUBLIC ${CMAKE_DL_LIBS}
          Threads::Threads
          # enable compiler warnings
@@ -127,12 +132,16 @@ target_link_libraries(
   PRIVATE GSL spdlog::spdlog nlohmann_json::nlohmann_json)
 
 if(RUST_FEATURES)
-  target_link_libraries(${PROJECT_NAME} PUBLIC rusty_code)
+  target_link_libraries(${KATAGLYPHIS_CORE_TARGET} PUBLIC rusty_code)
 endif()
 
-if(TARGET ${PROJECT_NAME} AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+add_executable(${PROJECT_NAME} "${KATAGLYPHIS_MAIN_SOURCE}")
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${KATAGLYPHIS_CORE_TARGET})
+
+if(TARGET ${KATAGLYPHIS_CORE_TARGET} AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   message(STATUS "GCC detected — module dependency flags are managed by CMake")
 
-  message(STATUS "GCC modules enabled — adding -fmodules-ts to target ${PROJECT_NAME}")
-  target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fmodules-ts>)
+  message(STATUS "GCC modules enabled — adding -fmodules-ts to target ${KATAGLYPHIS_CORE_TARGET}")
+  target_compile_options(${KATAGLYPHIS_CORE_TARGET} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-fmodules-ts>)
 endif()
