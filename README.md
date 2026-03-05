@@ -7,7 +7,7 @@
 
   <h4>This CMake/C++ template project gives me a good starting point for f.e. GPU/Graphics programming. For everything close to hardware ...</h4>
 </div>
- 
+
 For the official docs follow this [link](https://cmaketemplate.jonasheinle.de/).
 
 All details about my build environment can be found here: https://github.com/Kataglyphis/Kataglyphis-ContainerHub
