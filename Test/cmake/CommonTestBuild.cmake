@@ -12,7 +12,7 @@ endfunction()
 
 function(kataglyphis_add_config_module_to_target target_name project_src_dir)
   get_filename_component(_kataglyphis_project_src_dir "${project_src_dir}" REALPATH)
-  set(_kataglyphis_config_module "${_kataglyphis_project_src_dir}/KataglyphisCppProjectConfig.ixx")
+  set(_kataglyphis_config_module "${CMAKE_BINARY_DIR}/Src/KataglyphisCppProjectConfig.ixx")
 
   if(EXISTS "${_kataglyphis_config_module}")
     set_target_properties(${target_name} PROPERTIES CXX_SCAN_FOR_MODULES ON)
@@ -21,7 +21,7 @@ function(kataglyphis_add_config_module_to_target target_name project_src_dir)
       PRIVATE FILE_SET
               CXX_MODULES
               BASE_DIRS
-              "${_kataglyphis_project_src_dir}"
+              "${CMAKE_BINARY_DIR}/Src"
               FILES
               "${_kataglyphis_config_module}")
   else()
