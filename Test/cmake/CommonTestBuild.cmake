@@ -30,10 +30,21 @@ function(kataglyphis_add_config_module_to_target target_name project_src_dir)
 endfunction()
 
 function(kataglyphis_configure_gtest_discovery test_target)
-  if(NOT WINDOWS_CI)
-    message(STATUS "WINDOWS_CI is OFF - enabling gtest_discover_tests for ${test_target}.")
-    gtest_discover_tests(${test_target} DISCOVERY_TIMEOUT 300)
+  if(NOT DEFINED KATAGLYPHIS_ENABLE_GTEST_DISCOVERY)
+    set(KATAGLYPHIS_ENABLE_GTEST_DISCOVERY ON)
+  endif()
+
+  if(KATAGLYPHIS_ENABLE_GTEST_DISCOVERY)
+    message(STATUS "Enabling gtest_discover_tests for ${test_target}.")
+    # On Windows ASan builds, running test executables during build can fail due
+    # to runtime loader path issues. PRE_TEST discovery defers this to ctest.
+    gtest_discover_tests(
+      ${test_target}
+      DISCOVERY_TIMEOUT
+      300
+      DISCOVERY_MODE
+      PRE_TEST)
   else()
-    message(STATUS "WINDOWS_CI is ON - skipping gtest_discover_tests for ${test_target}.")
+    message(STATUS "KATAGLYPHIS_ENABLE_GTEST_DISCOVERY is OFF - skipping gtest_discover_tests for ${test_target}.")
   endif()
 endfunction()

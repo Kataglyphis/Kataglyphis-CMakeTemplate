@@ -1,3 +1,3 @@
 import kataglyphis.cppproject;
 
-int main() { return kataglyphis::run(); }
+auto main() -> int { return kataglyphis::run(); }

@@ -8,14 +8,10 @@ project(
   HOMEPAGE_URL "https://jonasheinle.de/"
   LANGUAGES CXX C)
 
+include(cmake/ClangClModules.cmake)
+
 set(AUTHOR "Jonas Heinle")
 
-#Set WINDOWS_CI to OFF by default
-#WINDOWS CI is only able to verify successful compiling... Windows... lel
-#i will stay on linux...
-set(WINDOWS_CI
-    OFF
-    CACHE BOOL "Enable Windows CI build options")
 set(RUST_FEATURES
     ON
     CACHE BOOL "Enable Rust features in our project.")
@@ -71,10 +67,21 @@ myproject_local_options()
 include(cmake/SystemLibDependencies.cmake)
 
 if(myproject_ENABLE_SANITIZER_ADDRESS)
-
-  add_compile_options(-fsanitize=address)
-
-  add_link_options(-fsanitize=address)
+  if(MSVC)
+    # Keep STL annotation settings consistent for all targets (including gtest)
+    # to avoid LNK2038 mismatches with AddressSanitizer builds.
+    add_compile_definitions(_DISABLE_VECTOR_ANNOTATION _DISABLE_STRING_ANNOTATION)
+    if(NOT
+       CMAKE_CXX_COMPILER_ID
+       STREQUAL
+       "Clang")
+      add_compile_options(/fsanitize=address /Zi)
+      add_link_options(/INCREMENTAL:NO)
+    endif()
+  else()
+    add_compile_options(-fsanitize=address)
+    add_link_options(-fsanitize=address)
+  endif()
 
 endif()
 
@@ -95,16 +102,12 @@ add_subdirectory(ExternalLib)
 
 add_subdirectory(Src)
 
-if(NOT WINDOWS_CI AND BUILD_TESTING)
+if(BUILD_TESTING)
   include(CTest)
   enable_testing()
-  message(STATUS "WINDOWS_CI is OFF - enabling CTest.")
+  message(STATUS "BUILD_TESTING is ON - enabling CTest.")
 else()
-  if(WINDOWS_CI)
-    message(STATUS "WINDOWS_CI is ON - skipping CTest enablement.")
-  else()
-    message(STATUS "BUILD_TESTING is OFF - skipping CTest enablement.")
-  endif()
+  message(STATUS "BUILD_TESTING is OFF - skipping CTest enablement.")
 endif()
 
 if(BUILD_TESTING)

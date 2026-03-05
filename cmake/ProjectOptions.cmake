@@ -38,16 +38,31 @@ macro(myproject_setup_options)
 
   myproject_supports_sanitizers()
 
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(DEFAULT_ASAN ON)
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+      set(DEFAULT_ASAN ON)
+    elseif(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+      # MSVC debug: enable AddressSanitizer by default.
+      set(DEFAULT_ASAN ON)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
+      # clang-cl debug: enable AddressSanitizer by default.
+      set(DEFAULT_ASAN ON)
+    else()
+      set(DEFAULT_ASAN OFF)
+    endif()
   else()
     set(DEFAULT_ASAN OFF)
   endif()
 
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug"
-     AND CMAKE_SYSTEM_NAME STREQUAL "Linux"
-     AND SUPPORTS_UBSAN)
-    set(DEFAULT_UBSAN ON)
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND SUPPORTS_UBSAN)
+      set(DEFAULT_UBSAN ON)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
+      # clang-cl debug: enable UBSan by default.
+      set(DEFAULT_UBSAN ON)
+    else()
+      set(DEFAULT_UBSAN OFF)
+    endif()
   else()
     set(DEFAULT_UBSAN OFF)
   endif()
@@ -62,38 +77,22 @@ macro(myproject_setup_options)
     set(DEFAULT_TSAN OFF)
   endif()
 
-  if(NOT PROJECT_IS_TOP_LEVEL OR myproject_PACKAGING_MAINTAINER_MODE)
-    option(myproject_ENABLE_IPO "Enable IPO/LTO" ON)
-    option(myproject_ENABLE_STATIC_ANALYZER "Enable Static Analyzer" OFF)
-    option(myproject_WARNINGS_AS_ERRORS "Treat Warnings As Errors" OFF)
-    option(myproject_ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" ${DEFAULT_ASAN})
-    option(myproject_ENABLE_SANITIZER_LEAK "Enable leak sanitizer" OFF)
-    option(myproject_ENABLE_SANITIZER_UNDEFINED "Enable undefined sanitizer" ${DEFAULT_UBSAN})
-    option(myproject_ENABLE_SANITIZER_THREAD "Enable thread sanitizer" ${DEFAULT_TSAN})
-    option(myproject_ENABLE_SANITIZER_MEMORY "Enable memory sanitizer" OFF)
-    option(myproject_ENABLE_UNITY_BUILD "Enable unity builds" OFF)
-    option(myproject_ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
-    option(myproject_ENABLE_CPPCHECK "Enable cpp-check analysis" OFF)
-    option(myproject_ENABLE_PCH "Enable precompiled headers" OFF)
-    option(myproject_ENABLE_CACHE "Enable ccache" ON)
-    option(myproject_ENABLE_IWYU "Enable IWYU" ON)
-  else()
-    option(myproject_ENABLE_IPO "Enable IPO/LTO" ON)
-    option(myproject_ENABLE_STATIC_ANALYZER "Enable Static Analyzer" OFF)
-    option(myproject_WARNINGS_AS_ERRORS "Treat Warnings As Errors" OFF)
-    option(myproject_ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" ${DEFAULT_ASAN}) # ${SUPPORTS_ASAN}
-    option(myproject_ENABLE_SANITIZER_LEAK "Enable leak sanitizer" OFF)
-    option(myproject_ENABLE_SANITIZER_UNDEFINED "Enable undefined sanitizer" ${DEFAULT_UBSAN}) # ${SUPPORTS_UBSAN}
-    option(myproject_ENABLE_SANITIZER_THREAD "Enable thread sanitizer" ${DEFAULT_TSAN})
-    option(myproject_ENABLE_SANITIZER_MEMORY "Enable memory sanitizer" OFF)
-    option(myproject_ENABLE_UNITY_BUILD "Enable unity builds" OFF)
-    option(myproject_ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
-    option(myproject_ENABLE_CPPCHECK "Enable cpp-check analysis" OFF)
-    option(myproject_ENABLE_PCH "Enable precompiled headers" OFF)
-    option(myproject_ENABLE_CACHE "Enable ccache" ON)
-    option(myproject_ENABLE_IWYU "Enable IWYU" ON)
-
-  endif()
+  # Keep all project options in one place to avoid duplicated defaults across
+  # top-level vs. subproject/packaging entry points.
+  option(myproject_ENABLE_IPO "Enable IPO/LTO" ON)
+  option(myproject_ENABLE_STATIC_ANALYZER "Enable Static Analyzer" OFF)
+  option(myproject_WARNINGS_AS_ERRORS "Treat Warnings As Errors" OFF)
+  option(myproject_ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" ${DEFAULT_ASAN})
+  option(myproject_ENABLE_SANITIZER_LEAK "Enable leak sanitizer" OFF)
+  option(myproject_ENABLE_SANITIZER_UNDEFINED "Enable undefined sanitizer" ${DEFAULT_UBSAN})
+  option(myproject_ENABLE_SANITIZER_THREAD "Enable thread sanitizer" ${DEFAULT_TSAN})
+  option(myproject_ENABLE_SANITIZER_MEMORY "Enable memory sanitizer" OFF)
+  option(myproject_ENABLE_UNITY_BUILD "Enable unity builds" OFF)
+  option(myproject_ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
+  option(myproject_ENABLE_CPPCHECK "Enable cpp-check analysis" OFF)
+  option(myproject_ENABLE_PCH "Enable precompiled headers" OFF)
+  option(myproject_ENABLE_CACHE "Enable ccache" ON)
+  option(myproject_ENABLE_IWYU "Enable IWYU" ON)
 
   if(NOT
      CMAKE_BUILD_TYPE
@@ -160,8 +159,8 @@ macro(myproject_global_options)
         "-fcolor-diagnostics -Wno-error=unused-command-line-argument -Wno-error=character-conversion -Wno-unknown-warning-option -Wno-error=unknown-warning-option"
     )
     # Apply to both C and C++ flags (some deps add to C flags)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  /Od /std:c++latest ${_CLANG_CL_SAFE_WARNINGS}")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2  /std:c++latest -DNDEBUG ${_CLANG_CL_SAFE_WARNINGS}")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  /Od ${_CLANG_CL_SAFE_WARNINGS}")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2  -DNDEBUG ${_CLANG_CL_SAFE_WARNINGS}")
     # https://clang.llvm.org/docs/ClangCommandLineReference.html
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -ggdb -std=c++23 -fcolor-diagnostics") # -std=c++2a
@@ -174,6 +173,15 @@ macro(myproject_global_options)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+     AND MSVC
+     AND CMAKE_BUILD_TYPE STREQUAL "Debug"
+     AND myproject_ENABLE_SANITIZER_ADDRESS)
+    # clang-cl AddressSanitizer does not support the Debug CRT (/MDd).
+    # Force /MD for Debug when ASan is enabled.
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+  endif()
 
   if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_LINK_WHAT_YOU_USE FALSE)

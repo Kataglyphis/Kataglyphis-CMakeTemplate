@@ -1,3 +1,9 @@
+param(
+  [switch]$SkipFormat,
+  [switch]$SkipTidy,
+  [switch]$SkipMsix
+)
+
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
@@ -27,17 +33,17 @@ function Get-ConfigValue {
   return $cursor
 }
 
-function Escape-Xml([AllowNull()][string]$Value) {
-  if ($null -eq $Value) { return '' }
-  return [System.Security.SecurityElement]::Escape($Value)
-}
-
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $containerHubModulesRoot = Join-Path $repoRoot 'ExternalLib\Kataglyphis-ContainerHub\windows\scripts\modules'
 
 $sharedModulePath = Join-Path $containerHubModulesRoot 'WindowsScripts.Shared.psm1'
 $buildModulePath = Join-Path $containerHubModulesRoot 'WindowsBuild.Common.psm1'
 $toolchainModulePath = Join-Path $containerHubModulesRoot 'WindowsToolchain.Common.psm1'
+$localModulesRoot = Join-Path $PSScriptRoot 'modules'
+$localCmakeModulePath = Join-Path $localModulesRoot 'Build.CMake.psm1'
+$localFormattingModulePath = Join-Path $localModulesRoot 'Build.Formatting.psm1'
+$localTestingModulePath = Join-Path $localModulesRoot 'Build.Testing.psm1'
+$localPackagingModulePath = Join-Path $localModulesRoot 'Build.Packaging.psm1'
 
 if (-not (Test-Path $sharedModulePath)) {
   throw "ContainerHub shared module not found: $sharedModulePath"
@@ -48,10 +54,26 @@ if (-not (Test-Path $buildModulePath)) {
 if (-not (Test-Path $toolchainModulePath)) {
   throw "ContainerHub toolchain module not found: $toolchainModulePath"
 }
+if (-not (Test-Path $localCmakeModulePath)) {
+  throw "Local CMake module not found: $localCmakeModulePath"
+}
+if (-not (Test-Path $localFormattingModulePath)) {
+  throw "Local formatting module not found: $localFormattingModulePath"
+}
+if (-not (Test-Path $localTestingModulePath)) {
+  throw "Local testing module not found: $localTestingModulePath"
+}
+if (-not (Test-Path $localPackagingModulePath)) {
+  throw "Local packaging module not found: $localPackagingModulePath"
+}
 
 Import-Module $buildModulePath -Force
 Import-Module $toolchainModulePath -Force
 Import-Module $sharedModulePath
+Import-Module $localCmakeModulePath -Force
+Import-Module $localFormattingModulePath -Force
+Import-Module $localTestingModulePath -Force
+Import-Module $localPackagingModulePath -Force
 
 $defaultConfigPath = Join-Path $PSScriptRoot 'Build-Windows.config.psd1'
 $configPath = Get-OrDefault $env:BUILD_WINDOWS_CONFIG $defaultConfigPath
@@ -69,37 +91,73 @@ $logDir = Get-OrDefault $env:BUILD_LOG_DIR (Get-ConfigValue -Config $config -Pat
 
 $buildDirMsvc = Get-OrDefault $env:BUILD_DIR_MSVC (Get-ConfigValue -Config $config -Path 'Build.BuildDirMsvc')
 $buildDirClangCl = Get-OrDefault $env:BUILD_DIR_CLANGCL (Get-ConfigValue -Config $config -Path 'Build.BuildDirClangCl')
+$buildDirClangClTsan = Get-OrDefault $env:BUILD_DIR_CLANGCL_TSAN (Get-ConfigValue -Config $config -Path 'Build.BuildDirClangClTsan')
 $buildProfileDir = Get-OrDefault $env:BUILD_DIR_PROFILE (Get-ConfigValue -Config $config -Path 'Build.BuildDirProfile')
 $buildReleaseDir = Get-OrDefault $env:BUILD_DIR_RELEASE (Get-ConfigValue -Config $config -Path 'Build.BuildDirRelease')
 
 $presetMsvcDebug = Get-OrDefault $env:PRESET_MSVC_DEBUG (Get-ConfigValue -Config $config -Path 'Build.Presets.MsvcDebug')
 $presetClangClDebug = Get-OrDefault $env:PRESET_CLANGCL_DEBUG (Get-ConfigValue -Config $config -Path 'Build.Presets.ClangClDebug')
+$presetClangClDebugTsan = Get-OrDefault $env:PRESET_CLANGCL_DEBUG_TSAN (Get-ConfigValue -Config $config -Path 'Build.Presets.ClangClDebugTsan')
 $clangProfilePreset = Get-OrDefault $env:CLANG_PROFILE_PRESET (Get-ConfigValue -Config $config -Path 'Build.Presets.ClangClProfile')
 $presetClangClRelease = Get-OrDefault $env:PRESET_CLANGCL_RELEASE (Get-ConfigValue -Config $config -Path 'Build.Presets.ClangClRelease')
-
-$disableCppcheckDefine = Get-OrDefault $env:DISABLE_CPPCHECK_DEFINE (Get-ConfigValue -Config $config -Path 'Build.DisableCppcheckDefine')
 
 $workspacePath = Resolve-WorkspacePath -Path $workspaceRoot
 $buildPathMsvc = Join-Path $workspacePath $buildDirMsvc
 $buildPathClangCl = Join-Path $workspacePath $buildDirClangCl
+$buildPathClangClTsan = Join-Path $workspacePath $buildDirClangClTsan
 $buildProfilePath = Join-Path $workspacePath $buildProfileDir
 $buildReleasePath = Join-Path $workspacePath $buildReleaseDir
 
 if ($buildPathClangCl -eq $buildPathMsvc) {
   $buildPathClangCl = Join-Path $workspacePath ("${buildDirMsvc}-clangcl")
 }
+if ($buildPathClangClTsan -eq $buildPathClangCl) {
+  $buildPathClangClTsan = Join-Path $workspacePath ("${buildDirClangCl}-tsan")
+}
 if ($buildProfilePath -eq $buildReleasePath) {
   $buildProfilePath = Join-Path $workspacePath ("${buildReleaseDir}-profile")
 }
 
-$context = New-BuildContext -Workspace $workspacePath -LogDir $logDir -StopOnError
+function Invoke-ClangTidyFixStep {
+  param(
+    [Parameter(Mandatory)]
+    [pscustomobject]$Context,
+    [Parameter(Mandatory)]
+    [string]$WorkspacePath,
+    [Parameter(Mandatory)]
+    [string]$BuildRoot
+  )
 
-function Try-RemoveBuildRoot([pscustomobject]$ctx, [string]$path, [string]$label) {
-  if (Remove-BuildRoot -Context $ctx -Path $path) {
+  $clangTidyCommand = Get-Command 'clang-tidy' -ErrorAction SilentlyContinue
+  if (-not $clangTidyCommand) {
+    throw 'clang-tidy not found on PATH.'
+  }
+
+  $compileDb = Join-Path $BuildRoot 'compile_commands.json'
+  if (-not (Test-Path $compileDb)) {
+    throw "compile_commands.json not found at: $compileDb"
+  }
+
+  $srcDir = Join-Path $WorkspacePath 'Src'
+  $tidyFiles = @(Get-ChildItem -Path $srcDir -Recurse -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Extension -in @('.cpp', '.cc', '.cxx') } |
+    Select-Object -ExpandProperty FullName)
+
+  if ($tidyFiles.Count -eq 0) {
+    Write-BuildLog -Context $Context -Message 'No C/C++ source files found under Src for clang-tidy.'
     return
   }
 
-  Write-BuildLogWarning -Context $ctx -Message "Could not remove build directory ($label): $path. Continuing with in-place configure/build."
+  foreach ($tidyFile in $tidyFiles) {
+    Invoke-BuildExternal -Context $Context -File $clangTidyCommand.Source -Parameters @(
+      '-p', $BuildRoot,
+      # include-cleaner can incorrectly add textual includes for C++ module imports.
+      '--checks=-misc-include-cleaner',
+      '--fix',
+      '--fix-errors',
+      $tidyFile
+    ) | Out-Null
+  }
 }
 
 try {
@@ -115,80 +173,150 @@ try {
     } -RequiredTools @('cmake', 'ninja') -FailOnMissingRequiredTools
   } | Out-Null
 
+  if (-not $SkipFormat) {
+    Invoke-BuildStep -Context $context -StepName 'Python tooling + cmake-format' -Critical -Script {
+      Invoke-CmakeFormatStep -Context $context -WorkspacePath $workspacePath
+    } | Out-Null
+  } else {
+    Write-BuildLog -Context $context -Message 'Skipping cmake-format step (-SkipFormat).'
+  }
+
+  if (-not $SkipFormat) {
+    Invoke-BuildStep -Context $context -StepName 'clang-format (C/C++)' -Critical -Script {
+      Invoke-ClangFormatStep -Context $context -WorkspacePath $workspacePath
+    } | Out-Null
+  }
+
   Invoke-BuildStep -Context $context -StepName 'Configure/Build: x64-MSVC-Windows-Debug' -Critical -Script {
-    Invoke-BuildExternal -Context $context -File 'cmake' -Parameters @('-B', $buildPathMsvc, '--preset', $presetMsvcDebug) | Out-Null
-    Invoke-BuildExternal -Context $context -File 'cmake' -Parameters @('--build', $buildPathMsvc, '--config', 'Debug') | Out-Null
+    Invoke-CmakeConfigureAndBuild -Context $context -BuildPath $buildPathMsvc -Preset $presetMsvcDebug -Configuration 'Debug'
   } | Out-Null
 
   Invoke-BuildStep -Context $context -StepName 'Test: MSVC' -Critical -Script {
-    Push-Location $buildPathMsvc
-    try {
-      Invoke-BuildExternal -Context $context -File 'ctest' -Parameters @('--output-on-failure') | Out-Null
-    } finally {
-      Pop-Location
-    }
+    Invoke-CtestDiscoveredTests -Context $context -BuildRoot $buildPathMsvc -Configuration 'Debug' -RuntimeFlavor 'Msvc'
   } | Out-Null
 
   Invoke-BuildStep -Context $context -StepName 'Configure/Build: x64-ClangCL-Windows-Debug' -Critical -Script {
-    Try-RemoveBuildRoot -ctx $context -path $buildPathClangCl -label $presetClangClDebug
-    Invoke-BuildExternal -Context $context -File 'clang' -Parameters @('--version') | Out-Null
-
-    Invoke-BuildExternal -Context $context -File 'cmake' -Parameters @(
-      '-B', $buildPathClangCl,
-      '--preset', $presetClangClDebug,
-      "-D$disableCppcheckDefine"
-    ) | Out-Null
-    Invoke-BuildExternal -Context $context -File 'cmake' -Parameters @('--build', $buildPathClangCl, '--config', 'Debug') | Out-Null
-  } | Out-Null
-
-  Invoke-BuildStep -Context $context -StepName 'Test: ClangCL (incl. coverage export)' -Critical -Script {
-    Push-Location $buildPathClangCl
-    try {
-      Invoke-BuildExternal -Context $context -File 'ctest' -Parameters @('--output-on-failure') | Out-Null
-
-      Invoke-BuildExternal -Context $context -File 'llvm-profdata.exe' -Parameters @(
-        'merge', '-sparse', 'Test\compile\default.profraw',
-        '-o', (Join-Path $buildPathClangCl 'compileTestSuite.profdata')
-      ) | Out-Null
-
-      Invoke-BuildExternal -Context $context -File 'llvm-cov.exe' -Parameters @(
-        'report', 'compileTestSuite.exe',
-        "-instr-profile=$(Join-Path $buildPathClangCl 'compileTestSuite.profdata')"
-      ) | Out-Null
-
-      $coverageJsonPath = Join-Path $buildPathClangCl 'coverage.json'
-      $instrProfileArg = "-instr-profile=$(Join-Path $buildPathClangCl 'compileTestSuite.profdata')"
-      Write-BuildLog -Context $context -Message "CMD: llvm-cov.exe export compileTestSuite.exe -format=text $instrProfileArg > $coverageJsonPath"
-
-      $global:LASTEXITCODE = 0
-      & 'llvm-cov.exe' export 'compileTestSuite.exe' '-format=text' $instrProfileArg | Out-File -FilePath $coverageJsonPath -Encoding UTF8
-      if ($LASTEXITCODE -ne 0) {
-        throw "llvm-cov export failed with exit code $LASTEXITCODE"
-      }
-
-      Invoke-BuildExternal -Context $context -File 'llvm-cov.exe' -Parameters @(
-        'show', 'compileTestSuite.exe',
-        "-instr-profile=$(Join-Path $buildPathClangCl 'compileTestSuite.profdata')"
-      ) | Out-Null
-    } finally {
-      Pop-Location
+    $clangClCommand = Get-Command 'clang-cl.exe' -ErrorAction SilentlyContinue
+    if (-not $clangClCommand) {
+      throw 'clang-cl.exe not found on PATH. Install LLVM/Visual Studio Clang tools and run from a Developer PowerShell.'
     }
+
+    Invoke-BuildExternal -Context $context -File $clangClCommand.Source -Parameters @('--version') | Out-Null
+
+    Invoke-CmakeConfigureAndBuild -Context $context -BuildPath $buildPathClangCl -Preset $presetClangClDebug -Configuration 'Debug' -CleanBuildRoot
   } | Out-Null
+
+  if (-not $SkipTidy) {
+    Invoke-BuildStep -Context $context -StepName 'clang-tidy --fix (Src)' -Critical -Script {
+      Invoke-ClangTidyFixStep -Context $context -WorkspacePath $workspacePath -BuildRoot $buildPathClangCl
+    } | Out-Null
+  } else {
+    Write-BuildLog -Context $context -Message 'Skipping clang-tidy step (-SkipTidy).'
+  }
+
+  Invoke-BuildStep -Context $context -StepName 'Test: ClangCL (ctest + coverage export)' -Critical -Script {
+    Invoke-CtestDiscoveredTests -Context $context -BuildRoot $buildPathClangCl -Configuration 'Debug' -RuntimeFlavor 'Clang'
+
+    $compileTestExe = Resolve-TestExecutable -BuildRoot $buildPathClangCl -ExecutableName 'compileTestSuite.exe'
+    if (-not $compileTestExe) {
+      Write-BuildLogWarning -Context $context -Message "compileTestSuite.exe not found under '$buildPathClangCl'. Skipping coverage export."
+      return
+    }
+
+    $profrawPath = Join-Path $buildPathClangCl 'Test\compile\default.profraw'
+    if (Test-Path $profrawPath) {
+      Remove-Item -Path $profrawPath -Force -ErrorAction SilentlyContinue
+    }
+
+    $oldProfileFile = $env:LLVM_PROFILE_FILE
+    $env:LLVM_PROFILE_FILE = $profrawPath
+    try {
+      $compileStarted = Invoke-ManualTestExecutable -Context $context -BuildRoot $buildPathClangCl -ExecutableName 'compileTestSuite.exe' -RuntimeFlavor 'Clang'
+      if (-not $compileStarted) {
+        return
+      }
+    } finally {
+      if ($null -eq $oldProfileFile) {
+        Remove-Item Env:LLVM_PROFILE_FILE -ErrorAction SilentlyContinue
+      } else {
+        $env:LLVM_PROFILE_FILE = $oldProfileFile
+      }
+    }
+
+    if (-not (Test-Path $profrawPath)) {
+      Write-BuildLogWarning -Context $context -Message "Coverage profile not found at $profrawPath. Skipping llvm-profdata/llvm-cov export."
+      return
+    }
+
+    Invoke-BuildExternal -Context $context -File 'llvm-profdata.exe' -Parameters @(
+      'merge', '-sparse', $profrawPath,
+      '-o', (Join-Path $buildPathClangCl 'compileTestSuite.profdata')
+    ) | Out-Null
+
+    # Keep project coverage focused on production code by excluding tests and vendored deps.
+    $coverageIgnoreRegex = '(^|[\\/])(_deps|Test)([\\/]|$)'
+
+    Invoke-BuildExternal -Context $context -File 'llvm-cov.exe' -Parameters @(
+      'report', $compileTestExe,
+      "-instr-profile=$(Join-Path $buildPathClangCl 'compileTestSuite.profdata')",
+      "-ignore-filename-regex=$coverageIgnoreRegex"
+    ) | Out-Null
+
+    $coverageJsonPath = Join-Path $buildPathClangCl 'coverage.json'
+    $instrProfileArg = "-instr-profile=$(Join-Path $buildPathClangCl 'compileTestSuite.profdata')"
+    $ignoreArg = "-ignore-filename-regex=$coverageIgnoreRegex"
+    Write-BuildLog -Context $context -Message "CMD: llvm-cov.exe export $compileTestExe -format=text $instrProfileArg $ignoreArg > $coverageJsonPath"
+
+    $global:LASTEXITCODE = 0
+    & 'llvm-cov.exe' export $compileTestExe '-format=text' $instrProfileArg $ignoreArg | Out-File -FilePath $coverageJsonPath -Encoding UTF8
+    if ($LASTEXITCODE -ne 0) {
+      throw "llvm-cov export failed with exit code $LASTEXITCODE"
+    }
+
+    Invoke-BuildExternal -Context $context -File 'llvm-cov.exe' -Parameters @(
+      'show', $compileTestExe,
+      "-instr-profile=$(Join-Path $buildPathClangCl 'compileTestSuite.profdata')",
+      "-ignore-filename-regex=$coverageIgnoreRegex"
+    ) | Out-Null
+  } | Out-Null
+
+  Invoke-BuildOptional -Context $context -Name 'ClangCL-TSan (optional)' -Script {
+    $clangClCommand = Get-Command 'clang-cl.exe' -ErrorAction SilentlyContinue
+    if (-not $clangClCommand) {
+      throw 'clang-cl.exe not found on PATH. Install LLVM/Visual Studio Clang tools and run from a Developer PowerShell.'
+    }
+
+    Invoke-BuildExternal -Context $context -File $clangClCommand.Source -Parameters @('--version') | Out-Null
+
+    if (-not (Test-ClangClThreadSanitizerSupport -ClangClPath $clangClCommand.Source)) {
+      throw 'clang-cl ThreadSanitizer is not supported for target x86_64-pc-windows-msvc in this toolchain. Skipping optional TSan build/test.'
+    }
+
+    Invoke-CmakeConfigureAndBuild -Context $context -BuildPath $buildPathClangClTsan -Preset $presetClangClDebugTsan -Configuration 'Debug' -CleanBuildRoot
+
+    Invoke-CtestDiscoveredTests -Context $context -BuildRoot $buildPathClangClTsan -Configuration 'Debug' -RuntimeFlavor 'Clang'
+  }
 
   Invoke-BuildStep -Context $context -StepName "Configure/Build: $clangProfilePreset" -Critical -Script {
-    Try-RemoveBuildRoot -ctx $context -path $buildProfilePath -label $clangProfilePreset
-    Invoke-BuildExternal -Context $context -File 'cmake' -Parameters @(
-      '-B', $buildProfilePath,
-      '--preset', $clangProfilePreset,
-      "-D$disableCppcheckDefine"
-    ) | Out-Null
-    Invoke-BuildExternal -Context $context -File 'cmake' -Parameters @('--build', $buildProfilePath) | Out-Null
+    Invoke-CmakeConfigureAndBuild -Context $context -BuildPath $buildProfilePath -Preset $clangProfilePreset -Configuration 'RelWithDebInfo' -CleanBuildRoot
   } | Out-Null
 
   Invoke-BuildStep -Context $context -StepName 'Benchmarks' -Critical -Script {
     Push-Location $buildProfilePath
     try {
-      Invoke-BuildExternal -Context $context -File (Join-Path $buildProfilePath 'perfTestSuite.exe') -Parameters @(
+      $benchmarkExe = Join-Path $buildProfilePath 'perfTestSuite.exe'
+      if (-not (Test-Path $benchmarkExe)) {
+        $candidate = Get-ChildItem -Path $buildProfilePath -Filter 'perfTestSuite.exe' -File -Recurse -ErrorAction SilentlyContinue |
+          Select-Object -First 1
+        if ($candidate) {
+          $benchmarkExe = $candidate.FullName
+        } else {
+          Write-BuildLog -Context $context -Message 'Benchmark executable not found. Skipping benchmark run.'
+          return
+        }
+      }
+
+      Invoke-BuildExternal -Context $context -File $benchmarkExe -Parameters @(
         '--benchmark_out=results.json',
         '--benchmark_out_format=json'
       ) | Out-Null
@@ -198,104 +326,92 @@ try {
   } | Out-Null
 
   Invoke-BuildStep -Context $context -StepName 'Release build/package: x64-ClangCL-Windows-Release' -Critical -Script {
-    Try-RemoveBuildRoot -ctx $context -path $buildReleasePath -label $presetClangClRelease
-
-    Invoke-BuildExternal -Context $context -File 'cmake' -Parameters @(
-      '-B', $buildReleasePath,
-      '--preset', $presetClangClRelease,
-      "-D$disableCppcheckDefine"
-    ) | Out-Null
-    Invoke-BuildExternal -Context $context -File 'cmake' -Parameters @('--build', $buildReleasePath) | Out-Null
+    Invoke-CmakeConfigureAndBuild -Context $context -BuildPath $buildReleasePath -Preset $presetClangClRelease -Configuration 'Release' -CleanBuildRoot
 
     Invoke-BuildExternal -Context $context -File 'cmake' -Parameters @(
       '--build', $buildReleasePath,
-      '--target', 'package'
+      '--target', 'package',
+      '--config', 'Release'
     ) | Out-Null
   } | Out-Null
 
-  Invoke-BuildOptional -Context $context -Name 'MSIX packaging' -Script {
-    $makeappx = Get-Command 'makeappx.exe' -ErrorAction SilentlyContinue
-    if (-not $makeappx) {
-      throw 'makeappx.exe not found on PATH (Windows SDK). Skipping MSIX packaging.'
-    }
-
-    $msixName = Get-OrDefault $env:MSIX_PACKAGE_NAME $env:PROJECT_NAME
-    if ([string]::IsNullOrWhiteSpace($msixName)) {
-      $msixName = Get-OrDefault (Get-ConfigValue -Config $config -Path 'Msix.PackageNameDefault') 'KataglyphisCppProject'
-    }
-
-    $msixPublisher = Get-OrDefault $env:MSIX_PUBLISHER (Get-ConfigValue -Config $config -Path 'Msix.Publisher')
-    $msixVersion = Get-OrDefault $env:MSIX_VERSION (Get-ConfigValue -Config $config -Path 'Msix.Version')
-    $msixMinVersion = Get-OrDefault $env:MSIX_MIN_VERSION (Get-ConfigValue -Config $config -Path 'Msix.MinVersion')
-
-    $msixStaging = Join-Path $buildReleasePath 'msix-staging'
-    $assetsDir = Join-Path $msixStaging 'Assets'
-    if (Test-Path $msixStaging) {
-      Remove-BuildRoot -Context $context -Path $msixStaging | Out-Null
-    }
-
-    Invoke-BuildExternal -Context $context -File 'cmake' -Parameters @(
-      '--install', $buildReleasePath,
-      '--config', 'Release',
-      '--prefix', $msixStaging
-    ) | Out-Null
-
-    Resolve-DirectoryPath -Path $assetsDir | Out-Null
-
-    $exeRelPath = "bin\\$msixName.exe"
-    $manifestPath = Join-Path $msixStaging 'AppxManifest.xml'
-    $storeLogoRel = 'Assets\\StoreLogo.png'
-    $logo150Rel = 'Assets\\Square150x150Logo.png'
-    $logo44Rel = 'Assets\\Square44x44Logo.png'
-
-    $manifestTemplateRel = Get-OrDefault $env:MSIX_MANIFEST_TEMPLATE (Get-ConfigValue -Config $config -Path 'Msix.ManifestTemplate')
-    $manifestTemplatePath = if ([System.IO.Path]::IsPathRooted($manifestTemplateRel)) { $manifestTemplateRel } else { Join-Path $workspacePath $manifestTemplateRel }
-    if (-not (Test-Path $manifestTemplatePath)) {
-      throw "MSIX manifest template not found: $manifestTemplatePath"
-    }
-
-    $template = Get-Content -Path $manifestTemplatePath -Raw -Encoding UTF8
-    $manifestXml = $template
-    $manifestXml = $manifestXml -replace '__MSIX_NAME__', (Escape-Xml $msixName)
-    $manifestXml = $manifestXml -replace '__MSIX_PUBLISHER__', (Escape-Xml $msixPublisher)
-    $manifestXml = $manifestXml -replace '__MSIX_VERSION__', (Escape-Xml $msixVersion)
-    $manifestXml = $manifestXml -replace '__MSIX_MIN_VERSION__', (Escape-Xml $msixMinVersion)
-    $manifestXml = $manifestXml -replace '__EXE_REL_PATH__', (Escape-Xml $exeRelPath)
-    $manifestXml = $manifestXml -replace '__STORE_LOGO_REL__', (Escape-Xml $storeLogoRel)
-    $manifestXml = $manifestXml -replace '__LOGO150_REL__', (Escape-Xml $logo150Rel)
-    $manifestXml = $manifestXml -replace '__LOGO44_REL__', (Escape-Xml $logo44Rel)
-
-    Set-Content -Path $manifestPath -Value $manifestXml -Encoding UTF8
-
-    $createPng = {
-      param([string]$Path, [int]$Width, [int]$Height)
-      Add-Type -AssemblyName System.Drawing
-      $bmp = New-Object System.Drawing.Bitmap($Width, $Height)
-      $gfx = [System.Drawing.Graphics]::FromImage($bmp)
-      try {
-        $gfx.Clear([System.Drawing.Color]::Transparent)
-        $bmp.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png)
-      } finally {
-        $gfx.Dispose()
-        $bmp.Dispose()
+  if (-not $SkipMsix) {
+    Invoke-BuildOptional -Context $context -Name 'MSIX packaging' -Script {
+      $makeappxOverride = Get-OrDefault $env:MAKEAPPX_PATH (Get-ConfigValue -Config $config -Path 'Msix.MakeAppxPath')
+      $makeappxPath = Resolve-WindowsSdkToolPath -ToolName 'makeappx.exe' -OverridePath $makeappxOverride
+      if (-not $makeappxPath) {
+        throw 'makeappx.exe not found. Install Windows SDK or set MAKEAPPX_PATH (or Msix.MakeAppxPath in config). Skipping MSIX packaging.'
       }
+
+      Write-BuildLog -Context $context -Message "Using makeappx: $makeappxPath"
+
+      $msixName = Get-OrDefault $env:MSIX_PACKAGE_NAME $env:PROJECT_NAME
+      if ([string]::IsNullOrWhiteSpace($msixName)) {
+        $msixName = Get-OrDefault (Get-ConfigValue -Config $config -Path 'Msix.PackageNameDefault') 'KataglyphisCppProject'
+      }
+
+      $msixPublisher = Get-OrDefault $env:MSIX_PUBLISHER (Get-ConfigValue -Config $config -Path 'Msix.Publisher')
+      $msixVersion = Get-OrDefault $env:MSIX_VERSION (Get-ConfigValue -Config $config -Path 'Msix.Version')
+      $msixMinVersion = Get-OrDefault $env:MSIX_MIN_VERSION (Get-ConfigValue -Config $config -Path 'Msix.MinVersion')
+
+      $msixStaging = Join-Path $buildReleasePath 'msix-staging'
+      $assetsDir = Join-Path $msixStaging 'Assets'
+      if (Test-Path $msixStaging) {
+        Remove-BuildRoot -Context $context -Path $msixStaging | Out-Null
+      }
+
+      Invoke-BuildExternal -Context $context -File 'cmake' -Parameters @(
+        '--install', $buildReleasePath,
+        '--config', 'Release',
+        '--prefix', $msixStaging
+      ) | Out-Null
+
+      Resolve-DirectoryPath -Path $assetsDir | Out-Null
+
+      $exeRelPath = "bin/$msixName.exe"
+      $manifestPath = Join-Path $msixStaging 'AppxManifest.xml'
+      $storeLogoRel = 'Assets/StoreLogo.png'
+      $logo150Rel = 'Assets/Square150x150Logo.png'
+      $logo44Rel = 'Assets/Square44x44Logo.png'
+
+      $manifestTemplateRel = Get-OrDefault $env:MSIX_MANIFEST_TEMPLATE (Get-ConfigValue -Config $config -Path 'Msix.ManifestTemplate')
+      $manifestTemplatePath = if ([System.IO.Path]::IsPathRooted($manifestTemplateRel)) { $manifestTemplateRel } else { Join-Path $workspacePath $manifestTemplateRel }
+      if (-not (Test-Path $manifestTemplatePath)) {
+        throw "MSIX manifest template not found: $manifestTemplatePath"
+      }
+
+      $template = Get-Content -Path $manifestTemplatePath -Raw -Encoding UTF8
+      $manifestXml = Expand-XmlTemplateTokens -Template $template -TokenMap @{
+        '__MSIX_NAME__'      = $msixName
+        '__MSIX_PUBLISHER__' = $msixPublisher
+        '__MSIX_VERSION__'   = $msixVersion
+        '__MSIX_MIN_VERSION__' = $msixMinVersion
+        '__EXE_REL_PATH__'   = $exeRelPath
+        '__STORE_LOGO_REL__' = $storeLogoRel
+        '__LOGO150_REL__'    = $logo150Rel
+        '__LOGO44_REL__'     = $logo44Rel
+      }
+
+      Set-Content -Path $manifestPath -Value $manifestXml -Encoding UTF8
+
+      New-TransparentPng -Path (Join-Path $msixStaging 'Assets\StoreLogo.png') -Width 50 -Height 50
+      New-TransparentPng -Path (Join-Path $msixStaging 'Assets\Square150x150Logo.png') -Width 150 -Height 150
+      New-TransparentPng -Path (Join-Path $msixStaging 'Assets\Square44x44Logo.png') -Width 44 -Height 44
+
+      if (-not (Test-Path (Join-Path $msixStaging $exeRelPath))) {
+        throw "Expected executable not found in MSIX staging: $exeRelPath"
+      }
+
+      $msixOutPath = Join-Path $buildReleasePath "$msixName.msix"
+      Invoke-BuildExternal -Context $context -File $makeappxPath -Parameters @(
+        'pack',
+        '/d', $msixStaging,
+        '/p', $msixOutPath,
+        '/o'
+      ) | Out-Null
     }
-
-    & $createPng (Join-Path $msixStaging 'Assets\StoreLogo.png') 50 50
-    & $createPng (Join-Path $msixStaging 'Assets\Square150x150Logo.png') 150 150
-    & $createPng (Join-Path $msixStaging 'Assets\Square44x44Logo.png') 44 44
-
-    if (-not (Test-Path (Join-Path $msixStaging $exeRelPath))) {
-      throw "Expected executable not found in MSIX staging: $exeRelPath"
-    }
-
-    $msixOutPath = Join-Path $buildReleasePath "$msixName.msix"
-    Invoke-BuildExternal -Context $context -File 'makeappx.exe' -Parameters @(
-      'pack',
-      '/d', $msixStaging,
-      '/p', $msixOutPath,
-      '/o'
-    ) | Out-Null
+  } else {
+    Write-BuildLog -Context $context -Message 'Skipping MSIX packaging step (-SkipMsix).'
   }
 
   Write-BuildLogSuccess -Context $context -Message '=== Windows container CI completed ==='

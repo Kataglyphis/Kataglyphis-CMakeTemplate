@@ -3,19 +3,19 @@
     WorkspaceRootEnv = 'WORKSPACE_PATH'
     LogDir = 'logs'
 
-    BuildDirMsvc = 'build'
-    BuildDirClangCl = 'build'
-    BuildDirProfile = 'build-profile'
-    BuildDirRelease = 'build-release'
+    BuildDirMsvc = 'build-msvc-debug'
+    BuildDirClangCl = 'build-clangcl-debug'
+    BuildDirClangClTsan = 'build-clangcl-tsan'
+    BuildDirProfile = 'build-clangcl-profile'
+    BuildDirRelease = 'build-clangcl-release'
 
     Presets = @{
       MsvcDebug = 'x64-MSVC-Windows-Debug'
       ClangClDebug = 'x64-ClangCL-Windows-Debug'
-      ClangClProfile = 'x64-ClangCL-Windows-Profile'
+      ClangClDebugTsan = 'x64-ClangCL-Windows-Debug-TSan'
+      ClangClProfile = 'x64-ClangCL-Windows-profile'
       ClangClRelease = 'x64-ClangCL-Windows-Release'
     }
-
-    DisableCppcheckDefine = 'myproject_ENABLE_CPPCHECK=OFF'
   }
 
   Msix = @{
@@ -23,6 +23,6 @@
     Publisher = 'CN=Kataglyphis'
     Version = '1.0.0.0'
     MinVersion = '10.0.17763.0'
-    ManifestTemplate = 'scripts/windows/msix/AppxManifest.xml.template'
+    ManifestTemplate = 'Resources/AppxManifest.xml.template'
   }
 }
