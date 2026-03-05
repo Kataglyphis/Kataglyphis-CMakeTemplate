@@ -6,6 +6,8 @@ CMakeUserPresets.json
 
 *.log
 
+logs/
+
 dist
 .mypy_cache
 .conda

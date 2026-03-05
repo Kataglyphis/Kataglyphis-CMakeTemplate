@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <vector>
 
-import kataglyphis.config;
+import kataglyphis.cppproject_config;
 
 // Demonstrate some basic assertions.
 TEST(HelloTestCommit, BasicAssertions)
