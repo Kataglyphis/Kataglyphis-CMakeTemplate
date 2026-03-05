@@ -160,6 +160,8 @@ function Invoke-ClangTidyFixStep {
   }
 }
 
+$context = New-BuildContext -Workspace $workspacePath -LogDir $logDir -StopOnError
+
 try {
   Open-BuildLog -Context $context
 
