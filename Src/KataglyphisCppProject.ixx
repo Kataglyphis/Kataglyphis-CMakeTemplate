@@ -3,9 +3,9 @@ module;
 #include <cstdint>
 #include <iostream>
 
-export module kataglyphis.core;
+export module kataglyphis_core;
 
-import kataglyphis.cppproject_config;
+import kataglyphis_config;
 
 #if USE_RUST
 extern "C" {
