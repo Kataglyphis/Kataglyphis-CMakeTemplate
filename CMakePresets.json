@@ -11,8 +11,8 @@
       "displayName": "Linux Debug Clang",
       "description": "Go with Linux",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
+      "binaryDir": "${sourceDir}/build-clang-debug/",
+      "installDir": "${sourceDir}/build-clang-debug/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_BUILD_TYPE": "Debug",
@@ -30,35 +30,11 @@
     },
     {
       "name": "linux-profile-clang",
-      "displayName": "Linux Profile Clang",
-      "description": "Go with Linux",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
-      "cacheVariables": {
-        "CMAKE_VERBOSE_MAKEFILE": "ON",
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++",
-        "RUST_FEATURES": "ON",
-        "myproject_ENABLE_GPROF": "TRUE",
-        "myproject_ENABLE_IPO": "FALSE",
-        "COMPILER_CACHE": "sccache",
-        "BUILD_TESTING": "TRUE"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      }
-    },
-    {
-      "name": "linux-RelWithDebInfo-clang",
       "displayName": "Linux RelWithDebInfo Clang",
       "description": "Go with Linux",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
+      "binaryDir": "${sourceDir}/build-clang-profile/",
+      "installDir": "${sourceDir}/build-clang-profile/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
@@ -79,8 +55,8 @@
       "displayName": "Linux Release Clang",
       "description": "Go with Linux",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-release/",
-      "installDir": "${sourceDir}/build-release/",
+      "binaryDir": "${sourceDir}/build-clang-release/",
+      "installDir": "${sourceDir}/build-clang-release/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_BUILD_TYPE": "Release",
@@ -101,16 +77,62 @@
       "displayName": "Linux Debug GNU",
       "description": "Go with Linux",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
+      "binaryDir": "${sourceDir}/build-gcc-debug/",
+      "installDir": "${sourceDir}/build-gcc-debug/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
         "RUST_FEATURES": "ON",
-        "COMPILER_CACHE": "sccache",
+        "COMPILER_CACHE": "ccache",
         "BUILD_TESTING": "TRUE"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-debug-tsan-clang",
+      "displayName": "Linux Debug Clang (ThreadSanitizer)",
+      "description": "Linux Debug with ThreadSanitizer",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-tsan-clang/",
+      "installDir": "${sourceDir}/build-tsan-clang/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "RUST_FEATURES": "ON",
+        "COMPILER_CACHE": "sccache",
+        "BUILD_TESTING": "TRUE",
+        "USE_THREAD_SANITIZER": "ON"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-debug-tsan-GNU",
+      "displayName": "Linux Debug GNU (ThreadSanitizer)",
+      "description": "Linux Debug with ThreadSanitizer",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-tsan-gcc/",
+      "installDir": "${sourceDir}/build-tsan-gcc/",
+      "cacheVariables": {
+        "CMAKE_VERBOSE_MAKEFILE": "ON",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "RUST_FEATURES": "ON",
+        "COMPILER_CACHE": "ccache",
+        "BUILD_TESTING": "TRUE",
+        "USE_THREAD_SANITIZER": "ON"
       },
       "condition": {
         "type": "equals",
@@ -120,42 +142,18 @@
     },
     {
       "name": "linux-profile-GNU",
-      "displayName": "Linux Profile GNU",
-      "description": "Go with Linux",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
-      "cacheVariables": {
-        "CMAKE_VERBOSE_MAKEFILE": "ON",
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "g++",
-        "RUST_FEATURES": "ON",
-        "myproject_ENABLE_GPROF": "TRUE",
-        "myproject_ENABLE_IPO": "FALSE",
-        "COMPILER_CACHE": "sccache",
-        "BUILD_TESTING": "TRUE"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      }
-    },
-    {
-      "name": "linux-RelWithDebInfo-GNU",
       "displayName": "Linux RelWithDebInfo GNU",
       "description": "Go with Linux",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
+      "binaryDir": "${sourceDir}/build-gcc-profile/",
+      "installDir": "${sourceDir}/build-gcc-profile/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "RUST_FEATURES": "ON",
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
-        "COMPILER_CACHE": "sccache",
+        "COMPILER_CACHE": "ccache",
         "BUILD_TESTING": "FALSE"
       },
       "condition": {
@@ -169,15 +167,15 @@
       "displayName": "Linux Release GNU",
       "description": "Go with Linux",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "installDir": "${sourceDir}/build/",
+      "binaryDir": "${sourceDir}/build-gcc-release/",
+      "installDir": "${sourceDir}/build-gcc-release/",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": "ON",
         "RUST_FEATURES": "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
-        "COMPILER_CACHE": "sccache",
+        "COMPILER_CACHE": "ccache",
         "BUILD_TESTING": "FALSE"
       },
       "condition": {
@@ -237,7 +235,7 @@
       }
     },
     {
-      "name": "x64-ClangCL-Windows-RelWithDebInfo",
+      "name": "x64-ClangCL-Windows-profile",
       "description": "Windows and Clang",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build_release/",
@@ -258,7 +256,7 @@
       }
     },
     {
-      "name": "x64-ClangCL-Windows-Profile",
+      "name": "x64-ClangCL-Windows-profile-NoIPO",
       "description": "Windows and Clang",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-release/",
@@ -322,7 +320,7 @@
       }
     },
     {
-      "name": "x64-Clang-Windows-RelWithDebInfo",
+      "name": "x64-Clang-Windows-profile",
       "description": "Windows and Clang",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/",
@@ -385,7 +383,7 @@
       }
     },
     {
-      "name": "x64-Clang-Windows-Profile",
+      "name": "x64-Clang-Windows-profile-NoIPO",
       "description": "Windows and Clang",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/",
@@ -424,6 +422,18 @@
       "name": "linux-debug-GNU",
       "jobs": 0,
       "configurePreset": "linux-debug-GNU",
+      "configuration": "Debug"
+    },
+    {
+      "name": "linux-debug-tsan-clang",
+      "jobs": 0,
+      "configurePreset": "linux-debug-tsan-clang",
+      "configuration": "Debug"
+    },
+    {
+      "name": "linux-debug-tsan-GNU",
+      "jobs": 0,
+      "configurePreset": "linux-debug-tsan-GNU",
       "configuration": "Debug"
     },
     {
@@ -469,9 +479,9 @@
 	    "configuration": "Release"
 	},
     {
-      "name": "x64-ClangCL-Windows-Profile",
+      "name": "x64-ClangCL-Windows-profile-NoIPO",
       "jobs": 0,
-      "configurePreset": "x64-ClangCL-Windows-Profile",
+      "configurePreset": "x64-ClangCL-Windows-profile-NoIPO",
       "configuration": "RelWithDebInfo"
     },
     {

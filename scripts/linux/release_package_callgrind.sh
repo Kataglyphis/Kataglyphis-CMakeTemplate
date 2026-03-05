@@ -82,22 +82,6 @@ ensure_appimagetool() {
   echo "${LOCAL_APPIMAGETOOL_PATH}"
 }
 
-require_cmd() {
-  local cmd="$1"
-  if [[ "${cmd}" == */* ]]; then
-    if [[ ! -x "${cmd}" ]]; then
-      echo "Missing required executable: ${cmd}" >&2
-      return 1
-    fi
-    return 0
-  fi
-
-  if ! command -v "${cmd}" >/dev/null 2>&1; then
-    echo "Missing required command: ${cmd}" >&2
-    return 1
-  fi
-}
-
 normalize_arch() {
   local arch
   arch="$(uname -m)"
@@ -118,14 +102,38 @@ read_cache_var() {
   fi
 }
 
+find_existing_cpack_appimage() {
+  local build_dir="$1"
+  find "${build_dir}" -maxdepth 1 -type f -name "*.AppImage" | head -n 1 || true
+}
+
 build_appimage() {
   local build_dir="$1"
   local out_dir="$2"
 
+  local existing_appimage
+  existing_appimage="$(find_existing_cpack_appimage "${build_dir}")"
+
+  if ! command -v mksquashfs >/dev/null 2>&1; then
+    if [[ -n "${existing_appimage}" ]]; then
+      echo "mksquashfs not found; reusing existing CPack AppImage: ${existing_appimage}" >&2
+      mkdir -p "${out_dir}"
+      local target_appimage
+      target_appimage="${out_dir}/$(basename "${existing_appimage}")"
+      if [[ "$(realpath "${existing_appimage}")" != "$(realpath -m "${target_appimage}")" ]]; then
+        cp -f "${existing_appimage}" "${target_appimage}"
+      else
+        echo "AppImage already in target location, skipping copy." >&2
+      fi
+      return 0
+    fi
+    echo "Missing required command: mksquashfs" >&2
+    return 1
+  fi
+
   local appimagetool
   appimagetool="$(ensure_appimagetool)"
   require_cmd "${appimagetool}"
-  require_cmd mksquashfs
 
   local cache_file="${build_dir}/CMakeCache.txt"
   local project_name="KataglyphisCppProject"
@@ -289,6 +297,10 @@ build_flatpak() {
 }
 EOF
 
+  echo "Setting up Flathub remote and installing Flatpak SDK/Runtime..."
+  flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+  flatpak install --user -y flathub "${FLATPAK_RUNTIME}//${FLATPAK_RUNTIME_VERSION}" "${FLATPAK_SDK}//${FLATPAK_RUNTIME_VERSION}"
+
   flatpak-builder --disable-rofiles-fuse --force-clean --repo="${repo_dir}" "${build_root}" "${manifest_path}"
 
   local out_name="${project_name}-${version_suffix}-linux.flatpak"
@@ -396,9 +408,19 @@ done
 CMAKE_EXTRA_ARGS=()
 append_default_toolchain_args CMAKE_EXTRA_ARGS
 
-cmake -B "${BUILD_RELEASE_DIR}" --preset "${CLANG_RELEASE_PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
-cmake --build "${BUILD_RELEASE_DIR}" --preset "${CLANG_RELEASE_PRESET}"
+# Ensure packaging runs from a clean tree. Stale module dependency metadata
+# from prior compiler/preset runs can break clang module dyndep generation.
+rm -rf "${BUILD_RELEASE_DIR}"
+
+cmake_configure_build "${BUILD_RELEASE_DIR}" "${CLANG_RELEASE_PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
 cmake --build "${BUILD_RELEASE_DIR}" --target package
+
+if [[ "${DO_APPIMAGE}" -eq 1 ]]; then
+  if [[ -z "${APPIMAGE_OUT_DIR}" ]]; then
+    APPIMAGE_OUT_DIR="${BUILD_RELEASE_DIR}"
+  fi
+  build_appimage "${BUILD_RELEASE_DIR}" "${APPIMAGE_OUT_DIR}"
+fi
 
 if [[ "${DO_FLATPAK}" -eq 1 ]]; then
   if [[ -z "${FLATPAK_OUT_DIR}" ]]; then

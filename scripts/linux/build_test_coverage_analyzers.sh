@@ -51,11 +51,10 @@ else
 fi
 echo "Using preset: ${PRESET}"
 
-CMAKE_EXTRA_ARGS=()
+CMAKE_EXTRA_ARGS=("-DCOMPILER_CACHE:STRING=ccache")
 append_clang_gcc_toolchain_args "${MATRIX_COMPILER}" CMAKE_EXTRA_ARGS
 
-cmake -B "${BUILD_DIR}" --preset "${PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
-cmake --build "${BUILD_DIR}" --preset "${PRESET}"
+cmake_configure_build "${BUILD_DIR}" "${PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
 
 (
   cd "${BUILD_DIR}"
@@ -67,6 +66,25 @@ if [ "${MATRIX_COMPILER}" = "clang" ]; then
 else
   echo "Compiled with GCC so no fuzz testing!"
 fi
+
+echo "=========================================="
+echo "Starting ThreadSanitizer (TSan) build..."
+echo "=========================================="
+TSAN_BUILD_DIR="${BUILD_DIR}-tsan"
+if [ "${MATRIX_COMPILER}" = "gcc" ]; then
+  TSAN_PRESET="linux-debug-tsan-GNU"
+else
+  TSAN_PRESET="linux-debug-tsan-clang"
+fi
+
+cmake_configure_build "${TSAN_BUILD_DIR}" "${TSAN_PRESET}" "${CMAKE_EXTRA_ARGS[@]}"
+
+echo "Running tests for TSan build..."
+(
+  cd "${TSAN_BUILD_DIR}"
+  ctest -C Debug --output-on-failure
+)
+echo "TSan build and tests completed successfully."
 
 if [ "${MATRIX_COMPILER}" = "gcc" ]; then
   (
@@ -84,27 +102,24 @@ else
 fi
 
 mapfile -t CLANG_ANALYZER_CANDIDATES < <(find Src -type f \( -name "*.cpp" -o -name "*.cc" \) | sort)
-mapfile -t CLANG_ANALYZER_FILES < <(
-  for file in "${CLANG_ANALYZER_CANDIDATES[@]}"; do
-    if ! grep -Eq '^[[:space:]]*import[[:space:]]+' "$file"; then
-      printf '%s\n' "$file"
-    fi
-  done
-)
-
-if [ "${#CLANG_ANALYZER_FILES[@]}" -gt 0 ]; then
-  clang-tidy -p "./${BUILD_DIR}" "${CLANG_ANALYZER_FILES[@]}"
-else
-  echo "No non-module C++ sources found for clang-tidy analysis"
+if [ "${#CLANG_ANALYZER_CANDIDATES[@]}" -eq 0 ]; then
+  echo "No C++ sources found for clang-tidy analysis in Src/"
+  exit 1
 fi
 
 if [ "${MATRIX_COMPILER}" = "clang" ]; then
-  if [ "${#CLANG_ANALYZER_FILES[@]}" -gt 0 ]; then
-    clang++ --analyze -DUSE_RUST=1 -Xanalyzer -analyzer-output=html "${CLANG_ANALYZER_FILES[@]}" || true
-  else
-    echo "No non-module C++ sources found for clang static analyzer"
-  fi
+  "${SELF_DIR}/run_static_analysis_format.sh" \
+    --tidy-only \
+    --compile-db "${WORKSPACE_ROOT}/${BUILD_DIR}" \
+    --run-clang-analyzer \
+    --run-scan-build \
+    --scan-build-preset "${CLANG_DEBUG_PRESET}"
+else
+  "${SELF_DIR}/run_static_analysis_format.sh" \
+    --tidy-only \
+    --compile-db "${WORKSPACE_ROOT}/${BUILD_DIR}"
+fi
 
-  mkdir -p scan-build-reports
-  scan-build -o scan-build-reports cmake --build "${WORKSPACE_ROOT}/${BUILD_DIR}" --preset "${CLANG_DEBUG_PRESET}" || true
+if [ "${MATRIX_COMPILER}" = "clang" ]; then
+  ./${BUILD_DIR}/first_fuzz_test --fuzz=MyTestSuite.IntegerAdditionCommutes --fuzz_for=30s
 fi

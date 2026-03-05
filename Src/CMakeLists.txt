@@ -8,31 +8,20 @@ include(cmake/SetSourceGroups.cmake)
 
 file(GLOB_RECURSE KataglyphisCppProject_SOURCES "*.cpp")
 file(GLOB_RECURSE KataglyphisCppProject_HEADERS "*.hpp")
+
 file(
   GLOB_RECURSE
   KataglyphisCppProject_MODULES
   "*.ixx"
   "*.cppm")
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|MSVC")
-  set(KATAGLYPHIS_ENABLE_MODULES ON)
-else()
-  set(KATAGLYPHIS_ENABLE_MODULES OFF)
-endif()
+set(KATAGLYPHIS_ENABLE_MODULES ON)
 
-set(_KATAGLYPHIS_MAIN_MODULES "${CMAKE_CURRENT_SOURCE_DIR}/Main.cpp")
-set(_KATAGLYPHIS_MAIN_LEGACY "${CMAKE_CURRENT_SOURCE_DIR}/MainLegacy.cpp")
 set(_KATAGLYPHIS_CONFIG_MODULE "${CMAKE_CURRENT_SOURCE_DIR}/KataglyphisCppProjectConfig.ixx")
 
 configure_file(KataglyphisCppProjectConfig.ixx.in "${_KATAGLYPHIS_CONFIG_MODULE}" @ONLY)
 list(APPEND KataglyphisCppProject_MODULES "${_KATAGLYPHIS_CONFIG_MODULE}")
 list(REMOVE_DUPLICATES KataglyphisCppProject_MODULES)
-
-if(KATAGLYPHIS_ENABLE_MODULES)
-  list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${_KATAGLYPHIS_MAIN_LEGACY}")
-else()
-  list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${_KATAGLYPHIS_MAIN_MODULES}")
-endif()
 
 if(RUST_FEATURES)
 
@@ -40,119 +29,42 @@ if(RUST_FEATURES)
   if(WIN32)
     corrosion_set_env_vars(rusty_code CXXFLAGS=/EHsc)
   else()
-    # Native-only corrosion/toolchain setup (no cross-building)
-    # Optionally override with -DGCC_TOOLCHAIN_PATH=/path/to/gcc when configuring
-    # Nur setzen, wenn unter dem Standardpfad eine GCC-Installation gefunden wird
-    set(DEFAULT_GCC_TOOLCHAIN_PATH "/opt/gcc-15.2.0")
-    if(EXISTS "${DEFAULT_GCC_TOOLCHAIN_PATH}/bin/gcc"
-       OR EXISTS "${DEFAULT_GCC_TOOLCHAIN_PATH}/bin/x86_64-pc-linux-gnu-gcc"
-       OR EXISTS "${DEFAULT_GCC_TOOLCHAIN_PATH}/bin/aarch64-linux-gnu-gcc"
-       OR EXISTS "${DEFAULT_GCC_TOOLCHAIN_PATH}/bin/riscv64-unknown-linux-gnu-gcc")
-      set(HAS_DEFAULT_GCC_TOOLCHAIN TRUE)
-    else()
-      set(HAS_DEFAULT_GCC_TOOLCHAIN FALSE)
+    if(NOT DEFINED GCC_TOOLCHAIN_PATH)
+      set(GCC_TOOLCHAIN_PATH
+          ""
+          CACHE PATH "Optional GCC toolchain root")
     endif()
 
-    # Nur im GNU/GCC Preset standardmäßig übernehmen und nur bei vorhandener Installation
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-      if(HAS_DEFAULT_GCC_TOOLCHAIN)
-        set(GCC_TOOLCHAIN_PATH
-            "${DEFAULT_GCC_TOOLCHAIN_PATH}"
-            CACHE PATH "GCC toolchain root")
-      else()
-        set(GCC_TOOLCHAIN_PATH
-            ""
-            CACHE PATH "GCC toolchain root" FORCE)
-      endif()
-      set(RUST_CXXFLAGS "-fexceptions")
-    else()
-      if(HAS_DEFAULT_GCC_TOOLCHAIN)
-        set(GCC_TOOLCHAIN_PATH
-            "${DEFAULT_GCC_TOOLCHAIN_PATH}"
-            CACHE PATH "GCC toolchain root")
-        set(RUST_CXXFLAGS "--gcc-toolchain=${GCC_TOOLCHAIN_PATH} -fexceptions")
-      else()
-        # Falls Clang aktiv ist und keine GCC-Toolchain gefunden wurde, keinen ungültigen Pfad setzen
-        set(GCC_TOOLCHAIN_PATH
-            ""
-            CACHE PATH "GCC toolchain root" FORCE)
-        set(RUST_CXXFLAGS "-fexceptions")
-      endif()
+    set(RUST_CC "${CMAKE_C_COMPILER}")
+    set(RUST_CXX "${CMAKE_CXX_COMPILER}")
+    if(NOT RUST_CC)
+      set(RUST_CC "cc")
+    endif()
+    if(NOT RUST_CXX)
+      set(RUST_CXX "c++")
     endif()
 
-    # detect host arch for logging (no cross-compile behavior)
-    string(TOLOWER "${CMAKE_HOST_SYSTEM_PROCESSOR}" _hostproc)
-    if(_hostproc MATCHES "^(x86_64|amd64)$")
-      set(HOST_ARCH "x86_64")
-    elseif(_hostproc MATCHES "^(aarch64|arm64|armv8)$")
-      set(HOST_ARCH "aarch64")
-    elseif(_hostproc MATCHES "^(riscv64)$")
-      set(HOST_ARCH "riscv64")
-    else()
-      set(HOST_ARCH "${_hostproc}")
-    endif()
-
-    message(STATUS "Native-only build. HOST_ARCH=${HOST_ARCH}")
-
+    set(_gcc_toolchain_root "")
     if(GCC_TOOLCHAIN_PATH AND EXISTS "${GCC_TOOLCHAIN_PATH}")
-      # Try to find reasonable native compiler binary names
-      if(HOST_ARCH STREQUAL "x86_64")
-        find_program(GCC_TOOLCHAIN_GCC NAMES "${GCC_TOOLCHAIN_PATH}/bin/x86_64-pc-linux-gnu-gcc"
-                                             "${GCC_TOOLCHAIN_PATH}/bin/gcc")
-        find_program(GCC_TOOLCHAIN_GXX NAMES "${GCC_TOOLCHAIN_PATH}/bin/x86_64-pc-linux-gnu-g++"
-                                             "${GCC_TOOLCHAIN_PATH}/bin/g++")
-      elseif(HOST_ARCH STREQUAL "aarch64")
-        find_program(GCC_TOOLCHAIN_GCC NAMES "${GCC_TOOLCHAIN_PATH}/bin/aarch64-linux-gnu-gcc"
-                                             "${GCC_TOOLCHAIN_PATH}/bin/gcc")
-        find_program(GCC_TOOLCHAIN_GXX NAMES "${GCC_TOOLCHAIN_PATH}/bin/aarch64-linux-gnu-g++"
-                                             "${GCC_TOOLCHAIN_PATH}/bin/g++")
-      elseif(HOST_ARCH STREQUAL "riscv64")
-        find_program(GCC_TOOLCHAIN_GCC NAMES "${GCC_TOOLCHAIN_PATH}/bin/riscv64-unknown-linux-gnu-gcc"
-                                             "${GCC_TOOLCHAIN_PATH}/bin/gcc")
-        find_program(GCC_TOOLCHAIN_GXX NAMES "${GCC_TOOLCHAIN_PATH}/bin/riscv64-unknown-linux-gnu-g++"
-                                             "${GCC_TOOLCHAIN_PATH}/bin/g++")
-      else()
-        find_program(GCC_TOOLCHAIN_GCC NAMES "${GCC_TOOLCHAIN_PATH}/bin/gcc")
-        find_program(GCC_TOOLCHAIN_GXX NAMES "${GCC_TOOLCHAIN_PATH}/bin/g++")
-      endif()
-
-      if(NOT GCC_TOOLCHAIN_GCC)
-        message(WARNING "Toolchain gcc not found in ${GCC_TOOLCHAIN_PATH}; falling back to system 'gcc'")
-        set(GCC_TOOLCHAIN_GCC "gcc")
-      endif()
-      if(NOT GCC_TOOLCHAIN_GXX)
-        message(WARNING "Toolchain g++ not found in ${GCC_TOOLCHAIN_PATH}; falling back to system 'g++'")
-        set(GCC_TOOLCHAIN_GXX "g++")
-      endif()
-
-      # prefer lib64 then lib; optional for setting LDFLAGS/rpath
-      if(EXISTS "${GCC_TOOLCHAIN_PATH}/lib64")
-        set(GCC_LIB_PATH "${GCC_TOOLCHAIN_PATH}/lib64")
-      elseif(EXISTS "${GCC_TOOLCHAIN_PATH}/lib")
-        set(GCC_LIB_PATH "${GCC_TOOLCHAIN_PATH}/lib")
-      else()
-        message(WARNING "No lib or lib64 under ${GCC_TOOLCHAIN_PATH}; skipping LDFLAGS/rpath setup")
-        unset(GCC_LIB_PATH)
-      endif()
-
-      # DO NOT inject toolchain C++ includes. Only set CC/CXX and LDFLAGS/rpath for native run.
-      corrosion_set_env_vars(
-        rusty_code
-        CC=${GCC_TOOLCHAIN_GCC}
-        CXX=${GCC_TOOLCHAIN_GXX}
-        "CXXFLAGS=${RUST_CXXFLAGS}")
-
-      message(
-        STATUS "Configured native corrosion: CC=${GCC_TOOLCHAIN_GCC} CXX=${GCC_TOOLCHAIN_GXX} CXXFLAGS=${RUST_CXXFLAGS}"
-      )
-      if(GCC_LIB_PATH)
-        message(STATUS "GCC library path: ${GCC_LIB_PATH}")
-      endif()
-    else()
-      message(STATUS "No GCC_TOOLCHAIN_PATH (${GCC_TOOLCHAIN_PATH}) found — using system compilers (native build)")
-      # Still set minimal sensible env so corrosion has deterministic env on non-Windows hosts
-      corrosion_set_env_vars(rusty_code "CXXFLAGS=${RUST_CXXFLAGS}")
+      set(_gcc_toolchain_root "${GCC_TOOLCHAIN_PATH}")
+    elseif(DEFINED MYPROJECT_GCC_TOOLCHAIN_PATH AND EXISTS "${MYPROJECT_GCC_TOOLCHAIN_PATH}")
+      set(_gcc_toolchain_root "${MYPROJECT_GCC_TOOLCHAIN_PATH}")
     endif()
+
+    set(RUST_CXXFLAGS "-fexceptions")
+    if(_gcc_toolchain_root AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      set(RUST_CXXFLAGS "--gcc-toolchain=${_gcc_toolchain_root} -fexceptions")
+    endif()
+    if(DEFINED ENV{CXXFLAGS})
+      set(RUST_CXXFLAGS "$ENV{CXXFLAGS} ${RUST_CXXFLAGS}")
+    endif()
+    corrosion_set_env_vars(
+      rusty_code
+      CC=${RUST_CC}
+      CXX=${RUST_CXX}
+      "CXXFLAGS=${RUST_CXXFLAGS}")
+
+    message(STATUS "Configured native corrosion: CC=${RUST_CC} CXX=${RUST_CXX} CXXFLAGS=${RUST_CXXFLAGS}")
   endif()
 
   corrosion_add_cxxbridge(
@@ -193,20 +105,16 @@ target_sources(
          FILES
          ${KataglyphisCppProject_HEADERS})
 
-if(KATAGLYPHIS_ENABLE_MODULES)
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    message(STATUS "GCC modules enabled — using explicit module file set without CXX_SCAN_FOR_MODULES")
-    set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES OFF)
-  else()
-    set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
-  endif()
-  target_sources(
-    ${PROJECT_NAME}
-    PRIVATE FILE_SET
-            CXX_MODULES
-            FILES
-            ${KataglyphisCppProject_MODULES})
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  message(STATUS "GCC modules enabled")
 endif()
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
+target_sources(
+  ${PROJECT_NAME}
+  PRIVATE FILE_SET
+          CXX_MODULES
+          FILES
+          ${KataglyphisCppProject_MODULES})
 
 target_link_libraries(
   ${PROJECT_NAME}
@@ -225,8 +133,6 @@ endif()
 if(TARGET ${PROJECT_NAME} AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   message(STATUS "GCC detected — module dependency flags are managed by CMake")
 
-  if(KATAGLYPHIS_ENABLE_MODULES)
-    message(STATUS "GCC modules enabled — adding -fmodules-ts to target ${PROJECT_NAME}")
-    target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fmodules-ts>)
-  endif()
+  message(STATUS "GCC modules enabled — adding -fmodules-ts to target ${PROJECT_NAME}")
+  target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fmodules-ts>)
 endif()

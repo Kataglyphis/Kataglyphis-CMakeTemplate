@@ -38,14 +38,38 @@ macro(myproject_setup_options)
 
   myproject_supports_sanitizers()
 
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(DEFAULT_ASAN ON)
+  else()
+    set(DEFAULT_ASAN OFF)
+  endif()
+
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug"
+     AND CMAKE_SYSTEM_NAME STREQUAL "Linux"
+     AND SUPPORTS_UBSAN)
+    set(DEFAULT_UBSAN ON)
+  else()
+    set(DEFAULT_UBSAN OFF)
+  endif()
+
+  # Thread sanitizer option overrides ASan and UBSan
+  option(USE_THREAD_SANITIZER "Use ThreadSanitizer instead of Address/UndefinedBehavior Sanitizer" OFF)
+  if(USE_THREAD_SANITIZER)
+    set(DEFAULT_ASAN OFF)
+    set(DEFAULT_UBSAN OFF)
+    set(DEFAULT_TSAN ON)
+  else()
+    set(DEFAULT_TSAN OFF)
+  endif()
+
   if(NOT PROJECT_IS_TOP_LEVEL OR myproject_PACKAGING_MAINTAINER_MODE)
     option(myproject_ENABLE_IPO "Enable IPO/LTO" ON)
     option(myproject_ENABLE_STATIC_ANALYZER "Enable Static Analyzer" OFF)
     option(myproject_WARNINGS_AS_ERRORS "Treat Warnings As Errors" OFF)
-    option(myproject_ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" ON)
+    option(myproject_ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" ${DEFAULT_ASAN})
     option(myproject_ENABLE_SANITIZER_LEAK "Enable leak sanitizer" OFF)
-    option(myproject_ENABLE_SANITIZER_UNDEFINED "Enable undefined sanitizer" OFF)
-    option(myproject_ENABLE_SANITIZER_THREAD "Enable thread sanitizer" OFF)
+    option(myproject_ENABLE_SANITIZER_UNDEFINED "Enable undefined sanitizer" ${DEFAULT_UBSAN})
+    option(myproject_ENABLE_SANITIZER_THREAD "Enable thread sanitizer" ${DEFAULT_TSAN})
     option(myproject_ENABLE_SANITIZER_MEMORY "Enable memory sanitizer" OFF)
     option(myproject_ENABLE_UNITY_BUILD "Enable unity builds" OFF)
     option(myproject_ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
@@ -57,10 +81,10 @@ macro(myproject_setup_options)
     option(myproject_ENABLE_IPO "Enable IPO/LTO" ON)
     option(myproject_ENABLE_STATIC_ANALYZER "Enable Static Analyzer" OFF)
     option(myproject_WARNINGS_AS_ERRORS "Treat Warnings As Errors" OFF)
-    option(myproject_ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" OFF) # ${SUPPORTS_ASAN}
+    option(myproject_ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" ${DEFAULT_ASAN}) # ${SUPPORTS_ASAN}
     option(myproject_ENABLE_SANITIZER_LEAK "Enable leak sanitizer" OFF)
-    option(myproject_ENABLE_SANITIZER_UNDEFINED "Enable undefined sanitizer" OFF) # ${SUPPORTS_UBSAN}
-    option(myproject_ENABLE_SANITIZER_THREAD "Enable thread sanitizer" OFF)
+    option(myproject_ENABLE_SANITIZER_UNDEFINED "Enable undefined sanitizer" ${DEFAULT_UBSAN}) # ${SUPPORTS_UBSAN}
+    option(myproject_ENABLE_SANITIZER_THREAD "Enable thread sanitizer" ${DEFAULT_TSAN})
     option(myproject_ENABLE_SANITIZER_MEMORY "Enable memory sanitizer" OFF)
     option(myproject_ENABLE_UNITY_BUILD "Enable unity builds" OFF)
     option(myproject_ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
@@ -69,6 +93,18 @@ macro(myproject_setup_options)
     option(myproject_ENABLE_CACHE "Enable ccache" ON)
     option(myproject_ENABLE_IWYU "Enable IWYU" ON)
 
+  endif()
+
+  if(NOT
+     CMAKE_BUILD_TYPE
+     STREQUAL
+     "Debug")
+    if(myproject_ENABLE_SANITIZER_UNDEFINED)
+      message(STATUS "Disabling UBSan: this project enables it only for Debug builds.")
+    endif()
+    set(myproject_ENABLE_SANITIZER_UNDEFINED
+        OFF
+        CACHE BOOL "Enable undefined sanitizer" FORCE)
   endif()
 
   if(NOT PROJECT_IS_TOP_LEVEL)
@@ -191,9 +227,9 @@ macro(myproject_local_options)
     ""
     "")
 
-    # Profiling is opt-in and uses RelWithDebInfo as the build type.
-    if(myproject_ENABLE_GPROF
-      AND CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"
+  # Profiling is opt-in and uses RelWithDebInfo as the build type.
+  if(myproject_ENABLE_GPROF
+     AND CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"
      AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
      AND NOT WIN32)
 
@@ -212,8 +248,7 @@ macro(myproject_local_options)
 
   elseif(myproject_ENABLE_GPROF)
     message(
-      STATUS
-        "Profiling requested, but supported only on non-Windows GNU/Clang with -DCMAKE_BUILD_TYPE=RelWithDebInfo")
+      STATUS "Profiling requested, but supported only on non-Windows GNU/Clang with -DCMAKE_BUILD_TYPE=RelWithDebInfo")
   endif()
 
   if(myproject_DISABLE_EXCEPTIONS)

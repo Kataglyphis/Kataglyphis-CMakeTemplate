@@ -6,25 +6,13 @@ set(PROJECT_INCLUDE_DIR ${WORKING_DIRECTORY}Src/)
 set(EXTERNAL_LIB_SRC_DIR ${WORKING_DIRECTORY}ExternalLib/)
 
 include(${PROJECT_SRC_DIR}cmake/filters/SetProjectFilters.cmake)
+include(${WORKING_DIRECTORY}Test/cmake/CommonTestBuild.cmake)
 
 include(cmake/SetTestFilters.cmake)
 
 set(PERF_TEST_SUITE perfTestSuite)
 
-file(GLOB_RECURSE KataglyphisCppProject_SOURCES
-     # RELATIVE ${PROJECT_SRC_DIR}
-     "${PROJECT_SRC_DIR}/*.cpp")
-
-# Specify the file to exclude
-list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/Main.cpp")
-list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/MainLegacy.cpp")
-
-file(GLOB_RECURSE KataglyphisCppProject_HEADERS
-     # RELATIVE ${PROJECT_SRC_DIR}
-     "${PROJECT_SRC_DIR}/*.hpp")
-
-set(_KATAGLYPHIS_TEST_CONFIG_HEADER "${CMAKE_CURRENT_BINARY_DIR}/KataglyphisCppProjectConfig.hpp")
-configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.hpp.in "${_KATAGLYPHIS_TEST_CONFIG_HEADER}" @ONLY)
+kataglyphis_collect_project_sources(KataglyphisCppProject_SOURCES KataglyphisCppProject_HEADERS ${PROJECT_SRC_DIR})
 
 # if(RUST_FEATURES)
 #   corrosion_import_crate(MANIFEST_PATH ${PROJECT_SRC_DIR}rusty_code/Cargo.toml)
@@ -32,11 +20,12 @@ configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.hpp.in "${_KATAGLY
 # endif()
 
 add_executable(${PERF_TEST_SUITE})
+kataglyphis_add_config_module_to_target(${PERF_TEST_SUITE} ${PROJECT_SRC_DIR})
 
 if(RUST_FEATURES)
-  target_compile_definitions(${PROJECT_NAME} PRIVATE USE_RUST=1)
+  target_compile_definitions(${PERF_TEST_SUITE} PRIVATE USE_RUST=1)
 else()
-  target_compile_definitions(${PROJECT_NAME} PRIVATE USE_RUST=0)
+  target_compile_definitions(${PERF_TEST_SUITE} PRIVATE USE_RUST=0)
 endif()
 
 if(WIN32 AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC))
@@ -56,8 +45,6 @@ target_sources(
          ${PROJECT_INCLUDE_DIR}
          FILES
          ${KataglyphisCppProject_HEADERS})
-
-target_include_directories(${PERF_TEST_SUITE} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 target_link_libraries(
   ${PERF_TEST_SUITE}

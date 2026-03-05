@@ -1,13 +1,11 @@
 module;
 
-#include <string_view>
-
-export module kataglyphis.config;
+export module kataglyphis.cppproject_config;
 
 export namespace kataglyphis::config {
-inline constexpr std::string_view renderer_version_major{"@PROJECT_VERSION_MAJOR@"};
-inline constexpr std::string_view renderer_version_minor{"@PROJECT_VERSION_MINOR@"};
+inline constexpr const char* renderer_version_major{"@PROJECT_VERSION_MAJOR@"};
+inline constexpr const char* renderer_version_minor{"@PROJECT_VERSION_MINOR@"};
 
-inline constexpr std::string_view vulkan_version_major{"@VULKAN_VERSION_MAJOR@"};
-inline constexpr std::string_view vulkan_version_minor{"@VULKAN_VERSION_MINOR@"};
+inline constexpr const char* vulkan_version_major{"@VULKAN_VERSION_MAJOR@"};
+inline constexpr const char* vulkan_version_minor{"@VULKAN_VERSION_MINOR@"};
 }

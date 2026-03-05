@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "KataglyphisCppProjectConfig.hpp"
+import kataglyphis.cppproject_config;
 
 // Demonstrate some basic assertions.
 TEST(HelloTestCompile, BasicAssertions)
@@ -10,7 +10,7 @@ TEST(HelloTestCompile, BasicAssertions)
     EXPECT_STRNE("hello", "world");
     // Expect equality.
     EXPECT_EQ(7 * 6, 42);
-    EXPECT_FALSE(kataglyphis::config::renderer_version_major.empty());
+    EXPECT_STRNE("", kataglyphis::config::renderer_version_major);
 }
 
 TEST(HelloTestCompile, blob)

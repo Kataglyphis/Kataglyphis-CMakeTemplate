@@ -5,7 +5,7 @@ module;
 
 export module kataglyphis.cppproject;
 
-import kataglyphis.config;
+import kataglyphis.cppproject_config;
 
 #if USE_RUST
 extern "C" {

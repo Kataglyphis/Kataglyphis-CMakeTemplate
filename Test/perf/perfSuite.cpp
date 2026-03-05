@@ -1,15 +1,14 @@
 #include <benchmark/benchmark.h>
 
-#include "KataglyphisCppProjectConfig.hpp"
+import kataglyphis.cppproject_config;
 
 
 static void BM_StringCreation(benchmark::State &state)
 {
     for (auto _ : state) {
         std::string empty_string;
-        auto renderer_version_minor = kataglyphis::config::renderer_version_minor;
         benchmark::DoNotOptimize(empty_string);
-        benchmark::DoNotOptimize(renderer_version_minor);
+        benchmark::DoNotOptimize(kataglyphis::config::renderer_version_minor);
     }
 }
 // Register the function as a benchmark

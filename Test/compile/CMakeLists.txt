@@ -8,6 +8,7 @@ set(PROJECT_INCLUDE_DIR ${WORKING_DIRECTORY}Src/)
 set(EXTERNAL_LIB_SRC_DIR ${WORKING_DIRECTORY}ExternalLib/)
 
 include(${PROJECT_SRC_DIR}cmake/filters/SetProjectFilters.cmake)
+include(${WORKING_DIRECTORY}Test/cmake/CommonTestBuild.cmake)
 
 set(COMPILE_TEST_SUITE compileTestSuite)
 
@@ -15,18 +16,10 @@ file(GLOB_RECURSE KataglyphisCppProject_COMPILE_TEST_FILTER "*.cpp")
 
 message("Compile test filter is: ${KataglyphisCppProject_COMPILE_TEST_FILTER}")
 
-file(GLOB_RECURSE KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/*.cpp")
-
-# Specify the file to exclude
-list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/Main.cpp")
-list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${PROJECT_SRC_DIR}/MainLegacy.cpp")
-
-file(GLOB_RECURSE KataglyphisCppProject_HEADERS "${PROJECT_SRC_DIR}/*.hpp")
-
-set(_KATAGLYPHIS_TEST_CONFIG_HEADER "${CMAKE_CURRENT_BINARY_DIR}/KataglyphisCppProjectConfig.hpp")
-configure_file(${PROJECT_SRC_DIR}/KataglyphisCppProjectConfig.hpp.in "${_KATAGLYPHIS_TEST_CONFIG_HEADER}" @ONLY)
+kataglyphis_collect_project_sources(KataglyphisCppProject_SOURCES KataglyphisCppProject_HEADERS ${PROJECT_SRC_DIR})
 
 add_executable(${COMPILE_TEST_SUITE})
+kataglyphis_add_config_module_to_target(${COMPILE_TEST_SUITE} ${PROJECT_SRC_DIR})
 
 if(RUST_FEATURES)
   target_compile_definitions(${COMPILE_TEST_SUITE} PRIVATE USE_RUST=1)
@@ -54,8 +47,6 @@ target_sources(
          FILES
          ${KataglyphisCppProject_HEADERS})
 
-target_include_directories(${COMPILE_TEST_SUITE} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-
 target_link_libraries(
   ${COMPILE_TEST_SUITE}
   PUBLIC ${CMAKE_DL_LIBS}
@@ -69,12 +60,7 @@ target_link_libraries(
           GSL
           spdlog)
 
-if(NOT WINDOWS_CI)
-  message(STATUS "WINDOWS_CI is OFF or not defined.")
-  gtest_discover_tests(${COMPILE_TEST_SUITE} DISCOVERY_TIMEOUT 300)
-else()
-  message(STATUS "WINDOWS_CI is OFF or not defined.")
-endif()
+kataglyphis_configure_gtest_discovery(${COMPILE_TEST_SUITE})
 
 if(RUST_FEATURES)
   target_link_libraries(${COMPILE_TEST_SUITE} PUBLIC rusty_code)

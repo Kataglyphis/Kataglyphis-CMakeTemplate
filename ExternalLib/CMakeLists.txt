@@ -3,7 +3,7 @@ include(FetchContent)
 #include google test to project
 if(BUILD_TESTING)
   FetchContent_Declare(googletest
-                       URL https://github.com/google/googletest/archive/850cb69efda7ef00aed1c08fbe2bc1b6b4e615ee.zip)
+                       URL https://github.com/google/googletest/archive/73a63ea05dc8ca29ec1d2c1d66481dd0de1950f1.zip)
   set(gtest_force_shared_crt
       ON
       CACHE BOOL "" FORCE)
@@ -29,31 +29,32 @@ set(BENCHMARK_USE_BUNDLED_GTEST
 
 add_subdirectory(GOOGLE_BENCHMARK)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND BUILD_TESTING AND NOT(CMAKE_BUILD_TYPE STREQUAL "Profile" ))
-  message(STATUS "This is a Linux system.")
-# #Detect target architecture
-#string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" TARGET_ARCH)
-#message(STATUS "Detected architecture: ${TARGET_ARCH}")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND BUILD_TESTING AND (CMAKE_BUILD_TYPE STREQUAL "Debug" ))
 
-# #Check if not ARM
-#if (NOT TARGET_ARCH MATCHES "^(arm|aarch64)")
-  if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+  if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" AND NOT USE_THREAD_SANITIZER)
 
     message("Adding Fuzztest")
+
+    option(
+      KATAGLYPHIS_ENABLE_FUZZTEST_FUZZING_MODE
+      "Build FUZZTEST in fuzzing mode (injects AddressSanitizer/coverage flags; keep OFF for normal builds)"
+      ON)
+
+    # We explicitly turn OFF FUZZTEST_FUZZING_MODE here because if it is ON,
+    # the fuzztest framework adds global coverage flags to itself in its own
+    # CMakeLists.txt, which causes infinite recursion with AddressSanitizer.
+    set(FUZZTEST_FUZZING_MODE
+        OFF
+        CACHE BOOL "" FORCE)
+
     add_subdirectory(FUZZTEST)
-    if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
-      set(FUZZTEST_FUZZING_MODE
-          ON
-          CACHE BOOL "" FORCE)
-    endif()
-#endif()
   endif()
 endif()
 
 FetchContent_Declare(
   GSL
   GIT_REPOSITORY "https://github.com/microsoft/GSL"
-  GIT_TAG "v4.1.0")
+  GIT_TAG "v4.2.1")
 FetchContent_MakeAvailable(GSL)
 
 if(myproject_DISABLE_EXCEPTIONS)
