@@ -19,7 +19,7 @@ file(
 
 set(KATAGLYPHIS_ENABLE_MODULES ON)
 
-set(_KATAGLYPHIS_CONFIG_MODULE "${CMAKE_CURRENT_SOURCE_DIR}/KataglyphisCppProjectConfig.ixx")
+set(_KATAGLYPHIS_CONFIG_MODULE "${CMAKE_CURRENT_BINARY_DIR}/KataglyphisCppProjectConfig.ixx")
 
 configure_file(KataglyphisCppProjectConfig.ixx.in "${_KATAGLYPHIS_CONFIG_MODULE}" @ONLY)
 list(APPEND KataglyphisCppProject_MODULES "${_KATAGLYPHIS_CONFIG_MODULE}")
@@ -118,6 +118,7 @@ target_sources(
          CXX_MODULES
          BASE_DIRS
          ${PROJECT_INCLUDE_DIR}
+         ${CMAKE_CURRENT_BINARY_DIR}
          FILES
          ${KataglyphisCppProject_MODULES})
 
