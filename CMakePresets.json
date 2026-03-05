@@ -85,7 +85,7 @@
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
         "RUST_FEATURES": "ON",
-        "COMPILER_CACHE": "ccache",
+        "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE"
       },
       "condition": {
@@ -130,7 +130,7 @@
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
         "RUST_FEATURES": "ON",
-        "COMPILER_CACHE": "ccache",
+        "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "TRUE",
         "USE_THREAD_SANITIZER": "ON"
       },
@@ -153,7 +153,7 @@
         "RUST_FEATURES": "ON",
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
-        "COMPILER_CACHE": "ccache",
+        "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "FALSE"
       },
       "condition": {
@@ -175,7 +175,7 @@
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
-        "COMPILER_CACHE": "ccache",
+        "COMPILER_CACHE": "sccache",
         "BUILD_TESTING": "FALSE"
       },
       "condition": {

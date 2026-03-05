@@ -115,11 +115,11 @@ set_target_properties(${KATAGLYPHIS_CORE_TARGET} PROPERTIES CXX_SCAN_FOR_MODULES
 target_sources(
   ${KATAGLYPHIS_CORE_TARGET}
   PUBLIC FILE_SET
-          CXX_MODULES
-          BASE_DIRS
-          ${PROJECT_INCLUDE_DIR}
-          FILES
-          ${KataglyphisCppProject_MODULES})
+         CXX_MODULES
+         BASE_DIRS
+         ${PROJECT_INCLUDE_DIR}
+         FILES
+         ${KataglyphisCppProject_MODULES})
 
 target_link_libraries(
   ${KATAGLYPHIS_CORE_TARGET}
