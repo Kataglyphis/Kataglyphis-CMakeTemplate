@@ -3,7 +3,7 @@ module;
 #include <cstdint>
 #include <iostream>
 
-export module kataglyphis.cppproject;
+export module kataglyphis.core;
 
 import kataglyphis.cppproject_config;
 
