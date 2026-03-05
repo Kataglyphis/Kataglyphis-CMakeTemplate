@@ -129,7 +129,7 @@ target_link_libraries(
          myproject_warnings
          # enable sanitizers
          myproject_options
-  PRIVATE GSL spdlog::spdlog nlohmann_json::nlohmann_json)
+  PUBLIC GSL spdlog::spdlog nlohmann_json::nlohmann_json)
 
 if(RUST_FEATURES)
   target_link_libraries(${KATAGLYPHIS_CORE_TARGET} PUBLIC rusty_code)
