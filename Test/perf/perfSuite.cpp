@@ -1,6 +1,6 @@
 #include <benchmark/benchmark.h>
 
-import kataglyphis.cppproject_config;
+import kataglyphis_config;
 
 
 static void BM_StringCreation(benchmark::State &state)
