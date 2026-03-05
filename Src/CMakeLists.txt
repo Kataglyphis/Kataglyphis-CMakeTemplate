@@ -78,9 +78,9 @@ if(RUST_FEATURES)
 
 endif()
 
-set(KATAGLYPHIS_CORE_TARGET kataglyphis_cppproject_core)
+set(KATAGLYPHIS_CORE_TARGET ${PROJECT_NAME})
 
-add_library(${KATAGLYPHIS_CORE_TARGET} STATIC)
+add_executable(${KATAGLYPHIS_CORE_TARGET} "${KATAGLYPHIS_MAIN_SOURCE}")
 
 if(RUST_FEATURES)
   target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PUBLIC USE_RUST=1)
@@ -134,10 +134,6 @@ target_link_libraries(
 if(RUST_FEATURES)
   target_link_libraries(${KATAGLYPHIS_CORE_TARGET} PUBLIC rusty_code)
 endif()
-
-add_executable(${PROJECT_NAME} "${KATAGLYPHIS_MAIN_SOURCE}")
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${KATAGLYPHIS_CORE_TARGET})
 
 if(TARGET ${KATAGLYPHIS_CORE_TARGET} AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   message(STATUS "GCC detected — module dependency flags are managed by CMake")
