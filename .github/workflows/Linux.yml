@@ -21,27 +21,24 @@ env:
   CLANG_GCC_TOOLCHAIN: /opt/gcc-15.2.0
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        include:
-          - runs_on: ubuntu-24.04
-            arch: x64
-            platform: linux/amd64
-            compiler: gcc
-          - runs_on: ubuntu-24.04
-            arch: x64
-            platform: linux/amd64
-            compiler: clang
-          - runs_on: ubuntu-24.04-arm
-            arch: arm64
-            platform: linux/arm64
-            compiler: gcc
-          - runs_on: ubuntu-24.04-arm
-            arch: arm64
-            platform: linux/arm64
-            compiler: clang
+  prepare-matrix:
+    runs-on: ubuntu-24.04
+    outputs:
+      build_matrix: ${{ steps.set-matrix.outputs.build_matrix }}
+    steps:
+      - name: Build matrix (arm gated by commit message)
+        id: set-matrix
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.event.head_commit.message }}" == *"[build-arm]"* ]]; then
+            echo 'build_matrix={"include":[{"runs_on":"ubuntu-24.04","arch":"x64","platform":"linux/amd64","compiler":"gcc"},{"runs_on":"ubuntu-24.04","arch":"x64","platform":"linux/amd64","compiler":"clang"},{"runs_on":"ubuntu-24.04-arm","arch":"arm64","platform":"linux/arm64","compiler":"gcc"},{"runs_on":"ubuntu-24.04-arm","arch":"arm64","platform":"linux/arm64","compiler":"clang"}]}' >> "$GITHUB_OUTPUT"
+          else
+            echo 'build_matrix={"include":[{"runs_on":"ubuntu-24.04","arch":"x64","platform":"linux/amd64","compiler":"gcc"},{"runs_on":"ubuntu-24.04","arch":"x64","platform":"linux/amd64","compiler":"clang"}]}' >> "$GITHUB_OUTPUT"
+          fi
 
+  build:
+    needs: prepare-matrix
+    strategy:
+      matrix: ${{ fromJSON(needs.prepare-matrix.outputs.build_matrix) }}
     runs-on: ${{ matrix.runs_on }}
 
     steps:
@@ -60,6 +57,14 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+
+      - name: Prepare isolated workspace mount
+        run: |
+          ISOLATED_WS="${{ github.workspace }}-${{ matrix.arch }}-${{ matrix.compiler }}"
+          rm -rf "${ISOLATED_WS}"
+          mkdir -p "${ISOLATED_WS}"
+          cp -a "${{ github.workspace }}/." "${ISOLATED_WS}/"
+          echo "ISOLATED_WS=${ISOLATED_WS}" >> "$GITHUB_ENV"
 
       - name: Login to GitHub Container Registry
         env:
@@ -85,7 +90,7 @@ jobs:
           docker run --rm --privileged \
             --platform ${{ matrix.platform }} \
             -e CLANG_GCC_TOOLCHAIN="${{ env.CLANG_GCC_TOOLCHAIN }}" \
-            -v "${{ github.workspace }}:/workspace" \
+            -v "${{ env.ISOLATED_WS }}:/workspace" \
             -w /workspace \
             "${{ env.CONTAINER_IMAGE }}" \
             bash /workspace/scripts/linux/build_test_coverage_analyzers.sh \
@@ -101,7 +106,7 @@ jobs:
           docker run --rm --privileged \
             --platform ${{ matrix.platform }} \
             -e CLANG_GCC_TOOLCHAIN="${{ env.CLANG_GCC_TOOLCHAIN }}" \
-            -v "${{ github.workspace }}:/workspace" \
+            -v "${{ env.ISOLATED_WS }}:/workspace" \
             -w /workspace \
             "${{ env.CONTAINER_IMAGE }}" \
             bash /workspace/scripts/linux/profiling_perf_bench.sh \
@@ -116,7 +121,7 @@ jobs:
           docker run --rm --privileged \
             --platform ${{ matrix.platform }} \
             -e CLANG_GCC_TOOLCHAIN="${{ env.CLANG_GCC_TOOLCHAIN }}" \
-            -v "${{ github.workspace }}:/workspace" \
+            -v "${{ env.ISOLATED_WS }}:/workspace" \
             -w /workspace \
             "${{ env.CONTAINER_IMAGE }}" \
             bash /workspace/scripts/linux/build_docs_convert_results.sh \
@@ -125,8 +130,8 @@ jobs:
       - name: Fix permissions for docs directory
         if: ${{ matrix.compiler == 'clang' && matrix.runs_on == 'ubuntu-24.04' }}
         run: |
-          chmod -R 755 ./docs
-          ls -la ./docs
+          chmod -R 755 "${{ env.ISOLATED_WS }}/docs"
+          ls -la "${{ env.ISOLATED_WS }}/docs"
 
       - name: Sync files to domain
         if: ${{ matrix.compiler == 'clang' && matrix.runs_on == 'ubuntu-24.04' }}
@@ -135,7 +140,7 @@ jobs:
           server: ${{ secrets.SERVER }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PW }}
-          local-dir: "./docs/build/html/"
+          local-dir: "${{ env.ISOLATED_WS }}/docs/build/html/"
 
       - name: Release build + package + callgrind (in container)
         if: ${{ matrix.compiler == 'clang' }}
@@ -143,7 +148,7 @@ jobs:
           docker run --rm --privileged \
             --platform ${{ matrix.platform }} \
             -e CLANG_GCC_TOOLCHAIN="${{ env.CLANG_GCC_TOOLCHAIN }}" \
-            -v "${{ github.workspace }}:/workspace" \
+            -v "${{ env.ISOLATED_WS }}:/workspace" \
             -w /workspace \
             "${{ env.CONTAINER_IMAGE }}" \
             bash /workspace/scripts/linux/release_package_callgrind.sh \
@@ -152,12 +157,12 @@ jobs:
 
       - name: Upload Linux Packages (Clang only)
         if: ${{ matrix.compiler == 'clang' }}
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: linux-packages-${{ matrix.arch }}
           path: |
-            ${{ env.BUILD_RELEASE_DIR }}/*.tar.gz
-            ${{ env.BUILD_RELEASE_DIR }}/*.tgz
-            ${{ env.BUILD_RELEASE_DIR }}/*.deb
-            ${{ env.BUILD_RELEASE_DIR }}/*.AppImage
-            ${{ env.BUILD_RELEASE_DIR }}/*.flatpak
+            ${{ env.ISOLATED_WS }}/${{ env.BUILD_RELEASE_DIR }}/*.tar.gz
+            ${{ env.ISOLATED_WS }}/${{ env.BUILD_RELEASE_DIR }}/*.tgz
+            ${{ env.ISOLATED_WS }}/${{ env.BUILD_RELEASE_DIR }}/*.deb
+            ${{ env.ISOLATED_WS }}/${{ env.BUILD_RELEASE_DIR }}/*.AppImage
+            ${{ env.ISOLATED_WS }}/${{ env.BUILD_RELEASE_DIR }}/*.flatpak
