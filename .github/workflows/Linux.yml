@@ -60,14 +60,6 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Prepare isolated workspace mount
-        run: |
-          ISOLATED_WS="${{ github.workspace }}-${{ matrix.arch }}-${{ matrix.compiler }}"
-          rm -rf "${ISOLATED_WS}"
-          mkdir -p "${ISOLATED_WS}"
-          cp -a "${{ github.workspace }}/." "${ISOLATED_WS}/"
-          echo "ISOLATED_WS=${ISOLATED_WS}" >> "$GITHUB_ENV"
-
       - name: Login to GitHub Container Registry
         env:
           GHCR_TOKEN: ${{ secrets.GHCR_PAT || github.token }}
@@ -132,8 +124,8 @@ jobs:
       - name: Fix permissions for docs directory
         if: ${{ matrix.compiler == 'clang' && matrix.runs_on == 'ubuntu-24.04' }}
         run: |
-          chmod -R 755 "${{ env.ISOLATED_WS }}/docs"
-          ls -la "${{ env.ISOLATED_WS }}/docs"
+          chmod -R 755 "${{ github.workspace }}/docs"
+          ls -la "${{ github.workspace }}/docs"
 
       - name: Sync files to domain
         if: ${{ matrix.compiler == 'clang' && matrix.runs_on == 'ubuntu-24.04' }}
@@ -142,7 +134,7 @@ jobs:
           server: ${{ secrets.SERVER }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PW }}
-          local-dir: "${{ env.ISOLATED_WS }}/docs/build/html/"
+          local-dir: "${{ github.workspace }}/docs/build/html/"
 
       - name: Release build + package + callgrind (in container)
         if: ${{ matrix.compiler == 'clang' }}
@@ -163,8 +155,8 @@ jobs:
         with:
           name: linux-packages-${{ matrix.arch }}
           path: |
-            ${{ env.ISOLATED_WS }}/${{ env.BUILD_RELEASE_DIR }}/*.tar.gz
-            ${{ env.ISOLATED_WS }}/${{ env.BUILD_RELEASE_DIR }}/*.tgz
-            ${{ env.ISOLATED_WS }}/${{ env.BUILD_RELEASE_DIR }}/*.deb
-            ${{ env.ISOLATED_WS }}/${{ env.BUILD_RELEASE_DIR }}/*.AppImage
-            ${{ env.ISOLATED_WS }}/${{ env.BUILD_RELEASE_DIR }}/*.flatpak
+            ${{ github.workspace }}/${{ env.BUILD_RELEASE_DIR }}/*.tar.gz
+            ${{ github.workspace }}/${{ env.BUILD_RELEASE_DIR }}/*.tgz
+            ${{ github.workspace }}/${{ env.BUILD_RELEASE_DIR }}/*.deb
+            ${{ github.workspace }}/${{ env.BUILD_RELEASE_DIR }}/*.AppImage
+            ${{ github.workspace }}/${{ env.BUILD_RELEASE_DIR }}/*.flatpak

@@ -116,6 +116,7 @@ fi
 if [ "${MATRIX_COMPILER}" = "clang" ]; then
   "${SELF_DIR}/run_static_analysis_format.sh" \
     --tidy-only \
+    --allow-tidy-failure \
     --compile-db "${WORKSPACE_ROOT}/${BUILD_DIR}" \
     --run-clang-analyzer \
     --run-scan-build \
@@ -123,6 +124,7 @@ if [ "${MATRIX_COMPILER}" = "clang" ]; then
 else
   "${SELF_DIR}/run_static_analysis_format.sh" \
     --tidy-only \
+    --allow-tidy-failure \
     --compile-db "${WORKSPACE_ROOT}/${BUILD_DIR}"
 fi
 

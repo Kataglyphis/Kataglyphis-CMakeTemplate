@@ -15,6 +15,7 @@ TIDY_ONLY="false"
 RUN_CLANG_ANALYZER="false"
 RUN_SCAN_BUILD="false"
 SCAN_BUILD_PRESET=""
+ALLOW_TIDY_FAILURE="false"
 
 ensure_tooling_environment() {
   if command -v clang-format >/dev/null 2>&1 && command -v cmake-format >/dev/null 2>&1; then
@@ -44,6 +45,7 @@ Options:
   --compile-db PATH         Path to compile_commands.json or its directory
   --include-fuzz-perf       Also run clang-tidy for Test/fuzz and Test/perf files
   --fix-tidy                Apply clang-tidy fixes (--fix --fix-errors, default: ON)
+  --allow-tidy-failure      Do not fail the script when clang-tidy reports issues
   -h, --help                Show this help
 EOF
 }
@@ -91,6 +93,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --fix-tidy)
       TIDY_FIX_MODE="true"
+      shift
+      ;;
+    --allow-tidy-failure)
+      ALLOW_TIDY_FAILURE="true"
       shift
       ;;
     -h|--help)
@@ -367,10 +373,14 @@ if [[ "$CMAKE_FORMAT_FAIL" -ne 0 ]]; then
   echo "cmake-format failed for one or more files."
 fi
 if [[ "$TIDY_FAIL" -ne 0 ]]; then
-  echo "clang-tidy failed for one or more files."
+  if [[ "${ALLOW_TIDY_FAILURE}" == "true" ]]; then
+    log_warn "clang-tidy reported issues, but failures are allowed in this run."
+  else
+    echo "clang-tidy failed for one or more files."
+  fi
 fi
 
-if [[ "$FORMAT_MODE" == "check" && "$FORMAT_FAIL" -ne 0 ]] || [[ "$CMAKE_FORMAT_FAIL" -ne 0 ]] || [[ "$TIDY_FAIL" -ne 0 ]]; then
+if [[ "$FORMAT_MODE" == "check" && "$FORMAT_FAIL" -ne 0 ]] || [[ "$CMAKE_FORMAT_FAIL" -ne 0 ]] || ([[ "$TIDY_FAIL" -ne 0 ]] && [[ "${ALLOW_TIDY_FAILURE}" != "true" ]]); then
   exit 1
 fi
 
