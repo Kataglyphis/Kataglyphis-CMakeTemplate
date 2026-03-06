@@ -21,24 +21,26 @@ env:
   CLANG_GCC_TOOLCHAIN: /opt/gcc-15.2.0
 
 jobs:
-  prepare-matrix:
-    runs-on: ubuntu-24.04
-    outputs:
-      build_matrix: ${{ steps.set-matrix.outputs.build_matrix }}
-    steps:
-      - name: Build matrix (arm gated by commit message)
-        id: set-matrix
-        run: |
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.event.head_commit.message }}" == *"[build-arm]"* ]]; then
-            echo 'build_matrix={"include":[{"runs_on":"ubuntu-24.04","arch":"x64","platform":"linux/amd64","compiler":"gcc"},{"runs_on":"ubuntu-24.04","arch":"x64","platform":"linux/amd64","compiler":"clang"},{"runs_on":"ubuntu-24.04-arm","arch":"arm64","platform":"linux/arm64","compiler":"gcc"},{"runs_on":"ubuntu-24.04-arm","arch":"arm64","platform":"linux/arm64","compiler":"clang"}]}' >> "$GITHUB_OUTPUT"
-          else
-            echo 'build_matrix={"include":[{"runs_on":"ubuntu-24.04","arch":"x64","platform":"linux/amd64","compiler":"gcc"},{"runs_on":"ubuntu-24.04","arch":"x64","platform":"linux/amd64","compiler":"clang"}]}' >> "$GITHUB_OUTPUT"
-          fi
-
   build:
-    needs: prepare-matrix
     strategy:
-      matrix: ${{ fromJSON(needs.prepare-matrix.outputs.build_matrix) }}
+      matrix:
+        include:
+          - runs_on: ubuntu-24.04
+            arch: x64
+            platform: linux/amd64
+            compiler: gcc
+          - runs_on: ubuntu-24.04
+            arch: x64
+            platform: linux/amd64
+            compiler: clang
+          - runs_on: ubuntu-24.04-arm
+            arch: arm64
+            platform: linux/arm64
+            compiler: gcc
+          - runs_on: ubuntu-24.04-arm
+            arch: arm64
+            platform: linux/arm64
+            compiler: clang
     runs-on: ${{ matrix.runs_on }}
 
     steps:
@@ -90,7 +92,7 @@ jobs:
           docker run --rm --privileged \
             --platform ${{ matrix.platform }} \
             -e CLANG_GCC_TOOLCHAIN="${{ env.CLANG_GCC_TOOLCHAIN }}" \
-            -v "${{ env.ISOLATED_WS }}:/workspace" \
+            -v "${{ github.workspace }}:/workspace" \
             -w /workspace \
             "${{ env.CONTAINER_IMAGE }}" \
             bash /workspace/scripts/linux/build_test_coverage_analyzers.sh \
@@ -106,7 +108,7 @@ jobs:
           docker run --rm --privileged \
             --platform ${{ matrix.platform }} \
             -e CLANG_GCC_TOOLCHAIN="${{ env.CLANG_GCC_TOOLCHAIN }}" \
-            -v "${{ env.ISOLATED_WS }}:/workspace" \
+            -v "${{ github.workspace }}:/workspace" \
             -w /workspace \
             "${{ env.CONTAINER_IMAGE }}" \
             bash /workspace/scripts/linux/profiling_perf_bench.sh \
@@ -121,7 +123,7 @@ jobs:
           docker run --rm --privileged \
             --platform ${{ matrix.platform }} \
             -e CLANG_GCC_TOOLCHAIN="${{ env.CLANG_GCC_TOOLCHAIN }}" \
-            -v "${{ env.ISOLATED_WS }}:/workspace" \
+            -v "${{ github.workspace }}:/workspace" \
             -w /workspace \
             "${{ env.CONTAINER_IMAGE }}" \
             bash /workspace/scripts/linux/build_docs_convert_results.sh \
@@ -148,7 +150,7 @@ jobs:
           docker run --rm --privileged \
             --platform ${{ matrix.platform }} \
             -e CLANG_GCC_TOOLCHAIN="${{ env.CLANG_GCC_TOOLCHAIN }}" \
-            -v "${{ env.ISOLATED_WS }}:/workspace" \
+            -v "${{ github.workspace }}:/workspace" \
             -w /workspace \
             "${{ env.CONTAINER_IMAGE }}" \
             bash /workspace/scripts/linux/release_package_callgrind.sh \
