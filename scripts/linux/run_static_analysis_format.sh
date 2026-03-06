@@ -304,6 +304,11 @@ fi
 
 TIDY_FAIL=0
 for file in "${TIDY_FILES[@]}"; do
+  IS_MODULE_OR_IMPORT_TU=0
+  if grep -Eq '^[[:space:]]*(module|import)[[:space:]]+' "$file"; then
+    IS_MODULE_OR_IMPORT_TU=1
+  fi
+
   TIDY_ARGS=(
     "$file"
     -p "$COMPILE_DB_DIR"
@@ -311,7 +316,12 @@ for file in "${TIDY_FILES[@]}"; do
     --header-filter="^${REPO_ROOT}/(Src|Test)/"
   )
 
-  if [[ "${TIDY_FIX_MODE}" == "true" ]]; then
+  # include-cleaner may apply unsafe fixes in C++ module/import translation units.
+  if [[ "$IS_MODULE_OR_IMPORT_TU" -eq 1 ]]; then
+    TIDY_ARGS+=(--checks=-misc-include-cleaner)
+  fi
+
+  if [[ "${TIDY_FIX_MODE}" == "true" && "$IS_MODULE_OR_IMPORT_TU" -eq 0 ]]; then
     TIDY_ARGS+=(--fix --fix-errors)
   fi
 

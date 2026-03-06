@@ -44,6 +44,9 @@ done
 mkdir -p "${WORKSPACE_ROOT}/docs/coverage"
 mkdir -p "${WORKSPACE_ROOT}/docs/test-results"
 
+# Keep project coverage focused on first-party code by excluding tests and vendored deps.
+COVERAGE_IGNORE_REGEX='(^|[\\/])(ExternalLib|_deps|Test)([\\/]|$)'
+
 if [ "${MATRIX_COMPILER}" = "gcc" ]; then
   PRESET="${GCC_DEBUG_PRESET}"
 else
@@ -95,9 +98,12 @@ else
   (
     cd "${BUILD_DIR}"
     llvm-profdata merge -sparse Test/compile/default.profraw -o compileTestSuite.profdata
-    llvm-cov report ./compileTestSuite -instr-profile=compileTestSuite.profdata
-    llvm-cov export ./compileTestSuite -format=text -instr-profile=compileTestSuite.profdata > "${WORKSPACE_ROOT}/${COVERAGE_JSON}"
-    llvm-cov show ./compileTestSuite -instr-profile=compileTestSuite.profdata -format=html -output-dir "${WORKSPACE_ROOT}/docs/coverage"
+    llvm-cov report ./compileTestSuite -instr-profile=compileTestSuite.profdata \
+      -ignore-filename-regex="${COVERAGE_IGNORE_REGEX}"
+    llvm-cov export ./compileTestSuite -format=text -instr-profile=compileTestSuite.profdata \
+      -ignore-filename-regex="${COVERAGE_IGNORE_REGEX}" > "${WORKSPACE_ROOT}/${COVERAGE_JSON}"
+    llvm-cov show ./compileTestSuite -instr-profile=compileTestSuite.profdata -format=html \
+      -ignore-filename-regex="${COVERAGE_IGNORE_REGEX}" -output-dir "${WORKSPACE_ROOT}/docs/coverage"
   )
 fi
 
