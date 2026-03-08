@@ -15,10 +15,6 @@ auto rusty_extern_c_integer() -> int32_t;
 
 export namespace kataglyphis {
 // NOLINTNEXTLINE(misc-use-internal-linkage)
-auto run() -> int;
-}
-
-namespace kataglyphis {
 auto run() -> int
 {
 #if USE_RUST
@@ -31,4 +27,4 @@ auto run() -> int
     std::cout << "Hello World! \n";
     return 0;
 }
-}// namespace kataglyphis
+} // namespace kataglyphis
