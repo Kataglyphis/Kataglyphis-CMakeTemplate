@@ -18,7 +18,7 @@ env:
   COVERAGE_JSON: coverage.json
   DOCS_OUT: build/build/html
   CONTAINER_IMAGE: ghcr.io/kataglyphis/kataglyphis_beschleuniger:latest
-  CLANG_GCC_TOOLCHAIN: /opt/gcc-15.2.0
+  CLANG_GCC_TOOLCHAIN: ${{ vars.CLANG_GCC_TOOLCHAIN || '/opt/gcc-15.2.0' }}
 
 jobs:
   build:
