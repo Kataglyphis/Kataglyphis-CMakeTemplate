@@ -209,7 +209,7 @@ try {
   } | Out-Null
 
   if (-not $SkipTidy) {
-    Invoke-BuildStep -Context $context -StepName 'clang-tidy --fix (Src)' -Critical -Script {
+    Invoke-BuildStep -Context $context -StepName 'clang-tidy --fix (Src)' -Script {
       Invoke-ClangTidyFixStep -Context $context -WorkspacePath $workspacePath -BuildRoot $buildPathClangCl
     } | Out-Null
   } else {

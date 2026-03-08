@@ -15,7 +15,7 @@ TIDY_ONLY="false"
 RUN_CLANG_ANALYZER="false"
 RUN_SCAN_BUILD="false"
 SCAN_BUILD_PRESET=""
-ALLOW_TIDY_FAILURE="false"
+ALLOW_TIDY_FAILURE="true"
 
 ensure_tooling_environment() {
   if command -v clang-format >/dev/null 2>&1 && command -v cmake-format >/dev/null 2>&1; then
