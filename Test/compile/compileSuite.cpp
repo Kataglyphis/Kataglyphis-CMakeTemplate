@@ -18,17 +18,17 @@ TEST(HelloTestCompile, blob)
 
     // VulkanBuffer vulkanBuffer;
 
-    int c = 0;
+    int count = 0;
 
     // Test that counter 0 returns 0
-    EXPECT_EQ(0, c);
+    EXPECT_EQ(0, count);
 
     // EXPECT_EQ() evaluates its arguments exactly once, so they
     // can have side effects.
 
-    EXPECT_EQ(0, c++);
-    EXPECT_EQ(1, c++);
-    EXPECT_EQ(2, c++);
+    EXPECT_EQ(0, count++);
+    EXPECT_EQ(1, count++);
+    EXPECT_EQ(2, count++);
 
-    EXPECT_EQ(3, c++);
+    EXPECT_EQ(3, count++);
 }
