@@ -1,8 +1,11 @@
 #include <gtest/gtest.h>
 
+// NOLINTNEXTLINE
 import kataglyphis_config;
 
 // Demonstrate some basic assertions.
+// NOLINTBEGIN(misc-use-internal-linkage, modernize-use-trailing-return-type, readability-named-parameter,
+// hicpp-named-parameter)
 TEST(HelloTestCompile, BasicAssertions)
 {
     constexpr auto expected_result = 42;
@@ -35,3 +38,5 @@ TEST(HelloTestCompile, blob)
 
     EXPECT_EQ(3, count++);
 }
+// NOLINTEND(misc-use-internal-linkage, modernize-use-trailing-return-type, readability-named-parameter,
+// hicpp-named-parameter)

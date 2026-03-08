@@ -14,6 +14,7 @@ auto rusty_extern_c_integer() -> int32_t;
 #endif
 
 export namespace kataglyphis {
+// NOLINTNEXTLINE(misc-use-internal-linkage)
 auto run() -> int;
 }
 
