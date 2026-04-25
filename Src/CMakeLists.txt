@@ -28,8 +28,13 @@ list(REMOVE_DUPLICATES KataglyphisCppProject_MODULES)
 if(RUST_FEATURES)
 
   corrosion_import_crate(MANIFEST_PATH rusty_code/Cargo.toml)
+  # Disable sccache for the rust crate build to avoid stale file handles on
+  # Windows that can prevent Cargo from removing temporary archives
+  # (observed as "os error 32" on temp-archive removal). This keeps the build
+  # environment deterministic and reduces file-locking races with external
+  # caching wrappers.
   if(WIN32)
-    corrosion_set_env_vars(rusty_code CXXFLAGS=/EHsc)
+    corrosion_set_env_vars(rusty_code CXXFLAGS=/EHsc SCCACHE_DISABLE=1)
   else()
     if(NOT DEFINED GCC_TOOLCHAIN_PATH)
       set(GCC_TOOLCHAIN_PATH
@@ -64,7 +69,8 @@ if(RUST_FEATURES)
       rusty_code
       CC=${RUST_CC}
       CXX=${RUST_CXX}
-      "CXXFLAGS=${RUST_CXXFLAGS}")
+      "CXXFLAGS=${RUST_CXXFLAGS}"
+      SCCACHE_DISABLE=1)
 
     message(STATUS "Configured native corrosion: CC=${RUST_CC} CXX=${RUST_CXX} CXXFLAGS=${RUST_CXXFLAGS}")
   endif()
@@ -115,12 +121,12 @@ set_target_properties(${KATAGLYPHIS_CORE_TARGET} PROPERTIES CXX_SCAN_FOR_MODULES
 target_sources(
   ${KATAGLYPHIS_CORE_TARGET}
   PRIVATE FILE_SET
-         CXX_MODULES
-         BASE_DIRS
-         ${PROJECT_INCLUDE_DIR}
-         ${CMAKE_CURRENT_BINARY_DIR}
-         FILES
-         ${KataglyphisCppProject_MODULES})
+          CXX_MODULES
+          BASE_DIRS
+          ${PROJECT_INCLUDE_DIR}
+          ${CMAKE_CURRENT_BINARY_DIR}
+          FILES
+          ${KataglyphisCppProject_MODULES})
 
 target_link_libraries(
   ${KATAGLYPHIS_CORE_TARGET}
@@ -130,7 +136,13 @@ target_link_libraries(
          myproject_warnings
          # enable sanitizers
          myproject_options
-  PUBLIC GSL spdlog::spdlog nlohmann_json::nlohmann_json)
+  PUBLIC GSL spdlog::spdlog nlohmann_json_modules)
+
+# Ensure the nlohmann.json module target is built before compiling the
+# project's module interface units. Some generators/compilers (clang-cl on
+# Windows) can attempt to compile module-importing translation units before
+# the provider target has produced its BMI, which yields "module not found".
+add_dependencies(${KATAGLYPHIS_CORE_TARGET} nlohmann_json_modules)
 
 if(RUST_FEATURES)
   target_link_libraries(${KATAGLYPHIS_CORE_TARGET} PUBLIC rusty_code)

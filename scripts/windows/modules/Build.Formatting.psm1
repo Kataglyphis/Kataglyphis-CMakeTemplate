@@ -100,9 +100,7 @@ function Initialize-UvVenvPython {
   $venvPython = Join-Path $venvPath 'Scripts\python.exe'
   $requirementsPath = Join-Path $WorkspacePath 'requirements.txt'
 
-  if (-not (Test-Path $venvPython)) {
-    Invoke-BuildExternal -Context $Context -File $uvCommand.Source -Parameters @('venv', '--allow-existing', $venvPath) | Out-Null
-  }
+  Invoke-BuildExternal -Context $Context -File $uvCommand.Source -Parameters @('venv', '--allow-existing', $venvPath) | Out-Null
 
   Invoke-BuildExternal -Context $Context -File $uvCommand.Source -Parameters @('pip', 'install', '--python', $venvPython, '-r', $requirementsPath) | Out-Null
   return $venvPython

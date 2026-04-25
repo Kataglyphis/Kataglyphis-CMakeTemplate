@@ -100,6 +100,15 @@ endif()
 
 add_subdirectory(ExternalLib)
 
+# If the nlohmann.json module target was created, expose a compile-time macro
+# so consumer module units can conditionally import the module. This lets
+# translation units fall back to the header-only include if the module BMI
+# cannot be used due to configuration mismatches (for example differing
+# exception handling settings between provider and consumer).
+if(TARGET nlohmann_json_modules)
+  add_compile_definitions(NLOHMANN_JSON_MODULE_AVAILABLE=1)
+endif()
+
 add_subdirectory(Src)
 
 if(BUILD_TESTING)

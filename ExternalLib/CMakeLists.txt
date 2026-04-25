@@ -71,7 +71,62 @@ set(SPDLOG_FMT_EXTERNAL   OFF   CACHE BOOL "Use external fmt"         FORCE)
 
 add_subdirectory(SPDLOG)
 
+# Enable building nlohmann.json as a C++20 module by default so consumers
+# that import the module (import nlohmann.json;) get the module target.
+# This is a cache variable so users can override it when configuring.
+set(NLOHMANN_JSON_BUILD_MODULES
+    ON
+    CACHE BOOL "Build nlohmann JSON as a C++20 module.")
+
 add_subdirectory(NLOHMANN_JSON)
+
+# Configure nlohmann::json to build with exceptions disabled to match the
+# project's exception configuration. The library checks JSON_NOEXCEPTION to
+# avoid throwing, but the module provider also needs to be compiled with the
+# same exception-handling compiler flags. We therefore set the preprocessor
+# define and ensure the module target inherits myproject_options when
+# available.
+if(TARGET nlohmann_json)
+  target_compile_definitions(nlohmann_json INTERFACE JSON_NOEXCEPTION)
+endif()
+
+# Configure the nlohmann.json module provider so it is compiled with the
+# same exception-handling configuration as the rest of the project. clang-cl
+# rejects loading BMIs built with different /EH settings, so we explicitly
+# apply the project's exception flags to the module provider target.
+if(TARGET nlohmann_json_modules)
+  # Prefer linking the project's options interface so compile flags are
+  # inherited where CMake propagates them.
+  if(TARGET myproject_options)
+    target_link_libraries(nlohmann_json_modules PUBLIC myproject_options)
+  endif()
+
+  target_compile_definitions(nlohmann_json_modules PUBLIC JSON_NOEXCEPTION)
+
+  # Ensure compile options match the project's myproject_DISABLE_EXCEPTIONS
+  # setting; mirror the logic from ProjectOptions.cmake.
+  if(DEFINED myproject_DISABLE_EXCEPTIONS AND myproject_DISABLE_EXCEPTIONS)
+    if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+      target_compile_options(nlohmann_json_modules PUBLIC /EHs-)
+      target_compile_definitions(nlohmann_json_modules PUBLIC _HAS_EXCEPTIONS=0)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
+      # clang-cl uses MSVC-style /EH flags
+      target_compile_options(nlohmann_json_modules PUBLIC /EHs-)
+      target_compile_definitions(nlohmann_json_modules PUBLIC _HAS_EXCEPTIONS=0)
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+      target_compile_options(nlohmann_json_modules PUBLIC -fno-exceptions)
+      target_compile_definitions(nlohmann_json_modules PUBLIC _HAS_EXCEPTIONS=0)
+    endif()
+  else()
+    if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+      target_compile_options(nlohmann_json_modules PUBLIC /EHsc)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
+      target_compile_options(nlohmann_json_modules PUBLIC /EHsc)
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+      target_compile_options(nlohmann_json_modules PUBLIC -fexceptions)
+    endif()
+  endif()
+endif()
 
 if(RUST_FEATURES)
 
@@ -92,4 +147,17 @@ if(RUST_FEATURES)
     find_program(CXXBRIDGE cxxbridge PATHS "$ENV{HOME}/.cargo/bin/")
   endif()
 
+endif()
+
+# Enforce module-only usage: make the legacy nlohmann_json interface target
+# forward to the module provider. This ensures that targets linking against
+# nlohmann_json will actually depend on the compiled C++ module (nlohmann_json_modules)
+# instead of consuming the header-only include paths.
+if(TARGET nlohmann_json_modules AND TARGET nlohmann_json)
+  # Link the public interface to the module provider so consumers get the BMI
+  target_link_libraries(nlohmann_json INTERFACE nlohmann_json_modules)
+
+  # Remove the header include directories from the interface to discourage
+  # header-only usage; consumers should import the module instead.
+  set_target_properties(nlohmann_json PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "")
 endif()
