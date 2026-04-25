@@ -90,6 +90,47 @@ if(TARGET nlohmann_json)
   target_compile_definitions(nlohmann_json INTERFACE JSON_NOEXCEPTION)
 endif()
 
+## tomlplusplus - header-only TOML parser
+# Enable building optional C++ modules for tomlplusplus. tomlplusplus's
+# modules provider requires CMake 3.28+; the top-level project already
+# requires CMake 4.x so this is acceptable. Consumers can still opt-out by
+# overriding the cache variable when configuring.
+set(TOMLPLUSPLUS_BUILD_MODULES
+    ON
+    CACHE BOOL "Build tomlplusplus as a C++ module provider" FORCE)
+add_subdirectory(tomlplusplus)
+
+if(TARGET tomlplusplus_modules AND TARGET tomlplusplus_tomlplusplus)
+  # Link the implementation target to the module provider so consumers get
+  # the BMI when they link against the public tomlplusplus target (the
+  # alias tomlplusplus::tomlplusplus forwards to tomlplusplus_tomlplusplus).
+  target_link_libraries(tomlplusplus_tomlplusplus INTERFACE tomlplusplus_modules)
+
+  # Remove the header include directories from the interface to discourage
+  # header-only usage; consumers should import the module instead.
+  set_target_properties(tomlplusplus_tomlplusplus PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "")
+  # Ensure consumers that link against the public interface also get the
+  # TOML_EXCEPTIONS compile definition so header-only usage (if any) matches
+  # the module provider configuration (exceptions disabled).
+  target_compile_definitions(tomlplusplus_tomlplusplus INTERFACE TOML_EXCEPTIONS=0)
+endif()
+
+## tomlplusplus: compile the module provider with exceptions disabled by default
+## to avoid BMI/consumer configuration mismatches on MSVC/clang-cl.
+## The module's own CMakeLists will also set these options; keep this here
+## minimal to avoid accidentally propagating myproject_options which can
+## enable exception handling.
+if(TARGET tomlplusplus_modules)
+  if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+    target_compile_options(tomlplusplus_modules PUBLIC /EHs-)
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
+    target_compile_options(tomlplusplus_modules PUBLIC /EHs-)
+  elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(tomlplusplus_modules PUBLIC -fno-exceptions)
+  endif()
+  target_compile_definitions(tomlplusplus_modules PUBLIC TOML_EXCEPTIONS=0)
+endif()
+
 # Configure the nlohmann.json module provider so it is compiled with the
 # same exception-handling configuration as the rest of the project. clang-cl
 # rejects loading BMIs built with different /EH settings, so we explicitly

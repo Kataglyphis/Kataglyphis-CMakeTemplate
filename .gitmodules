@@ -13,3 +13,6 @@
 [submodule "ExternalLib/Kataglyphis-ContainerHub"]
 	path = ExternalLib/Kataglyphis-ContainerHub
 	url = https://github.com/Kataglyphis/Kataglyphis-ContainerHub.git
+[submodule "ExternalLib/tomlplusplus"]
+	path = ExternalLib/tomlplusplus
+	url = https://github.com/marzer/tomlplusplus.git

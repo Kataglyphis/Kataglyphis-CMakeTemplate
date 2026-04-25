@@ -138,11 +138,29 @@ target_link_libraries(
          myproject_options
   PUBLIC GSL spdlog::spdlog nlohmann_json_modules)
 
+# Ensure the tomlplusplus module provider is linked so module BMIs and
+# module-mapping information are available to consumers at compile time.
+if(TARGET tomlplusplus_modules)
+  target_link_libraries(${KATAGLYPHIS_CORE_TARGET} PUBLIC tomlplusplus_modules)
+endif()
+
 # Ensure the nlohmann.json module target is built before compiling the
 # project's module interface units. Some generators/compilers (clang-cl on
 # Windows) can attempt to compile module-importing translation units before
 # the provider target has produced its BMI, which yields "module not found".
 add_dependencies(${KATAGLYPHIS_CORE_TARGET} nlohmann_json_modules)
+
+# Ensure the tomlplusplus module provider is built before consumers import it.
+# Some generators/compilers (clang-cl on Windows) may attempt to compile
+# module-importing translation units before the provider has produced its BMI
+# which yields "module not found". Make the provider a dependency when present.
+if(TARGET tomlplusplus_modules)
+  add_dependencies(${KATAGLYPHIS_CORE_TARGET} tomlplusplus_modules)
+  # Also link the tomlplusplus interface target so consumers inherit include dirs
+  if(TARGET tomlplusplus::tomlplusplus)
+    target_link_libraries(${KATAGLYPHIS_CORE_TARGET} PUBLIC tomlplusplus::tomlplusplus)
+  endif()
+endif()
 
 if(RUST_FEATURES)
   target_link_libraries(${KATAGLYPHIS_CORE_TARGET} PUBLIC rusty_code)

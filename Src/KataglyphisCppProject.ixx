@@ -11,6 +11,10 @@ import kataglyphis_config;
 // use the module interface rather than the header-only form.
 import nlohmann.json;
 
+#if defined(TOMLPLUSPLUS_MODULE_AVAILABLE)
+import tomlplusplus;
+#endif
+
 #if USE_RUST
 extern "C" {
 auto rusty_extern_c_integer() -> int32_t;
@@ -33,6 +37,27 @@ auto run() -> int
     auto data = nlohmann::json::parse(R"({"module": "nlohmann.json", "status": "ok"})");
     std::cout << "JSON module test: " << data["module"].get<std::string>() << " -> " << data["status"].get<std::string>()
               << "\n";
+
+#if defined(TOMLPLUSPLUS_MODULE_AVAILABLE)
+    // Parse the example TOML resource to demonstrate module usage.
+    // Use the no-exceptions API (parse_result) so this code compiles when
+    // exceptions are disabled for the toolchain.
+    {
+        auto res = toml::parse_file("${CMAKE_SOURCE_DIR}/Src/resources/example.toml");
+        if (res) {
+            // parse_result is convertible to toml::table when successful
+            const auto &t = static_cast<const toml::table &>(res);
+            if (auto app = t["application"]) {
+                if (auto name = app["name"].value<std::string>()) {
+                    std::cout << "TOML module test: application.name = " << *name << "\n";
+                }
+            }
+        } else {
+            // parse_result provides access to the parse_error when failed
+            std::cout << "Failed to parse TOML example: " << res.error() << "\n";
+        }
+    }
+#endif
 
     return 0;
 }

@@ -1,0 +1,12 @@
+# Example TOML configuration for Kataglyphis
+[application]
+name = "Kataglyphis"
+version = "0.0.1"
+
+[renderer]
+width = 1280
+height = 720
+fullscreen = false
+
+[paths]
+assets = "assets/"

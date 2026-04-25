@@ -1,0 +1,9 @@
+# Example TOML used at runtime (Resources dir)
+[application]
+name = "Kataglyphis Runtime"
+version = "0.0.1"
+
+[renderer]
+width = 800
+height = 600
+fullscreen = false

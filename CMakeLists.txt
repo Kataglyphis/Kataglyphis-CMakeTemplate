@@ -8,8 +8,6 @@ project(
   HOMEPAGE_URL "https://jonasheinle.de/"
   LANGUAGES CXX C)
 
-include(cmake/ClangClModules.cmake)
-
 set(AUTHOR "Jonas Heinle")
 
 set(RUST_FEATURES
@@ -107,6 +105,12 @@ add_subdirectory(ExternalLib)
 # exception handling settings between provider and consumer).
 if(TARGET nlohmann_json_modules)
   add_compile_definitions(NLOHMANN_JSON_MODULE_AVAILABLE=1)
+endif()
+
+# If the tomlplusplus module provider was created, expose a compile-time macro
+# so module consumers can import it conditionally.
+if(TARGET tomlplusplus_modules)
+  add_compile_definitions(TOMLPLUSPLUS_MODULE_AVAILABLE=1)
 endif()
 
 add_subdirectory(Src)

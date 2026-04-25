@@ -128,6 +128,13 @@ function Invoke-CmakeFormatStep {
   }
 
   foreach ($cmakeFile in $cmakeFiles) {
+    # Skip files that are tracked by git but no longer exist on disk. This can
+    # happen in CI where the workspace snapshot lists removed files.
+    if (-not (Test-Path $cmakeFile)) {
+      Write-BuildLog -Context $Context -Message "Skipping missing CMake file: $cmakeFile"
+      continue
+    }
+
     if (Test-Path $formatConfig) {
       Invoke-BuildExternal -Context $Context -File $cmakeFormatExe -Parameters @('-c', $formatConfig, '--in-place', $cmakeFile) | Out-Null
     } else {
