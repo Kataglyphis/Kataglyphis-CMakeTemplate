@@ -1,3 +1,8 @@
 [target.x86_64-pc-windows-msvc]
-linker = "lld-link.exe"
-ar = "llvm-ar.exe"
+# Use the MSVC linker by default on Windows hosts where Visual Studio
+# / Build Tools are available. Some environments prefer lld-link; to use
+# that, remove or overwrite this file via CMake when a different linker
+# is detected in the environment.
+linker = "link.exe"
+# Use lib.exe as the archiver on MSVC toolchains
+ar = "lib.exe"
