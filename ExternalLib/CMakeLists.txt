@@ -226,32 +226,8 @@ if(TARGET nlohmann_json_modules)
   endif()
 endif()
 
-if(RUST_FEATURES)
-
-  FetchContent_Declare(
-    Corrosion
-    GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
-    GIT_TAG master)
-  # Enable verbose output from Corrosion/Cargo so that cargo/rustc stdout/stderr
-  # are forwarded into the CMake logs. This helps debugging Rust build failures
-  # in CI by ensuring full compiler output is captured. Set as a cache variable
-  # so the option inside the Corrosion subproject picks it up.
-  set(CORROSION_VERBOSE_OUTPUT ON CACHE BOOL "Enable verbose output from Corrosion and Cargo" FORCE)
-  message(STATUS "Corrosion verbose output enabled (CORROSION_VERBOSE_OUTPUT=ON)")
-  FetchContent_MakeAvailable(Corrosion)
-
-  find_program(CXXBRIDGE cxxbridge PATHS "$ENV{HOME}/.cargo/bin/")
-  if(CXXBRIDGE STREQUAL "CXXBRIDGE-NOTFOUND")
-    message("Could not find cxxbridge, trying to install with `cargo install cxxbridge-cmd'")
-    find_program(CARGO cargo PATHS "$ENV{HOME}/.cargo/bin/")
-    if(CARGO STREQUAL "CARGO-NOTFOUND")
-      message(FATAL_ERROR "Requires cargo available in path, install via rustup https://rustup.rs/")
-    endif()
-    execute_process(COMMAND ${CARGO} install cxxbridge-cmd)
-    find_program(CXXBRIDGE cxxbridge PATHS "$ENV{HOME}/.cargo/bin/")
-  endif()
-
-endif()
+## Corrosion and cxxbridge handling moved to top-level CMakeLists to avoid
+## duplicate FetchContent declarations and to centralise Rust preflight checks.
 
 # Enforce module-only usage: make the legacy nlohmann_json interface target
 # forward to the module provider. This ensures that targets linking against

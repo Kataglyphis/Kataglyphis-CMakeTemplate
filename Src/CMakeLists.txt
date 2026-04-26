@@ -38,66 +38,90 @@ set(ENABLE_RUST_CXXBRIDGE
 # defaults point at the in-tree rusty_code crate under Src/. Adjust via the
 # cache if you want to import a different crate (for example an external
 # Kataglyphis-RustProjectTemplate crate).
-set(RUSTY_MANIFEST_PATH "${CMAKE_CURRENT_SOURCE_DIR}/rusty_code/Cargo.toml"
+set(RUSTY_MANIFEST_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/rusty_code/Cargo.toml"
     CACHE PATH "Path to the Rust crate Cargo.toml to import")
-set(RUSTY_CRATE_NAME "rusty_code" CACHE STRING "Name of the Rust crate target")
+set(RUSTY_CRATE_NAME
+    "rusty_code"
+    CACHE STRING "Name of the Rust crate target")
 
 if(ENABLE_RUST OR RUST_FEATURES)
 
-  message(STATUS "RUST_FEATURES is enabled; importing rusty_code crate")
-  message(STATUS "About to run corrosion_import_crate for rusty_code/Cargo.toml")
-  # Explicitly prefer the `dev` cargo profile when configuring/building the
-  # project in Debug. Corrosion's default mapping can sometimes select the
-  # release profile for certain generator/config combinations. Passing an
-  # explicit PROFILE generator-expression ensures the crate is built with the
-  # expected cargo profile for the chosen CMake configuration.
+  message(STATUS "RUST_FEATURES is enabled; importing ${RUSTY_CRATE_NAME} crate")
+  message(STATUS "About to run corrosion_import_crate for ${RUSTY_MANIFEST_PATH}")
   corrosion_import_crate(
     MANIFEST_PATH
     ${RUSTY_MANIFEST_PATH}
-    PROFILE
-    $<$<CONFIG:Debug>:dev>
     CRATE_TYPES
     staticlib
     CRATES
     ${RUSTY_CRATE_NAME})
 
-  # Configure environment for Cargo/Corrosion before importing the crate.
-  message(STATUS "RUST_FEATURES is enabled; configuring Rust/Cargo environment")
-  # Disable sccache for the rust crate build to avoid stale file handles on
-  # Windows that can prevent Cargo from removing temporary archives
-  # (observed as "os error 32" on temp-archive removal). This keeps the build
-  # environment deterministic and reduces file-locking races with external
-  # caching wrappers.
+  # Keep Rust build flags simple and aligned with the working repository.
   if(WIN32)
-    message(STATUS "Configuring corrosion env for Windows: setting CXXFLAGS=/EHsc SCCACHE_DISABLE=1")
-    # Also forward verbose flag to ensure cargo prints full output when Corrosion runs it
+    # Minimal Windows set of system libraries — matches the working repo.
+    target_link_libraries(
+      ${RUSTY_CRATE_NAME}
+      INTERFACE kernel32
+                ntdll
+                userenv
+                ws2_32
+                dbghelp)
+
+    set(_RUST_WINDOWS_DEBUG_CXXFLAGS "/MDd /D_DEBUG /D_ITERATOR_DEBUG_LEVEL=2")
+    set(_RUST_WINDOWS_DEBUG_CFLAGS "/MDd /D_DEBUG")
+
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+       AND MSVC
+       AND myproject_ENABLE_SANITIZER_ADDRESS)
+      set(_RUST_WINDOWS_DEBUG_CXXFLAGS "/MD /D_ITERATOR_DEBUG_LEVEL=0")
+      set(_RUST_WINDOWS_DEBUG_CFLAGS "/MD")
+    endif()
+
+    set(_RUST_WINDOWS_CXXFLAGS
+        "/EHsc $<$<CONFIG:Debug>:${_RUST_WINDOWS_DEBUG_CXXFLAGS}>$<$<NOT:$<CONFIG:Debug>>:/MD /DNDEBUG /D_ITERATOR_DEBUG_LEVEL=0>"
+    )
+    set(_RUST_WINDOWS_CFLAGS "$<$<CONFIG:Debug>:${_RUST_WINDOWS_DEBUG_CFLAGS}>$<$<NOT:$<CONFIG:Debug>>:/MD /DNDEBUG>")
+
+    # Ensure Corrosion/Cargo produce verbose output for diagnostic purposes
     set_property(GLOBAL PROPERTY CORROSION_VERBOSE_OUTPUT ON)
-    # Set environment variables to increase cargo/rust verbosity and diagnostics
+
     corrosion_set_env_vars(
-      rusty_code
-      CXXFLAGS=/EHsc
+      ${RUSTY_CRATE_NAME}
+      "CXXFLAGS=${_RUST_WINDOWS_CXXFLAGS}"
+      "CFLAGS=${_RUST_WINDOWS_CFLAGS}"
       SCCACHE_DISABLE=1
       RUST_BACKTRACE=1
       CARGO_TERM_VERBOSE=true
       RUST_LOG=debug
       CARGO_TERM_COLOR=never
       CRATE_CC_NO_DEFAULTS=1)
-    # Request cargo to produce verbose output and machine-readable messages
-    corrosion_set_cargo_flags(rusty_code --verbose --message-format=json)
-    # Also export MSVC-targeted CC/CXX variables if available in the environment
+
+    corrosion_set_cargo_flags(${RUSTY_CRATE_NAME} --verbose --message-format=json)
+
+    # Forward any MSVC-targeted CC/CXX values from the environment so
+    # Cargo uses the same compiler as the CMake build when present. Prefer
+    # explicit environment-provided values (which may be absolute paths)
+    # over the fallback clang-cl string below.
     if(DEFINED ENV{CC_x86_64-pc-windows-msvc})
       message(STATUS "Using environment CC_x86_64-pc-windows-msvc=${ENV{CC_x86_64-pc-windows-msvc}}")
-      corrosion_set_env_vars(rusty_code CC_x86_64-pc-windows-msvc=$ENV{CC_x86_64-pc-windows-msvc})
+      corrosion_set_env_vars(${RUSTY_CRATE_NAME} CC_x86_64-pc-windows-msvc=$ENV{CC_x86_64-pc-windows-msvc})
+      set(_RUSTY_CC_FORWARDED TRUE)
     elseif(DEFINED ENV{CC})
-      corrosion_set_env_vars(rusty_code CC_x86_64-pc-windows-msvc=$ENV{CC})
+      corrosion_set_env_vars(${RUSTY_CRATE_NAME} CC_x86_64-pc-windows-msvc=$ENV{CC})
+      set(_RUSTY_CC_FORWARDED TRUE)
     endif()
+
     if(DEFINED ENV{CXX_x86_64-pc-windows-msvc})
-      corrosion_set_env_vars(rusty_code CXX_x86_64-pc-windows-msvc=$ENV{CXX_x86_64-pc-windows-msvc})
+      corrosion_set_env_vars(${RUSTY_CRATE_NAME} CXX_x86_64-pc-windows-msvc=$ENV{CXX_x86_64-pc-windows-msvc})
+      set(_RUSTY_CXX_FORWARDED TRUE)
     elseif(DEFINED ENV{CXX})
-      corrosion_set_env_vars(rusty_code CXX_x86_64-pc-windows-msvc=$ENV{CXX})
+      corrosion_set_env_vars(${RUSTY_CRATE_NAME} CXX_x86_64-pc-windows-msvc=$ENV{CXX})
+      set(_RUSTY_CXX_FORWARDED TRUE)
     endif()
+
     if(DEFINED ENV{AR})
-      corrosion_set_env_vars(rusty_code AR=$ENV{AR})
+      corrosion_set_env_vars(${RUSTY_CRATE_NAME} AR=$ENV{AR})
     endif()
   else()
     if(NOT DEFINED GCC_TOOLCHAIN_PATH)
@@ -129,106 +153,30 @@ if(ENABLE_RUST OR RUST_FEATURES)
     if(DEFINED ENV{CXXFLAGS})
       set(RUST_CXXFLAGS "$ENV{CXXFLAGS} ${RUST_CXXFLAGS}")
     endif()
-    message(
-      STATUS "Configuring corrosion env: CC=${RUST_CC} CXX=${RUST_CXX} CXXFLAGS=${RUST_CXXFLAGS} SCCACHE_DISABLE=1")
+
     corrosion_set_env_vars(
-      rusty_code
+      ${RUSTY_CRATE_NAME}
       CC=${RUST_CC}
       CXX=${RUST_CXX}
-      "CXXFLAGS=${RUST_CXXFLAGS}"
-      SCCACHE_DISABLE=1
-      RUST_BACKTRACE=1
-      CARGO_TERM_VERBOSE=true
-      RUST_LOG=debug
-      CARGO_TERM_COLOR=never)
-    corrosion_set_cargo_flags(rusty_code --message-format=json --verbose)
+      "CXXFLAGS=${RUST_CXXFLAGS}")
+
+    corrosion_set_cargo_flags(${RUSTY_CRATE_NAME} --message-format=json --verbose)
 
     message(STATUS "Configured native corrosion: CC=${RUST_CC} CXX=${RUST_CXX} CXXFLAGS=${RUST_CXXFLAGS}")
   endif()
 
-  # (crate already imported above)
-
-  # Generate a per-crate Cargo config to pin the linker/ar for the
-  # x86_64-pc-windows-msvc target. Prefer values supplied by the environment
-  # but avoid unconditionally writing a fallback config which can force Cargo
-  # to use linkers/archivers that are inappropriate inside CI containers.
-  #
-  # By default do not write a config file unless the user/environment has
-  # explicitly provided linker/ar values or the cache option below is set.
-  option(RUSTY_FORCE_CARGO_CONFIG "Force writing .cargo/config.toml for rusty_code crate" OFF)
-
-  set(RUSTY_CARGO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/rusty_code/.cargo")
-  file(MAKE_DIRECTORY "${RUSTY_CARGO_DIR}")
-  set(RUSTY_CARGO_CONFIG "${RUSTY_CARGO_DIR}/config.toml")
-
-  # Only write the Cargo config if the environment provides an explicit
-  # linker/ar or the user forces the config via the CMake option above.
-  if(DEFINED ENV{CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER}
-     OR DEFINED ENV{CC_x86_64-pc-windows-msvc}
-     OR DEFINED ENV{CC}
-     OR DEFINED ENV{AR}
-     OR RUSTY_FORCE_CARGO_CONFIG)
-
-    # Determine linker preference: prefer explicit Cargo/CMake env vars, fall
-    # back to lld-link when nothing is provided but only in the forced case.
-    if(DEFINED ENV{CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER})
-      set(_linker_path "$ENV{CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER}")
-    elseif(DEFINED ENV{CC_x86_64-pc-windows-msvc})
-      set(_linker_path "$ENV{CC_x86_64-pc-windows-msvc}")
-    elseif(DEFINED ENV{CC})
-      set(_linker_path "$ENV{CC}")
-    else()
-      set(_linker_path "lld-link")
-    endif()
-
-    # Determine archiver preference: respect $AR when present, otherwise
-    # prefer llvm-lib when forcing the config.
-    if(DEFINED ENV{AR})
-      set(_ar_path "$ENV{AR}")
-    else()
-      set(_ar_path "llvm-lib")
-    endif()
-
-    file(WRITE "${RUSTY_CARGO_CONFIG}" "[target.x86_64-pc-windows-msvc]\n")
-    file(APPEND "${RUSTY_CARGO_CONFIG}" "linker = \"${_linker_path}\"\n")
-    file(APPEND "${RUSTY_CARGO_CONFIG}" "ar = \"${_ar_path}\"\n")
-    message(STATUS "Wrote ${RUSTY_CARGO_CONFIG} (linker=${_linker_path} ar=${_ar_path})")
-  else()
-    message(
-      STATUS
-        "Skipping writing ${RUSTY_CARGO_CONFIG}; no explicit Rust linker/ar configured. Let Cargo choose defaults or set -DRUSTY_FORCE_CARGO_CONFIG=ON to force writing."
-    )
+  if(ENABLE_RUST_CXXBRIDGE)
+    corrosion_add_cxxbridge(
+      rusty_bridge
+      CRATE
+      ${RUSTY_CRATE_NAME}
+      FILES
+      lib.rs)
   endif()
 
-  message(STATUS "Adding cxxbridge target for rusty_code (rusty_bridge)")
-  corrosion_add_cxxbridge(
-    rusty_bridge
-    CRATE
-    rusty_code
-    FILES
-    lib.rs)
-
-  message(STATUS "corrosion_add_cxxbridge completed for rusty_code")
-
-  # If Corrosion imported the crate target, on Windows ensure the Rust staticlib
-  # carries necessary system libraries so final link resolves Windows system
-  # symbols when linking the crate into a C++ executable.
-  if(WIN32 AND TARGET rusty_code)
-    target_link_libraries(
-      rusty_code
-      INTERFACE kernel32
-                ntdll
-                userenv
-                ws2_32
-                dbghelp)
-  endif()
-
-  # If the preferred toolchain is clang-cl, forward that to the corrosion env
-  # so Cargo and downstream build scripts use clang-cl for CC/CXX. This pairs
-  # well with lld-link as the linker.
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
     message(STATUS "Detected clang-cl; instructing Corrosion to use clang-cl for crate builds")
-    corrosion_set_env_vars(rusty_code CC_x86_64-pc-windows-msvc=clang-cl CXX_x86_64-pc-windows-msvc=clang-cl)
+    corrosion_set_env_vars(${RUSTY_CRATE_NAME} CC_x86_64-pc-windows-msvc=clang-cl CXX_x86_64-pc-windows-msvc=clang-cl)
   endif()
 
 endif()

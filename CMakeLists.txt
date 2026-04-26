@@ -17,6 +17,81 @@ set(MYPROJECT_GCC_TOOLCHAIN_PATH
     ""
     CACHE PATH "Optional GCC toolchain root used by Clang and Rust tooling on Linux (for example /opt/gcc-15.2.0)")
 
+include(FetchContent)
+
+# Fetch Corrosion from GitHub
+if(RUST_FEATURES)
+  # Fetch Corrosion from GitHub (only when Rust integration is enabled)
+  FetchContent_Declare(
+    Corrosion
+    GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
+    GIT_TAG master)
+  FetchContent_MakeAvailable(Corrosion)
+
+  # Ensure cxxbridge-cmd is available for Corrosion/C++ bridge generation.
+  # Search common cargo bin locations and the system PATH. If not found try to
+  # infer cargo location from a discovered rustc, then attempt a cargo
+  # install of cxxbridge-cmd.
+  find_program(
+    CXXBRIDGE
+    NAMES cxxbridge cxxbridge.exe
+    HINTS "$ENV{HOME}/.cargo/bin" "$ENV{USERPROFILE}/.cargo/bin" "$ENV{USERPROFILE}/scoop/persist/rustup/.cargo/bin")
+
+  if(NOT CXXBRIDGE)
+    message(STATUS "Could not find cxxbridge; attempting to install cxxbridge-cmd via cargo")
+
+    find_program(
+      CARGO
+      NAMES cargo cargo.exe
+      HINTS "$ENV{HOME}/.cargo/bin" "$ENV{USERPROFILE}/.cargo/bin" "$ENV{USERPROFILE}/scoop/persist/rustup/.cargo/bin")
+
+    # If cargo is still not found, try to locate rustc and infer cargo's bin
+    # directory (they are co-located under the same toolchain/bin directory).
+    if(NOT CARGO)
+      find_program(RUSTC NAMES rustc rustc.exe)
+      if(RUSTC)
+        get_filename_component(_rustc_bin_dir ${RUSTC} DIRECTORY)
+        find_program(
+          CARGO
+          NAMES cargo cargo.exe
+          PATHS ${_rustc_bin_dir})
+      endif()
+    endif()
+
+    if(NOT CARGO)
+      message(
+        FATAL_ERROR
+          "Rust cargo not found in PATH; install rustup/cargo (https://rustup.rs/) before enabling RUST_FEATURES")
+    endif()
+
+    execute_process(
+      COMMAND ${CARGO} install cxxbridge-cmd
+      RESULT_VARIABLE _CARGO_INSTALL_RESULT
+      OUTPUT_VARIABLE _CARGO_INSTALL_OUT
+      ERROR_VARIABLE _CARGO_INSTALL_ERR)
+    if(NOT
+       _CARGO_INSTALL_RESULT
+       EQUAL
+       0)
+      message(
+        FATAL_ERROR "Failed to install cxxbridge-cmd via cargo. Output: ${_CARGO_INSTALL_OUT}\n${_CARGO_INSTALL_ERR}")
+    endif()
+
+    # Try locating again after install
+    find_program(
+      CXXBRIDGE
+      NAMES cxxbridge cxxbridge.exe
+      HINTS "$ENV{HOME}/.cargo/bin" "$ENV{USERPROFILE}/.cargo/bin" "$ENV{USERPROFILE}/scoop/persist/rustup/.cargo/bin")
+    if(NOT CXXBRIDGE)
+      message(
+        FATAL_ERROR
+          "cxxbridge still not found after cargo install. Ensure your cargo bin directory (for example $ENV{USERPROFILE}/.cargo/bin) is on PATH and rerun CMake."
+      )
+    endif()
+    message(STATUS "Installed cxxbridge and found at: ${CXXBRIDGE}")
+  endif()
+endif()
+
 # Auto-detect custom GCC toolchain for Clang on Linux to avoid workflow env setup
 if(UNIX
    AND NOT APPLE

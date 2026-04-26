@@ -1,8 +1,10 @@
 [package]
 name = "rusty_code"
 version = "0.1.0"
+edition = "2024"
 authors = ["Jonas Heinle <contact@jonasheinle.de>"]
-edition = "2021"
+license = "MIT OR Apache-2.0"
+publish = false
 
 [dependencies]
 cxx = "1.0"
@@ -11,12 +13,13 @@ cxx = "1.0"
 cxx-build = "1.0"
 
 [lib]
-crate-type = ["staticlib"]
-
-[profile.release]
-debug = true
-panic = "abort"
+crate-type = ["cdylib", "staticlib", "rlib"]
 
 [profile.dev]
 panic = "abort"
 
+[profile.release]
+panic = "abort"
+debug = true
+lto = "thin"
+codegen-units = 1

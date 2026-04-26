@@ -156,6 +156,17 @@ This enumeration also includes submodules.
 cargo install cxxbridge-cmd
 ```
 
+You can also build the in-tree Rust crate (rusty_code) inside a Windows container provided by our kataglyphis_beschleuniger image. Run this from a PowerShell prompt in the repository root:
+
+```powershell
+docker run --rm --cpus 32 --memory 48g `
+  --mount "type=bind,source=${PWD},target=C:\workspace" `
+  -w "C:\workspace\Src\rusty_code" `
+  --entrypoint "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" `
+  "ghcr.io/kataglyphis/kataglyphis_beschleuniger:winamd64" `
+  -NoProfile -ExecutionPolicy Bypass -Command "cargo build --verbose"
+```
+
 # Tests
 I have four tests suites.
 
