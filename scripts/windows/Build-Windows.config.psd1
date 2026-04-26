@@ -16,6 +16,10 @@
       ClangClProfile = 'x64-ClangCL-Windows-profile'
       ClangClRelease = 'x64-ClangCL-Windows-Release'
     }
+    # Optional fast build cache directory (local host path). When provided,
+    # the build script will attempt to pull prebuilt artifacts before building
+    # and push built artifacts back after the build using ContainerHub helpers.
+    FastBuildDir = ''
   }
 
   Msix = @{

@@ -27,14 +27,48 @@ list(REMOVE_DUPLICATES KataglyphisCppProject_MODULES)
 
 if(RUST_FEATURES)
 
+  message(STATUS "RUST_FEATURES is enabled; importing rusty_code crate")
+  message(STATUS "About to run corrosion_import_crate for rusty_code/Cargo.toml")
   corrosion_import_crate(MANIFEST_PATH rusty_code/Cargo.toml)
+
+  # Configure environment for Cargo/Corrosion before importing the crate.
+  message(STATUS "RUST_FEATURES is enabled; configuring Rust/Cargo environment")
   # Disable sccache for the rust crate build to avoid stale file handles on
   # Windows that can prevent Cargo from removing temporary archives
   # (observed as "os error 32" on temp-archive removal). This keeps the build
   # environment deterministic and reduces file-locking races with external
   # caching wrappers.
   if(WIN32)
-    corrosion_set_env_vars(rusty_code CXXFLAGS=/EHsc SCCACHE_DISABLE=1)
+    message(STATUS "Configuring corrosion env for Windows: setting CXXFLAGS=/EHsc SCCACHE_DISABLE=1")
+    # Also forward verbose flag to ensure cargo prints full output when Corrosion runs it
+    set_property(GLOBAL PROPERTY CORROSION_VERBOSE_OUTPUT ON)
+    # Set environment variables to increase cargo/rust verbosity and diagnostics
+    corrosion_set_env_vars(
+      rusty_code
+      CXXFLAGS=/EHsc
+      SCCACHE_DISABLE=1
+      RUST_BACKTRACE=1
+      CARGO_TERM_VERBOSE=true
+      RUST_LOG=debug
+      CARGO_TERM_COLOR=never
+      CRATE_CC_NO_DEFAULTS=1)
+    # Request cargo to produce verbose output and machine-readable messages
+    corrosion_set_cargo_flags(rusty_code --verbose --message-format=json)
+    # Also export MSVC-targeted CC/CXX variables if available in the environment
+    if(DEFINED ENV{CC_x86_64-pc-windows-msvc})
+      message(STATUS "Using environment CC_x86_64-pc-windows-msvc=${ENV{CC_x86_64-pc-windows-msvc}}")
+      corrosion_set_env_vars(rusty_code CC_x86_64-pc-windows-msvc=$ENV{CC_x86_64-pc-windows-msvc})
+    elseif(DEFINED ENV{CC})
+      corrosion_set_env_vars(rusty_code CC_x86_64-pc-windows-msvc=$ENV{CC})
+    endif()
+    if(DEFINED ENV{CXX_x86_64-pc-windows-msvc})
+      corrosion_set_env_vars(rusty_code CXX_x86_64-pc-windows-msvc=$ENV{CXX_x86_64-pc-windows-msvc})
+    elseif(DEFINED ENV{CXX})
+      corrosion_set_env_vars(rusty_code CXX_x86_64-pc-windows-msvc=$ENV{CXX})
+    endif()
+    if(DEFINED ENV{AR})
+      corrosion_set_env_vars(rusty_code AR=$ENV{AR})
+    endif()
   else()
     if(NOT DEFINED GCC_TOOLCHAIN_PATH)
       set(GCC_TOOLCHAIN_PATH
@@ -65,22 +99,67 @@ if(RUST_FEATURES)
     if(DEFINED ENV{CXXFLAGS})
       set(RUST_CXXFLAGS "$ENV{CXXFLAGS} ${RUST_CXXFLAGS}")
     endif()
+    message(
+      STATUS "Configuring corrosion env: CC=${RUST_CC} CXX=${RUST_CXX} CXXFLAGS=${RUST_CXXFLAGS} SCCACHE_DISABLE=1")
     corrosion_set_env_vars(
       rusty_code
       CC=${RUST_CC}
       CXX=${RUST_CXX}
       "CXXFLAGS=${RUST_CXXFLAGS}"
-      SCCACHE_DISABLE=1)
+      SCCACHE_DISABLE=1
+      RUST_BACKTRACE=1
+      CARGO_TERM_VERBOSE=true
+      RUST_LOG=debug
+      CARGO_TERM_COLOR=never)
+    corrosion_set_cargo_flags(rusty_code --message-format=json --verbose)
 
     message(STATUS "Configured native corrosion: CC=${RUST_CC} CXX=${RUST_CXX} CXXFLAGS=${RUST_CXXFLAGS}")
   endif()
 
+  # (crate already imported above)
+
+  # If possible, generate a per-crate Cargo config to pin the linker/ar for the
+  # x86_64-pc-windows-msvc target. This helps when forcing clang-cl or lld-link
+  # in CI/container environments where the system defaults are not present.
+  set(RUSTY_CARGO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/rusty_code/.cargo")
+  file(MAKE_DIRECTORY "${RUSTY_CARGO_DIR}")
+  set(RUSTY_CARGO_CONFIG "${RUSTY_CARGO_DIR}/config.toml")
+  # Only write the file if we can determine a linker from environment
+  if(DEFINED ENV{CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER}
+     OR DEFINED ENV{CC_x86_64-pc-windows-msvc}
+     OR DEFINED ENV{CC})
+    if(DEFINED ENV{CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER})
+      set(_linker_path "$ENV{CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER}")
+    elseif(DEFINED ENV{CC_x86_64-pc-windows-msvc})
+      set(_linker_path "$ENV{CC_x86_64-pc-windows-msvc}")
+    else()
+      set(_linker_path "$ENV{CC}")
+    endif()
+    # Optional ar from environment
+    if(DEFINED ENV{AR})
+      set(_ar_path "$ENV{AR}")
+    else()
+      set(_ar_path "")
+    endif()
+    file(WRITE "${RUSTY_CARGO_CONFIG}" "[target.x86_64-pc-windows-msvc]\n")
+    file(APPEND "${RUSTY_CARGO_CONFIG}" "linker = \"${_linker_path}\"\n")
+    if(_ar_path)
+      file(APPEND "${RUSTY_CARGO_CONFIG}" "ar = \"${_ar_path}\"\n")
+    endif()
+    message(STATUS "Wrote ${RUSTY_CARGO_CONFIG} (linker=${_linker_path})")
+  else()
+    message(STATUS "Skipping generation of ${RUSTY_CARGO_CONFIG}: no linker detected in environment")
+  endif()
+
+  message(STATUS "Adding cxxbridge target for rusty_code (rusty_bridge)")
   corrosion_add_cxxbridge(
     rusty_bridge
     CRATE
     rusty_code
     FILES
     lib.rs)
+
+  message(STATUS "corrosion_add_cxxbridge completed for rusty_code")
 
 endif()
 

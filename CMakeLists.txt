@@ -98,6 +98,12 @@ endif()
 
 add_subdirectory(ExternalLib)
 
+# Enable maximum Corrosion/Cargo verbosity by default so CI and local builds
+# produce detailed Rust/Cargo logs for debugging integration issues.
+set(CORROSION_VERBOSE_OUTPUT
+    ON
+    CACHE BOOL "Enables verbose output from Corrosion and Cargo" FORCE)
+
 # If the nlohmann.json module target was created, expose a compile-time macro
 # so consumer module units can conditionally import the module. This lets
 # translation units fall back to the header-only include if the module BMI

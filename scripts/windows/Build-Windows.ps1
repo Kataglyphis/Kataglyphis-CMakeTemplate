@@ -147,6 +147,13 @@ $containerHubModulesRoot = Join-Path $repoRoot 'ExternalLib\Kataglyphis-Containe
 $sharedModulePath = Join-Path $containerHubModulesRoot 'WindowsScripts.Shared.psm1'
 $buildModulePath = Join-Path $containerHubModulesRoot 'WindowsBuild.Common.psm1'
 $toolchainModulePath = Join-Path $containerHubModulesRoot 'WindowsToolchain.Common.psm1'
+## Additional ContainerHub modules we can reuse instead of local copies
+$containerFormattingModulePath = Join-Path $containerHubModulesRoot 'WindowsFormatting.Common.psm1'
+$containerCmakeModulePath = Join-Path $containerHubModulesRoot 'WindowsCMake.Common.psm1'
+$containerTestingModulePath = Join-Path $containerHubModulesRoot 'WindowsTesting.Common.psm1'
+$containerMsixModulePath = Join-Path $containerHubModulesRoot 'WindowsMsix.Common.psm1'
+## uv (astral "uv") helpers used by formatting/python steps
+$containerUvModulePath = Join-Path $containerHubModulesRoot 'WindowsUv.Common.psm1'
 $localModulesRoot = Join-Path $PSScriptRoot 'modules'
 $localCmakeModulePath = Join-Path $localModulesRoot 'Build.CMake.psm1'
 $localFormattingModulePath = Join-Path $localModulesRoot 'Build.Formatting.psm1'
@@ -162,26 +169,145 @@ if (-not (Test-Path $buildModulePath)) {
 if (-not (Test-Path $toolchainModulePath)) {
   throw "ContainerHub toolchain module not found: $toolchainModulePath"
 }
-if (-not (Test-Path $localCmakeModulePath)) {
-  throw "Local CMake module not found: $localCmakeModulePath"
+if (-not (Test-Path $containerFormattingModulePath)) {
+  throw "ContainerHub formatting module not found: $containerFormattingModulePath"
 }
-if (-not (Test-Path $localFormattingModulePath)) {
-  throw "Local formatting module not found: $localFormattingModulePath"
+if (-not (Test-Path $containerCmakeModulePath)) {
+  throw "ContainerHub CMake module not found: $containerCmakeModulePath"
 }
-if (-not (Test-Path $localTestingModulePath)) {
-  throw "Local testing module not found: $localTestingModulePath"
+if (-not (Test-Path $containerTestingModulePath)) {
+  throw "ContainerHub testing module not found: $containerTestingModulePath"
 }
-if (-not (Test-Path $localPackagingModulePath)) {
-  throw "Local packaging module not found: $localPackagingModulePath"
+if (-not (Test-Path $containerMsixModulePath)) {
+  throw "ContainerHub MSIX module not found: $containerMsixModulePath"
 }
+if (-not (Test-Path $containerUvModulePath)) {
+  throw "ContainerHub uv module not found: $containerUvModulePath"
+}
+## Preload all ContainerHub module files to avoid ordering/import timing issues
+## (some modules expect helpers from other ContainerHub modules to already be
+## loaded; importing them all up-front makes the behavior consistent across
+## environments and avoids runtime "function not found" errors).
+  try {
+    $containerModuleFiles = Get-ChildItem -Path $containerHubModulesRoot -Filter '*.psm1' -File -ErrorAction SilentlyContinue
+    foreach ($mf in $containerModuleFiles) {
+      try {
+        # Ensure the module file is not blocked (downloaded files can be blocked on Windows).
+        Unblock-File -LiteralPath $mf.FullName -ErrorAction SilentlyContinue
+        Import-Module $mf.FullName -Force -ErrorAction Stop
+        Write-Host "DEBUG: Imported container module: $($mf.Name)"
+      } catch {
+        Write-Host "DEBUG: Import-Module failed for container module $($mf.FullName): $($_.Exception.Message)"
+      }
+    }
+  } catch {
+    Write-Host "DEBUG: Failed enumerating container modules in ${containerHubModulesRoot}: $($_.Exception.Message)"
+  }
+## Local modules are optional. Prefer ContainerHub shared modules and allow
+## the local modules only as optional overrides. This makes it safe to remove
+## the local copies: when absent, the ContainerHub implementations are used.
 
+## Import local helper modules first. They provide project-specific glue
+## but should defer to the shared ContainerHub implementations when
+## available. Importing the ContainerHub modules after the local modules
+## with -Force ensures the ContainerHub versions override duplicates,
+## maximising reuse while preserving any local extensions.
+if (Test-Path $localCmakeModulePath) { Import-Module $localCmakeModulePath -Force }
+if (Test-Path $localFormattingModulePath) { Import-Module $localFormattingModulePath -Force }
+if (Test-Path $localTestingModulePath) { Import-Module $localTestingModulePath -Force }
+if (Test-Path $localPackagingModulePath) { Import-Module $localPackagingModulePath -Force }
+
+## Now import the ContainerHub shared modules and force them to override
+## any duplicate function definitions from the local modules so we reuse
+## the authoritative implementations from ExternalLib/Kataglyphis-ContainerHub.
 Import-Module $buildModulePath -Force
 Import-Module $toolchainModulePath -Force
-Import-Module $sharedModulePath
-Import-Module $localCmakeModulePath -Force
-Import-Module $localFormattingModulePath -Force
-Import-Module $localTestingModulePath -Force
-Import-Module $localPackagingModulePath -Force
+Import-Module $sharedModulePath -Force
+
+## Import additional ContainerHub modules that provide CMake/format/testing/packaging
+## implementations. These will override local copies when present.
+## The uv helpers are required by the formatting module; import them first so
+## functions like New-UvProjectEnvironment are available when formatting code
+## runs those helpers at runtime.
+Import-Module $containerUvModulePath -Force
+Import-Module $containerFormattingModulePath -Force
+Import-Module $containerCmakeModulePath -Force
+Import-Module $containerTestingModulePath -Force
+Import-Module $containerMsixModulePath -Force
+
+## Sanity check: ensure essential functions are available. Import-Module should
+## export these symbols, but in some environments module loading can behave
+## unexpectedly (missing submodule, execution policy, etc.). If a function is
+## missing, attempt to dot-source the module file as a fallback so the
+## definitions are available in the current scope. If that also fails, emit a
+## clear error with remediation steps.
+$essentialFunctionMap = @{
+  'Resolve-WorkspacePath'          = $sharedModulePath
+  'New-BuildContext'               = $buildModulePath
+  'Invoke-BuildExternal'           = $buildModulePath
+  'Invoke-ToolchainChecks'         = $toolchainModulePath
+  'Invoke-CmakeFormatStep'         = $containerFormattingModulePath
+  'Invoke-ClangFormatStep'         = $containerFormattingModulePath
+  'Invoke-CmakeConfigureAndBuild'  = $containerCmakeModulePath
+  'Test-ClangClThreadSanitizerSupport' = $containerCmakeModulePath
+  'Resolve-TestExecutable'         = $containerTestingModulePath
+  'Invoke-CtestDiscoveredTests'    = $containerTestingModulePath
+  'Invoke-ManualTestExecutable'    = $containerTestingModulePath
+  'Resolve-WindowsSdkToolPath'     = $containerMsixModulePath
+  'Expand-XmlTemplateTokens'       = $containerMsixModulePath
+  'New-TransparentPng'             = $containerMsixModulePath
+  # uv helpers (virtualenv/astral uv) used by formatting/python steps
+  'New-UvProjectEnvironment'      = $containerUvModulePath
+  'Invoke-UvCommand'               = $containerUvModulePath
+  'Remove-UvProjectEnvironment'    = $containerUvModulePath
+  'Sync-UvProjectDependencies'     = $containerUvModulePath
+}
+
+foreach ($fn in $essentialFunctionMap.Keys) {
+  if (-not (Get-Command $fn -ErrorAction SilentlyContinue)) {
+    $modulePath = $essentialFunctionMap[$fn]
+    if (-not (Test-Path $modulePath)) {
+      throw "Required function '$fn' is missing and module file not found: $modulePath`nEnsure the ContainerHub submodule is initialized: `n  git submodule update --init --recursive"
+    }
+
+    Write-Host "DEBUG: Function '$fn' not found after Import-Module; attempting Import-Module on $modulePath as a fallback"
+    # Try Import-Module first; in some constrained or module-aware environments importing
+    # the .psm1 file succeeds where dot-sourcing may fail. If Import-Module fails,
+    # fall back to dot-sourcing and emit richer diagnostics to help CI/container
+    # debugging (file metadata, head of file and full exception details).
+    $importSucceeded = $false
+    try {
+      Import-Module $modulePath -Force -ErrorAction Stop
+      $importSucceeded = $true
+    } catch {
+      Write-Host "DEBUG: Import-Module failed for '$modulePath': $($_.Exception.Message)"
+      Write-Host "DEBUG: Exception details:"
+      Write-Host ($_.Exception | Format-List * -Force)
+    }
+
+    if (-not $importSucceeded) {
+      Write-Host "DEBUG: Falling back to dot-sourcing $modulePath"
+      try {
+        . $modulePath
+      } catch {
+        # Collect some contextual diagnostics to help root-cause the "token" error
+        $fileInfo = $null
+        try { $fileInfo = Get-Item -LiteralPath $modulePath -ErrorAction SilentlyContinue } catch {}
+        $fileHead = $null
+        try { $fileHead = Get-Content -LiteralPath $modulePath -TotalCount 60 -ErrorAction SilentlyContinue | Out-String } catch {}
+
+        $excDetails = $null
+        try { $excDetails = $_ | Format-List * -Force | Out-String } catch { $excDetails = $_.Exception.Message }
+
+        throw "Failed to load required function '$fn' from module file: $modulePath`nException: $($_.Exception.Message)`nFile: $($fileInfo.FullName) Size=$($fileInfo.Length) LastWrite=$($fileInfo.LastWriteTime)`n--- File head ---`n$fileHead`n--- Exception details ---`n$excDetails"
+      }
+    }
+
+    if (-not (Get-Command $fn -ErrorAction SilentlyContinue)) {
+      throw "Failed to load required function '$fn' from module file: $modulePath"
+    }
+  }
+}
 
 $defaultConfigPath = Join-Path $PSScriptRoot 'Build-Windows.config.psd1'
 $configPath = if (-not [string]::IsNullOrWhiteSpace($ConfigPath)) { $ConfigPath } else { $defaultConfigPath }
