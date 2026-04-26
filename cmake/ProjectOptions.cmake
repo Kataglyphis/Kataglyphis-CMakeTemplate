@@ -282,6 +282,15 @@ macro(myproject_local_options)
     endif()
   endif()
 
+  # If Rust features are enabled, ensure exception handling is enabled for
+  # C++ consumers. The cxx crate and some imported C++ dependencies expect
+  # standard exception unwind semantics to be available; forcing /EHsc for
+  # the interface target avoids mismatches between library builds that would
+  # otherwise cause link-time unresolved externals on MSVC toolchains.
+  if(RUST_FEATURES AND MSVC)
+    target_compile_options(myproject_options INTERFACE /EHsc)
+  endif()
+
   if(NOT
      CMAKE_BUILD_TYPE
      STREQUAL
