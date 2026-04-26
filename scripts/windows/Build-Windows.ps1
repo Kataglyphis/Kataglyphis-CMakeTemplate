@@ -23,7 +23,9 @@ param(
   [string]$MsixPublisher = '',
   [string]$MsixVersion = '',
   [string]$MsixMinVersion = '',
-  [string]$MsixManifestTemplate = ''
+  [string]$MsixManifestTemplate = '',
+  # Optional: remove transient build artifacts (coverage/msix-staging) after a successful run
+  [switch]$CleanupAfter
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,6 +34,9 @@ Set-StrictMode -Version Latest
 # Note: CONFIGURATIONS environment variable support removed.
 # Configurations must be provided explicitly via the -Configurations parameter.
 
+## Use WindowsConfig.Common helpers to parse / validate selected configurations when
+## possible. We still keep a local set of valid configuration names for quick
+## validation and help text.
 $validConfigs = @('clangcl-debug','clangcl-profile','clangcl-release','msvc-debug')
 [string[]]$script:Configurations = @()
 
@@ -115,31 +120,8 @@ if (-not [string]::IsNullOrWhiteSpace($Configurations)) {
   }
 }
 
-function Get-OrDefault([string]$Value, [string]$DefaultValue) {
-  if ([string]::IsNullOrWhiteSpace($Value)) { return $DefaultValue }
-  return $Value
-}
-
-function Get-ConfigValue {
-  param(
-    [Parameter(Mandatory)]
-    $Config,
-    [Parameter(Mandatory)]
-    [string]$Path
-  )
-
-  $cursor = $Config
-  foreach ($segment in ($Path -split '\.')) {
-    if ($null -eq $cursor) { return $null }
-    try {
-      $cursor = $cursor[$segment]
-    } catch {
-      return $null
-    }
-  }
-
-  return $cursor
-}
+## Use Get-OrDefault and Get-ConfigValue from WindowsConfig.Common (ContainerHub) to
+## maximize reuse of shared logic. Those modules are preloaded/imported below.
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $containerHubModulesRoot = Join-Path $repoRoot 'ExternalLib\Kataglyphis-ContainerHub\windows\scripts\modules'
@@ -413,79 +395,38 @@ if ($buildProfilePath -eq $buildReleasePath) {
  }
 
 if ($script:Configurations.Count -gt 0) {
-  foreach ($config in $script:Configurations) {
-    # OrderedDictionary uses .Contains for key existence; avoid calling
-    # .ContainsKey which is not present on this type in all runtimes.
-    if (-not $stageDefinitions.Contains($config)) {
-      throw "Unknown configuration '$config'. Valid configurations: $($stageDefinitions.Keys -join ', ')"
-    }
-  }
+  # Normalize & validate the requested configurations using the shared
+  # WindowsConfig.Common implementation from the ContainerHub. This ensures
+  # consistent parsing (commas, casing) and centralises error handling.
+  $selected = Get-SelectedConfigurations -Configurations $script:Configurations -AvailableConfigurations $stageDefinitions.Keys
+  # Replace the script variable with the normalized selection (HashSet enumerates values)
+  $script:Configurations = @($selected)
 }
 
-function Invoke-ClangTidyFixStep {
-  param(
-    [Parameter(Mandatory)]
-    [pscustomobject]$Context,
-    [Parameter(Mandatory)]
-    [string]$WorkspacePath,
-    [Parameter(Mandatory)]
-    [string]$BuildRoot
-  )
-
-  $clangTidyCommand = Get-Command 'clang-tidy' -ErrorAction SilentlyContinue
-  if (-not $clangTidyCommand) {
-    throw 'clang-tidy not found on PATH.'
-  }
-
-  $compileDb = Join-Path $BuildRoot 'compile_commands.json'
-  if (-not (Test-Path $compileDb)) {
-    throw "compile_commands.json not found at: $compileDb"
-  }
-
-  $srcDir = Join-Path $WorkspacePath 'Src'
-  $tidyFiles = @(Get-ChildItem -Path $srcDir -Recurse -File -ErrorAction SilentlyContinue |
-    Where-Object { $_.Extension -in @('.cpp', '.cc', '.cxx') } |
-    Select-Object -ExpandProperty FullName)
-
-  if ($tidyFiles.Count -eq 0) {
-    Write-BuildLog -Context $Context -Message 'No C/C++ source files found under Src for clang-tidy.'
-    return
-  }
-
-   foreach ($tidyFile in $tidyFiles) {
-    # Some clang-tidy checks crash when processing C++20 module translation
-    # units (files that contain 'import' or 'module' declarations). Detect
-    # those files and skip clang-tidy for them to avoid crashing the CI run.
-    try {
-      $isModuleTU = Select-String -Path $tidyFile -Pattern '^[\s]*((import)|(module))\s+[A-Za-z0-9_.:]+' -Quiet -ErrorAction SilentlyContinue
-    } catch {
-      $isModuleTU = $false
-    }
-
-    if ($isModuleTU) {
-      Write-BuildLog -Context $Context -Message "Skipping clang-tidy on module translation unit: $tidyFile"
-      continue
-    }
-
-    Invoke-BuildExternal -Context $Context -File $clangTidyCommand.Source -Parameters @(
-      '-p', $BuildRoot,
-      # include-cleaner can incorrectly add textual includes for C++ module imports.
-      # Exclude modernize-deprecated-headers because it may crash when processing
-      # translation units that use C++ modules (observed in CI). See clang-tidy
-      # bug reports for details; disabling the single problematic check is the
-      # smallest change to avoid the crash while keeping other tidy checks.
-      "--checks=-misc-include-cleaner,-modernize-deprecated-headers",
-      '--fix',
-      '--fix-errors',
-      $tidyFile
-    ) | Out-Null
-  }
-}
+## Delegate clang-tidy invocation to the ContainerHub implementation when
+## available. This keeps logic consistent across projects and centralizes
+## maintenance. The ContainerHub module provides Invoke-ClangTidyFixStep which
+## accepts -Context, -WorkspacePath and -BuildRoot and supports configurable
+## checks.
 
 $context = New-BuildContext -Workspace $workspacePath -LogDir $logDir -StopOnError
 
 try {
   Open-BuildLog -Context $context
+  # Initialize fast-build cache environment if configured. This sets up
+  # GLOBAL_CACHE_DIR, SCCACHE_DIR, CARGO_HOME, and PUB_CACHE. The config value
+  # Build.FastBuildDir or the -FastBuildDir parameter may be used to override
+  # the location. When set, we will attempt to pull prebuilt artifacts before
+  # building and push artifacts back after a successful build.
+  $fastBuildDir = Get-OrDefault $null (Get-ConfigValue -Config $config -Path 'Build.FastBuildDir')
+  if (-not [string]::IsNullOrWhiteSpace($fastBuildDir)) {
+    Invoke-BuildStep -Context $context -StepName 'Init fast cache' -Script {
+      Initialize-BuildCacheEnvironment -Context $context -FastBuildDir $fastBuildDir | Out-Null
+      Write-BuildLog -Context $context -Message "Fast build dir configured: $fastBuildDir"
+    } | Out-Null
+  } else {
+    Write-BuildLog -Context $context -Message 'No FastBuildDir configured; skipping fast cache initialization.'
+  }
   # Emit debug information to help diagnose why the -Configurations
   # parameter may be lost when the script is invoked via docker/entrypoint
   # wrappers. This does not change behavior; it only records the current
@@ -549,6 +490,24 @@ try {
   # configurations were provided, we don't run any build stages.
   $runStages = $script:Configurations
 
+  # Prepare fast-build artifact sync parameters. If the config contains
+  # Build.FastBuildDir, use it as the remote cache root. The expectation is
+  # that the FastBuildDir points at a host-accessible path that already
+  # mirrors the workspace layout (i.e. contains Src/ and build directories).
+  $fastBuildDir = Get-OrDefault $null (Get-ConfigValue -Config $config -Path 'Build.FastBuildDir')
+  $fastCacheEnabled = -not [string]::IsNullOrWhiteSpace($fastBuildDir)
+
+  if ($fastCacheEnabled) {
+    Invoke-BuildStep -Context $context -StepName 'Sync artifacts (pull before build)' -Script {
+      # Attempt to pull previously-built artifacts into the workspace build
+      # directories. Use the ContainerHub helper which wraps robocopy and
+      # supports exclude patterns for common build cache files.
+      $source = $fastBuildDir
+      $dest = $workspacePath
+      Sync-BuildArtifacts -Context $context -Source $source -Destination $dest -ExcludeCommonRustAndCppCache
+    } | Out-Null
+  }
+
   if ($runStages.Count -eq 0) {
     # Fail fast with a clear message so invocations that intended to build
     # don't silently skip the build stage. Keep the message helpful with
@@ -575,6 +534,15 @@ try {
 
       Invoke-CmakeConfigureAndBuild -Context $context -BuildPath $stageDef.BuildPath -Preset $stageDef.Preset -Configuration $stageDef.Configuration -CleanBuildRoot
     } | Out-Null
+
+    # If fast cache is enabled, push artifacts back after a successful build
+    if ($fastCacheEnabled) {
+      Invoke-BuildStep -Context $context -StepName "Sync artifacts (push after $stageName)" -Script {
+        $source = $stageDef.BuildPath
+        $destination = $fastBuildDir
+        Sync-BuildArtifacts -Context $context -Source $source -Destination $destination -ExcludeCommonRustAndCppCache
+      } | Out-Null
+    }
 
     if ($stageDef.ClangTidy -and -not $SkipTidy) {
       Invoke-BuildStep -Context $context -StepName 'clang-tidy --fix (Src)' -Script {
@@ -794,6 +762,31 @@ try {
 
   Write-BuildLogSuccess -Context $context -Message '=== Windows container CI completed ==='
 } finally {
+  # Optionally remove transient artifacts produced by build/test/package steps.
+  # This is intentionally opt-in because deleting outputs can be destructive.
+  if ($CleanupAfter -and $context -and ($context.Results.Failed.Count -eq 0)) {
+    Invoke-BuildStep -Context $context -StepName 'Cleanup outputs' -Script {
+      foreach ($stageName in $runStages) {
+        $stageDef = $stageDefinitions[$stageName]
+
+        # Coverage artifacts
+        $profrawPath = Join-Path $stageDef.BuildPath 'Test\compile\default.profraw'
+        if (Test-Path $profrawPath) { Remove-Item -Path $profrawPath -Force -ErrorAction SilentlyContinue }
+
+        $profdataPath = Join-Path $stageDef.BuildPath 'compileTestSuite.profdata'
+        if (Test-Path $profdataPath) { Remove-Item -Path $profdataPath -Force -ErrorAction SilentlyContinue }
+
+        $coverageJsonPath = Join-Path $stageDef.BuildPath 'coverage.json'
+        if (Test-Path $coverageJsonPath) { Remove-Item -Path $coverageJsonPath -Force -ErrorAction SilentlyContinue }
+
+        # MSIX staging and packages
+        $msixStaging = Join-Path $stageDef.BuildPath 'msix-staging'
+        if (Test-Path $msixStaging) { Remove-BuildRoot -Context $context -Path $msixStaging | Out-Null }
+        Get-ChildItem -Path $stageDef.BuildPath -Filter '*.msix' -File -Recurse -ErrorAction SilentlyContinue | ForEach-Object { Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue }
+      }
+    } | Out-Null
+  }
+
   Write-BuildSummary -Context $context
   Close-BuildLog -Context $context
 }

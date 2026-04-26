@@ -229,6 +229,38 @@ endif()
 ## Corrosion and cxxbridge handling moved to top-level CMakeLists to avoid
 ## duplicate FetchContent declarations and to centralise Rust preflight checks.
 
+# Ensure Corrosion and cxxbridge are available when Rust features are enabled.
+# The real project configures this at top-level; when working from this
+# template enable the same behaviour here so rust integration works.
+if(RUST_FEATURES)
+  if(WIN32)
+    # Use cargo wrapper script that retries transient Windows file-lock failures
+    set(Rust_CARGO
+        "${CMAKE_SOURCE_DIR}/scripts/windows/cargo-retry.cmd"
+        CACHE FILEPATH "Cargo wrapper used to retry transient Windows file-lock failures" FORCE)
+  endif()
+
+  FetchContent_Declare(
+    Corrosion
+    GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
+    GIT_TAG master)
+  FetchContent_MakeAvailable(Corrosion)
+
+  # Find cxxbridge/cargo in common cargo locations and attempt to install
+  # cxxbridge-cmd via cargo if it is missing. This mirrors the behaviour of
+  # the working repository to reduce integration diffs.
+  find_program(CXXBRIDGE cxxbridge PATHS "$ENV{HOME}/.cargo/bin/" "$ENV{USERPROFILE}/.cargo/bin/")
+  if(CXXBRIDGE STREQUAL "CXXBRIDGE-NOTFOUND")
+    message(STATUS "Could not find cxxbridge, trying to install with `cargo install cxxbridge-cmd'")
+    find_program(CARGO cargo PATHS "$ENV{HOME}/.cargo/bin/" "$ENV{USERPROFILE}/.cargo/bin/")
+    if(CARGO STREQUAL "CARGO-NOTFOUND")
+      message(FATAL_ERROR "Requires cargo available in path, install via rustup https://rustup.rs/")
+    endif()
+    execute_process(COMMAND ${CARGO} install cxxbridge-cmd)
+    find_program(CXXBRIDGE cxxbridge PATHS "$ENV{HOME}/.cargo/bin/" "$ENV{USERPROFILE}/.cargo/bin/")
+  endif()
+endif()
+
 # Enforce module-only usage: make the legacy nlohmann_json interface target
 # forward to the module provider. This ensures that targets linking against
 # nlohmann_json will actually depend on the compiled C++ module (nlohmann_json_modules)
