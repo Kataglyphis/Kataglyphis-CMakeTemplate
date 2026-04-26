@@ -180,6 +180,14 @@ else()
   target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PUBLIC USE_RUST=0)
 endif()
 
+# Ensure exceptions are enabled for the main target on MSVC/clang-cl builds.
+# Some dependent libraries and STL internals expect exception unwind semantics
+# to be available; explicitly enforce /EHsc for the executable to avoid
+# mismatches caused by interface targets that disable exceptions.
+if(MSVC)
+  target_compile_options(${KATAGLYPHIS_CORE_TARGET} PRIVATE /EHsc)
+endif()
+
 # Treat MSVC and clang-cl on Windows differently in a sense of deployment
 # https://clang.llvm.org/docs/UsersManual.html
 if(WIN32 AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC))
