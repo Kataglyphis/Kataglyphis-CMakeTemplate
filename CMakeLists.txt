@@ -103,6 +103,7 @@ add_subdirectory(ExternalLib)
 set(CORROSION_VERBOSE_OUTPUT
     ON
     CACHE BOOL "Enables verbose output from Corrosion and Cargo" FORCE)
+option(ENABLE_RUST_CXXBRIDGE "Enable generation of the CXX bridge for Rust crates" ON)
 
 # If the nlohmann.json module target was created, expose a compile-time macro
 # so consumer module units can conditionally import the module. This lets
