@@ -261,10 +261,22 @@ macro(myproject_local_options)
 
   if(myproject_DISABLE_EXCEPTIONS)
     if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-      target_compile_options(myproject_options INTERFACE /EHs-) # Disable exceptions
+      # When Rust features are enabled we need standard exception unwind
+      # semantics for some C++ consumers (Rust cxx bridge). In that case
+      # avoid adding the MSVC flag that disables exceptions (/EHs-) so the
+      # later RUST_FEATURES block can enforce /EHsc consistently.
+      if(NOT (DEFINED RUST_FEATURES) OR NOT RUST_FEATURES)
+        target_compile_options(myproject_options INTERFACE /EHs-) # Disable exceptions
+      else()
+        message(STATUS "RUST_FEATURES=ON on MSVC: keeping exceptions enabled to satisfy Rust integration")
+      endif()
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
       message(STATUS "Using clang-cl and disable exceptions with /GX-")
-      target_compile_options(myproject_options INTERFACE /EHs-) # Disable exceptions
+      if(NOT (DEFINED RUST_FEATURES) OR NOT RUST_FEATURES)
+        target_compile_options(myproject_options INTERFACE /EHs-) # Disable exceptions
+      else()
+        message(STATUS "RUST_FEATURES=ON with clang-cl: keeping exceptions enabled to satisfy Rust integration")
+      endif()
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
       target_compile_options(myproject_options INTERFACE -fno-exceptions)
     else()

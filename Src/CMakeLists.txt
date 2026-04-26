@@ -25,11 +25,41 @@ configure_file(KataglyphisCppProjectConfig.ixx.in "${_KATAGLYPHIS_CONFIG_MODULE}
 list(APPEND KataglyphisCppProject_MODULES "${_KATAGLYPHIS_CONFIG_MODULE}")
 list(REMOVE_DUPLICATES KataglyphisCppProject_MODULES)
 
-if(RUST_FEATURES)
+option(ENABLE_RUST "Enable building the Rust helper crate" ON)
+option(ENABLE_RUST_CXXBRIDGE "Enable generation of the CXX bridge" ON)
+
+# Force the CXX bridge to be enabled unconditionally (including Emscripten builds).
+# This ensures the cxx bridge headers are always generated.
+set(ENABLE_RUST_CXXBRIDGE
+    ON
+    CACHE BOOL "Enable generation of the CXX bridge" FORCE)
+
+# Allow configuring which Cargo manifest to import and the crate name. The
+# defaults point at the in-tree rusty_code crate under Src/. Adjust via the
+# cache if you want to import a different crate (for example an external
+# Kataglyphis-RustProjectTemplate crate).
+set(RUSTY_MANIFEST_PATH "${CMAKE_CURRENT_SOURCE_DIR}/rusty_code/Cargo.toml"
+    CACHE PATH "Path to the Rust crate Cargo.toml to import")
+set(RUSTY_CRATE_NAME "rusty_code" CACHE STRING "Name of the Rust crate target")
+
+if(ENABLE_RUST OR RUST_FEATURES)
 
   message(STATUS "RUST_FEATURES is enabled; importing rusty_code crate")
   message(STATUS "About to run corrosion_import_crate for rusty_code/Cargo.toml")
-  corrosion_import_crate(MANIFEST_PATH rusty_code/Cargo.toml)
+  # Explicitly prefer the `dev` cargo profile when configuring/building the
+  # project in Debug. Corrosion's default mapping can sometimes select the
+  # release profile for certain generator/config combinations. Passing an
+  # explicit PROFILE generator-expression ensures the crate is built with the
+  # expected cargo profile for the chosen CMake configuration.
+  corrosion_import_crate(
+    MANIFEST_PATH
+    ${RUSTY_MANIFEST_PATH}
+    PROFILE
+    $<$<CONFIG:Debug>:dev>
+    CRATE_TYPES
+    staticlib
+    CRATES
+    ${RUSTY_CRATE_NAME})
 
   # Configure environment for Cargo/Corrosion before importing the crate.
   message(STATUS "RUST_FEATURES is enabled; configuring Rust/Cargo environment")
@@ -118,37 +148,56 @@ if(RUST_FEATURES)
 
   # (crate already imported above)
 
-  # If possible, generate a per-crate Cargo config to pin the linker/ar for the
-  # x86_64-pc-windows-msvc target. This helps when forcing clang-cl or lld-link
-  # in CI/container environments where the system defaults are not present.
+  # Generate a per-crate Cargo config to pin the linker/ar for the
+  # x86_64-pc-windows-msvc target. Prefer values supplied by the environment
+  # but avoid unconditionally writing a fallback config which can force Cargo
+  # to use linkers/archivers that are inappropriate inside CI containers.
+  #
+  # By default do not write a config file unless the user/environment has
+  # explicitly provided linker/ar values or the cache option below is set.
+  option(RUSTY_FORCE_CARGO_CONFIG "Force writing .cargo/config.toml for rusty_code crate" OFF)
+
   set(RUSTY_CARGO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/rusty_code/.cargo")
   file(MAKE_DIRECTORY "${RUSTY_CARGO_DIR}")
   set(RUSTY_CARGO_CONFIG "${RUSTY_CARGO_DIR}/config.toml")
-  # Only write the file if we can determine a linker from environment
+
+  # Only write the Cargo config if the environment provides an explicit
+  # linker/ar or the user forces the config via the CMake option above.
   if(DEFINED ENV{CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER}
      OR DEFINED ENV{CC_x86_64-pc-windows-msvc}
-     OR DEFINED ENV{CC})
+     OR DEFINED ENV{CC}
+     OR DEFINED ENV{AR}
+     OR RUSTY_FORCE_CARGO_CONFIG)
+
+    # Determine linker preference: prefer explicit Cargo/CMake env vars, fall
+    # back to lld-link when nothing is provided but only in the forced case.
     if(DEFINED ENV{CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER})
       set(_linker_path "$ENV{CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER}")
     elseif(DEFINED ENV{CC_x86_64-pc-windows-msvc})
       set(_linker_path "$ENV{CC_x86_64-pc-windows-msvc}")
-    else()
+    elseif(DEFINED ENV{CC})
       set(_linker_path "$ENV{CC}")
+    else()
+      set(_linker_path "lld-link")
     endif()
-    # Optional ar from environment
+
+    # Determine archiver preference: respect $AR when present, otherwise
+    # prefer llvm-lib when forcing the config.
     if(DEFINED ENV{AR})
       set(_ar_path "$ENV{AR}")
     else()
-      set(_ar_path "")
+      set(_ar_path "llvm-lib")
     endif()
+
     file(WRITE "${RUSTY_CARGO_CONFIG}" "[target.x86_64-pc-windows-msvc]\n")
     file(APPEND "${RUSTY_CARGO_CONFIG}" "linker = \"${_linker_path}\"\n")
-    if(_ar_path)
-      file(APPEND "${RUSTY_CARGO_CONFIG}" "ar = \"${_ar_path}\"\n")
-    endif()
-    message(STATUS "Wrote ${RUSTY_CARGO_CONFIG} (linker=${_linker_path})")
+    file(APPEND "${RUSTY_CARGO_CONFIG}" "ar = \"${_ar_path}\"\n")
+    message(STATUS "Wrote ${RUSTY_CARGO_CONFIG} (linker=${_linker_path} ar=${_ar_path})")
   else()
-    message(STATUS "Skipping generation of ${RUSTY_CARGO_CONFIG}: no linker detected in environment")
+    message(
+      STATUS
+        "Skipping writing ${RUSTY_CARGO_CONFIG}; no explicit Rust linker/ar configured. Let Cargo choose defaults or set -DRUSTY_FORCE_CARGO_CONFIG=ON to force writing."
+    )
   endif()
 
   message(STATUS "Adding cxxbridge target for rusty_code (rusty_bridge)")
@@ -165,7 +214,21 @@ if(RUST_FEATURES)
   # carries necessary system libraries so final link resolves Windows system
   # symbols when linking the crate into a C++ executable.
   if(WIN32 AND TARGET rusty_code)
-    target_link_libraries(rusty_code INTERFACE kernel32 ntdll userenv ws2_32 dbghelp)
+    target_link_libraries(
+      rusty_code
+      INTERFACE kernel32
+                ntdll
+                userenv
+                ws2_32
+                dbghelp)
+  endif()
+
+  # If the preferred toolchain is clang-cl, forward that to the corrosion env
+  # so Cargo and downstream build scripts use clang-cl for CC/CXX. This pairs
+  # well with lld-link as the linker.
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
+    message(STATUS "Detected clang-cl; instructing Corrosion to use clang-cl for crate builds")
+    corrosion_set_env_vars(rusty_code CC_x86_64-pc-windows-msvc=clang-cl CXX_x86_64-pc-windows-msvc=clang-cl)
   endif()
 
 endif()
@@ -260,8 +323,8 @@ if(RUST_FEATURES)
   if(ENABLE_RUST_CXXBRIDGE)
     # Ensure the main C++ target can include headers generated by cxxbridge and
     # waits for the bridge target to be generated before compiling.
-    target_include_directories(${KATAGLYPHIS_CORE_TARGET} PRIVATE
-      "${CMAKE_CURRENT_BINARY_DIR}/corrosion_generated/cxxbridge/rusty_bridge/include")
+    target_include_directories(${KATAGLYPHIS_CORE_TARGET}
+                               PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/corrosion_generated/cxxbridge/rusty_bridge/include")
     add_dependencies(${KATAGLYPHIS_CORE_TARGET} rusty_bridge)
   endif()
   target_link_libraries(${KATAGLYPHIS_CORE_TARGET} PUBLIC rusty_code)

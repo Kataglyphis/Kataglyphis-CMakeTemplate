@@ -89,7 +89,18 @@ add_subdirectory(NLOHMANN_JSON)
 # define and ensure the module target inherits myproject_options when
 # available.
 if(TARGET nlohmann_json)
-  target_compile_definitions(nlohmann_json INTERFACE JSON_NOEXCEPTION)
+  # Only disable nlohmann exceptions when the project requests exceptions be
+  # disabled. The library respects the JSON_NOEXCEPTION macro to avoid
+  # throwing and to switch to abort()-style behavior.
+  if(DEFINED myproject_DISABLE_EXCEPTIONS AND myproject_DISABLE_EXCEPTIONS)
+    # If Rust integration requires exceptions, avoid forcing exception-free
+    # builds for consumers that need unwind semantics.
+    if(NOT (DEFINED RUST_FEATURES) OR NOT RUST_FEATURES)
+      target_compile_definitions(nlohmann_json INTERFACE JSON_NOEXCEPTION)
+    else()
+      message(STATUS "RUST_FEATURES=ON: keeping nlohmann::json exceptions enabled (not defining JSON_NOEXCEPTION)")
+    endif()
+  endif()
 endif()
 
 ## tomlplusplus - header-only TOML parser
@@ -100,6 +111,7 @@ endif()
 set(TOMLPLUSPLUS_BUILD_MODULES
     ON
     CACHE BOOL "Build tomlplusplus as a C++ module provider" FORCE)
+
 add_subdirectory(tomlplusplus)
 
 if(TARGET tomlplusplus_modules AND TARGET tomlplusplus_tomlplusplus)
@@ -117,18 +129,42 @@ if(TARGET tomlplusplus_modules AND TARGET tomlplusplus_tomlplusplus)
   target_compile_definitions(tomlplusplus_tomlplusplus INTERFACE TOML_EXCEPTIONS=0)
 endif()
 
+# Also ensure the public interface target enforces no-exceptions for consumers
+# so header-only usage compiles consistently with the module provider.
+if(TARGET tomlplusplus_tomlplusplus)
+  # Prefer inheriting the project's compile options (including exception handling)
+  # so that BMI/module consumers and providers are built with consistent flags.
+  if(TARGET myproject_options)
+    target_link_libraries(tomlplusplus_tomlplusplus INTERFACE myproject_options)
+  else()
+    if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+      target_compile_options(tomlplusplus_tomlplusplus INTERFACE /EHs-)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
+      target_compile_options(tomlplusplus_tomlplusplus INTERFACE /EHs-)
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+      target_compile_options(tomlplusplus_tomlplusplus INTERFACE -fno-exceptions)
+    endif()
+  endif()
+endif()
+
 ## tomlplusplus: compile the module provider with exceptions disabled by default
 ## to avoid BMI/consumer configuration mismatches on MSVC/clang-cl.
 ## The module's own CMakeLists will also set these options; keep this here
 ## minimal to avoid accidentally propagating myproject_options which can
 ## enable exception handling.
 if(TARGET tomlplusplus_modules)
-  if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-    target_compile_options(tomlplusplus_modules PUBLIC /EHs-)
-  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
-    target_compile_options(tomlplusplus_modules PUBLIC /EHs-)
-  elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(tomlplusplus_modules PUBLIC -fno-exceptions)
+  if(TARGET myproject_options)
+    # Let the module provider inherit the project's options to avoid BMI
+    # configuration mismatches (exception handling, sanitizer flags, etc.).
+    target_link_libraries(tomlplusplus_modules PUBLIC myproject_options)
+  else()
+    if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+      target_compile_options(tomlplusplus_modules PUBLIC /EHs-)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
+      target_compile_options(tomlplusplus_modules PUBLIC /EHs-)
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+      target_compile_options(tomlplusplus_modules PUBLIC -fno-exceptions)
+    endif()
   endif()
   target_compile_definitions(tomlplusplus_modules PUBLIC TOML_EXCEPTIONS=0)
 endif()
@@ -139,34 +175,53 @@ endif()
 # apply the project's exception flags to the module provider target.
 if(TARGET nlohmann_json_modules)
   # Prefer linking the project's options interface so compile flags are
-  # inherited where CMake propagates them.
+  # inherited where CMake propagates them. This avoids BMI config mismatches
+  # between module providers and consumers.
   if(TARGET myproject_options)
     target_link_libraries(nlohmann_json_modules PUBLIC myproject_options)
   endif()
 
-  target_compile_definitions(nlohmann_json_modules PUBLIC JSON_NOEXCEPTION)
-
-  # Ensure compile options match the project's myproject_DISABLE_EXCEPTIONS
-  # setting; mirror the logic from ProjectOptions.cmake.
   if(DEFINED myproject_DISABLE_EXCEPTIONS AND myproject_DISABLE_EXCEPTIONS)
-    if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-      target_compile_options(nlohmann_json_modules PUBLIC /EHs-)
+    if(NOT (DEFINED RUST_FEATURES) OR NOT RUST_FEATURES)
+      target_compile_definitions(nlohmann_json_modules PUBLIC JSON_NOEXCEPTION)
       target_compile_definitions(nlohmann_json_modules PUBLIC _HAS_EXCEPTIONS=0)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
-      # clang-cl uses MSVC-style /EH flags
-      target_compile_options(nlohmann_json_modules PUBLIC /EHs-)
-      target_compile_definitions(nlohmann_json_modules PUBLIC _HAS_EXCEPTIONS=0)
-    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-      target_compile_options(nlohmann_json_modules PUBLIC -fno-exceptions)
-      target_compile_definitions(nlohmann_json_modules PUBLIC _HAS_EXCEPTIONS=0)
+    else()
+      message(STATUS "RUST_FEATURES=ON: building nlohmann_json_modules with exceptions enabled to avoid BMI config mismatch")
     endif()
-  else()
-    if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-      target_compile_options(nlohmann_json_modules PUBLIC /EHsc)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
-      target_compile_options(nlohmann_json_modules PUBLIC /EHsc)
-    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-      target_compile_options(nlohmann_json_modules PUBLIC -fexceptions)
+  endif()
+
+  # If myproject_options is not available (older cmake flow), fall back to
+  # the previous per-compiler logic for setting exception flags.
+  if(NOT TARGET myproject_options)
+    # Ensure compile options match the project's myproject_DISABLE_EXCEPTIONS
+    # setting; mirror the logic from ProjectOptions.cmake.
+    if(DEFINED myproject_DISABLE_EXCEPTIONS AND myproject_DISABLE_EXCEPTIONS)
+      if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+        if(NOT (DEFINED RUST_FEATURES) OR NOT RUST_FEATURES)
+          target_compile_options(nlohmann_json_modules PUBLIC /EHs-)
+          target_compile_definitions(nlohmann_json_modules PUBLIC _HAS_EXCEPTIONS=0)
+        else()
+          message(STATUS "RUST_FEATURES=ON: building nlohmann_json_modules with exceptions enabled on MSVC to avoid BMI config mismatch")
+        endif()
+      elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
+        if(NOT (DEFINED RUST_FEATURES) OR NOT RUST_FEATURES)
+          target_compile_options(nlohmann_json_modules PUBLIC /EHs-)
+          target_compile_definitions(nlohmann_json_modules PUBLIC _HAS_EXCEPTIONS=0)
+        else()
+          message(STATUS "RUST_FEATURES=ON with clang-cl: building nlohmann_json_modules with exceptions enabled to avoid BMI config mismatch")
+        endif()
+      elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(nlohmann_json_modules PUBLIC -fno-exceptions)
+        target_compile_definitions(nlohmann_json_modules PUBLIC _HAS_EXCEPTIONS=0)
+      endif()
+    else()
+      if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+        target_compile_options(nlohmann_json_modules PUBLIC /EHsc)
+      elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
+        target_compile_options(nlohmann_json_modules PUBLIC /EHsc)
+      elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(nlohmann_json_modules PUBLIC -fexceptions)
+      endif()
     endif()
   endif()
 endif()
