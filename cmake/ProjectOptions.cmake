@@ -45,7 +45,11 @@ macro(myproject_setup_options)
       # MSVC debug: enable AddressSanitizer by default.
       set(DEFAULT_ASAN ON)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
-      # clang-cl debug: enable AddressSanitizer by default.
+      # clang-cl debug: enable AddressSanitizer by default. We prefer to fix
+      # the CRT/runtime selection (force /MD) when ASan is enabled instead of
+      # disabling ASan by default. The logic later in myproject_global_options
+      # will force the MSVC runtime to the release DLL (/MD) when ASan is
+      # requested so ASan can link correctly on clang-cl.
       set(DEFAULT_ASAN ON)
     else()
       set(DEFAULT_ASAN OFF)
@@ -136,6 +140,65 @@ macro(myproject_global_options)
   set(CMAKE_C_STANDARD 17)
   set(CMAKE_C_STANDARD_REQUIRED True)
 
+  # Ensure the MSVC runtime selection is consistent across all subprojects and
+  # third-party dependencies. Mismatched runtime libraries cause the
+  # _ITERATOR_DEBUG_LEVEL LNK2038 mismatch when linking libraries built with
+  # different CRT/debug settings. Set the runtime early so FetchContent and
+  # add_subdirectory() consumers inherit a consistent choice.
+  if(MSVC)
+    # Prefer forcing the release DLL runtime when AddressSanitizer is enabled
+    # on clang-cl Debug builds because ASan's runtime is incompatible with
+    # the MSVC debug DLL (/MDd). Set the cache value early so FetchContent
+    # and subprojects see the correct runtime during their configure step.
+    #
+    # NOTE: ExternalLib/CMakeLists may save/restore or re-force the cache
+    # variable when configuring FetchContent dependencies. To make the
+    # top-level intent authoritative, we only set/force the runtime here when
+    # ASan is active on clang-cl Debug builds. For non-ASan Debug builds we
+    # still force the debug DLL so behaviour stays consistent for developers.
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+       AND CMAKE_BUILD_TYPE STREQUAL "Debug"
+       AND myproject_ENABLE_SANITIZER_ADDRESS)
+      # clang-cl + ASan: use release DLL runtime (/MD) so ASan can link.
+      set(CMAKE_MSVC_RUNTIME_LIBRARY
+          "MultiThreadedDLL"
+          CACHE STRING "MSVC runtime library" FORCE)
+      message(
+        STATUS "clang-cl + ASan: forcing MSVC runtime selection to MultiThreadedDLL (/MD) to satisfy ASan requirements")
+    elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+      # Use the debug DLL runtime in Debug builds (equivalent to /MDd).
+      set(CMAKE_MSVC_RUNTIME_LIBRARY
+          "MultiThreadedDebugDLL"
+          CACHE STRING "MSVC runtime library" FORCE)
+    else()
+      # Use the release DLL runtime in non-Debug builds (equivalent to /MD).
+      set(CMAKE_MSVC_RUNTIME_LIBRARY
+          "MultiThreadedDLL"
+          CACHE STRING "MSVC runtime library" FORCE)
+    endif()
+  endif()
+
+  # Ensure iterator debugging configuration is consistent across all
+  # subprojects and dependencies. Some toolchains (for example clang-cl with
+  # AddressSanitizer) force the release runtime for Debug builds which sets
+  # the default iterator debug level to 0. To avoid LNK2038 mismatches, set
+  # an explicit _ITERATOR_DEBUG_LEVEL for all MSVC-like builds early.
+  if(MSVC)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+      if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND myproject_ENABLE_SANITIZER_ADDRESS)
+        # clang-cl + ASan: force iterator debug level 0 to match the forced
+        # release CRT used by AddressSanitizer on Windows.
+        add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0)
+      else()
+        # Normal Debug builds: enable iterator debugging.
+        add_compile_definitions(_ITERATOR_DEBUG_LEVEL=2)
+      endif()
+    else()
+      # Non-debug builds use iterator debug level 0.
+      add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0)
+    endif()
+  endif()
+
   # Keep global module scanning disabled so vendored third-party targets are not
   # forced into module dependency scanning. Individual targets can opt in.
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
@@ -179,8 +242,14 @@ macro(myproject_global_options)
      AND CMAKE_BUILD_TYPE STREQUAL "Debug"
      AND myproject_ENABLE_SANITIZER_ADDRESS)
     # clang-cl AddressSanitizer does not support the Debug CRT (/MDd).
-    # Force /MD for Debug when ASan is enabled.
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+    # Force the MSVC runtime to the release DLL (/MD) so the ASan runtime can
+    # link successfully. Set the cache value so subprojects and FetchContent
+    # consumers inherit the choice during their configure step.
+    set(CMAKE_MSVC_RUNTIME_LIBRARY
+        "MultiThreadedDLL"
+        CACHE STRING "MSVC runtime library" FORCE)
+    message(
+      STATUS "clang-cl + ASan: forcing MSVC runtime selection to MultiThreadedDLL (/MD) to satisfy ASan requirements")
   endif()
 
   if(CMAKE_BUILD_TYPE STREQUAL "Release")

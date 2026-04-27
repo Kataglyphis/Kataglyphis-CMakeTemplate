@@ -10,9 +10,21 @@ project(
 
 set(AUTHOR "Jonas Heinle")
 
-set(RUST_FEATURES
-    ON
-    CACHE BOOL "Enable Rust features in our project.")
+if(NOT DEFINED RUST_FEATURES)
+  # Default to enabling Rust features when the user has not supplied a
+  # preference. Use a cache variable so command-line -DRUST_FEATURES=OFF will
+  # override this default without being overwritten later by the project.
+  set(RUST_FEATURES
+      ON
+      CACHE BOOL "Enable Rust features in our project.")
+else()
+  # If the cache entry already exists (for example set via -DRUST_FEATURES=OFF)
+  # ensure the local variable is set to the cache value so downstream code
+  # sees the user's intent consistently.
+  set(RUST_FEATURES
+      "${RUST_FEATURES}"
+      CACHE BOOL "Enable Rust features in our project." FORCE)
+endif()
 set(MYPROJECT_GCC_TOOLCHAIN_PATH
     ""
     CACHE PATH "Optional GCC toolchain root used by Clang and Rust tooling on Linux (for example /opt/gcc-15.2.0)")
@@ -87,17 +99,73 @@ if(myproject_ENABLE_SANITIZER_ADDRESS)
 
 endif()
 
-if(myproject_ENABLE_COVERAGE
-   AND NOT
-       CMAKE_BUILD_TYPE
-       STREQUAL
-       "Release"
-   AND CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+## Coverage instrumentation is applied per-target by
+## myproject_enable_coverage() in cmake/Tests.cmake (invoked from
+## cmake/ProjectOptions.cmake). Avoid global add_compile_options/add_link_options
+## here so instrumentation is only added to the intended interface target
+## and under the explicit Debug guard implemented in that helper.
 
-  add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+# Profile-Guided Optimization and profile/coverage control for non-Debug builds
+# Provide a simple opt-in for instrumenting profile builds (PGO) and for using
+# an existing merged profile (.profdata) when rebuilding with profile use.
+# Typical flow:
+# 1) Instrument/build/run to generate .profraw: set myproject_ENABLE_PGO=ON and
+#    build RelWithDebInfo. Run workloads to produce .profraw files.
+# 2) Merge raw profiles: llvm-profdata merge -sparse default.profraw -o merged.profdata
+# 3) Rebuild with profile use: set myproject_PGO_PROFILE to the path to merged.profdata
+#    and rebuild; the compile/link flags -fprofile-instr-use=<file> are applied.
 
-  add_link_options(-fprofile-instr-generate -fcoverage-mapping)
+option(myproject_ENABLE_PGO "Enable PGO instrumentation for RelWithDebInfo/Release builds" OFF)
+set(myproject_PGO_PROFILE
+    ""
+    CACHE PATH "Path to merged PGO profile (.profdata) to use with -fprofile-instr-use")
 
+if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+  # Apply PGO flags to the project interface target instead of globally so
+  # that instrumentation is opt-in and only propagates to targets that opt
+  # into the project's interface target. myproject_options is created in
+  # myproject_local_options() so ensure it exists before applying flags.
+  if(TARGET myproject_options)
+    if(myproject_PGO_PROFILE)
+      # If a profile path is supplied, use it for profile-guided optimizations.
+      target_compile_options(myproject_options INTERFACE -fprofile-instr-use=${myproject_PGO_PROFILE})
+      target_link_options(myproject_options INTERFACE -fprofile-instr-use=${myproject_PGO_PROFILE})
+    elseif(myproject_ENABLE_PGO AND (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" OR CMAKE_BUILD_TYPE STREQUAL "Release"))
+      # Instrument the build to generate runtime profiles (.profraw).
+      target_compile_options(myproject_options INTERFACE -fprofile-instr-generate)
+      target_link_options(myproject_options INTERFACE -fprofile-instr-generate)
+    endif()
+  else()
+    message(STATUS "PGO requested but myproject_options target not available; skipping PGO flags.")
+  endif()
+endif()
+
+# Ensure MSVC runtime selection is established early so FetchContent and
+# subprojects inherit a consistent choice during their configure step. This
+# mirrors the logic in cmake/ProjectOptions.cmake but must run before
+# add_subdirectory(FetchContent consumers) so dependencies (Abseil, etc.) are
+# configured with the intended runtime selection (avoids /MDd vs /MD mismatches
+# when using clang-cl + AddressSanitizer).
+if(MSVC)
+  # Default to release DLL runtime unless overridden below.
+  set(_initial_runtime "MultiThreadedDLL")
+  # If a user explicitly set CMAKE_BUILD_TYPE and address sanitizer via cache
+  # variables, prefer forcing a runtime that satisfies ASan requirements.
+  if(DEFINED CMAKE_BUILD_TYPE
+     AND DEFINED myproject_ENABLE_SANITIZER_ADDRESS
+     AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+     AND CMAKE_BUILD_TYPE STREQUAL "Debug"
+     AND myproject_ENABLE_SANITIZER_ADDRESS)
+    set(_initial_runtime "MultiThreadedDLL")
+  elseif(DEFINED CMAKE_BUILD_TYPE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(_initial_runtime "MultiThreadedDebugDLL")
+  endif()
+
+  # Force into cache so FetchContent consumers see this value at configure time.
+  set(CMAKE_MSVC_RUNTIME_LIBRARY
+      "${_initial_runtime}"
+      CACHE STRING "MSVC runtime library" FORCE)
+  message(STATUS "Top-level: enforcing CMAKE_MSVC_RUNTIME_LIBRARY=${_initial_runtime}")
 endif()
 
 add_subdirectory(ExternalLib)
@@ -189,3 +257,126 @@ install(
   RENAME Engine_logo.png)
 
 include(cmake/CPackOptions.cmake)
+
+# Final exhaustive alignment of all targets to the desired MSVC runtime selection.
+# This runs after all subdirectories (ExternalLib, Src, Tests) have been added,
+# ensuring that every target in the project is correctly aligned to avoid
+# /failifmismatch and iterator-debug-level LNK2038 linker errors.
+if(MSVC)
+  # Re-derive the concrete desired runtime from the cache variable
+  set(_desired_runtime "${CMAKE_MSVC_RUNTIME_LIBRARY}")
+  if(_desired_runtime MATCHES "\\$<")
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+      string(
+        REPLACE "$<$<CONFIG:Debug>:Debug>"
+                "Debug"
+                _desired_runtime
+                "${_desired_runtime}")
+    else()
+      string(
+        REPLACE "$<$<CONFIG:Debug>:Debug>"
+                ""
+                _desired_runtime
+                "${_desired_runtime}")
+    endif()
+  endif()
+
+  function(get_all_targets_recursive _result _dir)
+    get_property(
+      _subdirs
+      DIRECTORY "${_dir}"
+      PROPERTY SUBDIRECTORIES)
+    foreach(_subdir IN LISTS _subdirs)
+      get_all_targets_recursive(${_result} "${_subdir}")
+    endforeach()
+    get_property(
+      _targets
+      DIRECTORY "${_dir}"
+      PROPERTY BUILDSYSTEM_TARGETS)
+    set(${_result}
+        ${${_result}} ${_targets}
+        PARENT_SCOPE)
+  endfunction()
+
+  set(_all_targets "")
+  get_all_targets_recursive(_all_targets "${CMAKE_CURRENT_SOURCE_DIR}")
+  list(REMOVE_DUPLICATES _all_targets)
+
+  foreach(_t IN LISTS _all_targets)
+    # Align target property
+    get_target_property(_current_runtime ${_t} MSVC_RUNTIME_LIBRARY)
+    if(NOT _current_runtime
+       OR _current_runtime STREQUAL "NOTFOUND"
+       OR _current_runtime MATCHES "\\$<"
+       OR NOT
+          "${_current_runtime}"
+          STREQUAL
+          "${_desired_runtime}")
+      # message(STATUS "Exhaustive alignment: setting target ${_t} MSVC_RUNTIME_LIBRARY to ${_desired_runtime}")
+      set_target_properties(${_t} PROPERTIES MSVC_RUNTIME_LIBRARY "${_desired_runtime}")
+    endif()
+
+    # Align iterator debugging compile definition
+    get_target_property(_cur_defs ${_t} COMPILE_DEFINITIONS)
+    if(NOT _cur_defs OR _cur_defs MATCHES "-NOTFOUND$")
+      set(_cur_defs "")
+    endif()
+    set(_new_defs ${_cur_defs})
+    if("${_desired_runtime}" STREQUAL "MultiThreadedDLL")
+      list(APPEND _new_defs "_ITERATOR_DEBUG_LEVEL=0")
+    elseif("${_desired_runtime}" STREQUAL "MultiThreadedDebugDLL")
+      list(APPEND _new_defs "_ITERATOR_DEBUG_LEVEL=2")
+    endif()
+    list(REMOVE_DUPLICATES _new_defs)
+    set_target_properties(${_t} PROPERTIES COMPILE_DEFINITIONS "${_new_defs}")
+
+    # Exhaustively strip explicit runtime flags from all relevant properties
+    foreach(_prop COMPILE_OPTIONS INTERFACE_COMPILE_OPTIONS)
+      get_target_property(_opts ${_t} ${_prop})
+      if(_opts
+         AND NOT
+             _opts
+             MATCHES
+             "-NOTFOUND$")
+        set(_filt)
+        foreach(_o IN LISTS _opts)
+          if(NOT
+             (_o MATCHES "^[/-]M(T|D)(d)?$"
+              OR _o MATCHES "^-clang:-M(T|D)(d)?$"
+              OR _o MATCHES ".*:-M(T|D)(d)?$"))
+            list(APPEND _filt "${_o}")
+          endif()
+        endforeach()
+        set_property(TARGET ${_t} PROPERTY ${_prop} ${_filt})
+      endif()
+    endforeach()
+
+    get_target_property(_flags ${_t} COMPILE_FLAGS)
+    if(_flags
+       AND NOT
+           _flags
+           MATCHES
+           "-NOTFOUND$")
+      string(
+        REPLACE " "
+                ";"
+                _flist
+                "${_flags}")
+      set(_filt)
+      foreach(_f IN LISTS _flist)
+        if(NOT
+           (_f MATCHES "^[/-]M(T|D)(d)?$"
+            OR _f MATCHES "^-clang:-M(T|D)(d)?$"
+            OR _f MATCHES ".*:-M(T|D)(d)?$"))
+          list(APPEND _filt "${_f}")
+        endif()
+      endforeach()
+      string(
+        JOIN
+        " "
+        _final
+        ${_filt})
+      set_target_properties(${_t} PROPERTIES COMPILE_FLAGS "${_final}")
+    endif()
+  endforeach()
+endif()

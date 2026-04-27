@@ -59,6 +59,101 @@ FetchContent_Declare(
   GIT_TAG "v4.2.1")
 FetchContent_MakeAvailable(GSL)
 
+## -------------------------------------------------------------------------
+## Abseil C++ (FetchContent)
+## Temporarily adjust some configuration so Abseil is configured with the
+## project's exception policy. Abseil's feature-detection (which defines
+## ABSL_HAVE_EXCEPTIONS in absl/base/config.h) runs at configure time, so we
+## must ensure the compiler flags reflect the desired exception mode when
+## FetchContent makes Abseil available.
+##
+## Save/restore BUILD_TESTING (avoid building Abseil tests) and temporarily
+## adjust C/C++ global flags if the project requests exceptions-disabled
+## builds (myproject_DISABLE_EXCEPTIONS).
+if(DEFINED BUILD_TESTING)
+  set(_kataglyphis_saved_BUILD_TESTING "${BUILD_TESTING}")
+else()
+  set(_kataglyphis_saved_BUILD_TESTING "")
+endif()
+
+set(BUILD_TESTING OFF)
+
+# If the top-level project requested exceptions to be disabled, propagate that
+# policy to Abseil's configure-time checks so Abseil's config.h is generated
+# with ABSL_HAVE_EXCEPTIONS unset.
+if(DEFINED myproject_DISABLE_EXCEPTIONS AND myproject_DISABLE_EXCEPTIONS)
+  message(STATUS "Configuring Abseil with exceptions disabled to match project policy")
+  if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+    set(_absl_extra_flags "/EHs-")
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
+    set(_absl_extra_flags "/EHs-")
+  elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(_absl_extra_flags "-fno-exceptions")
+  endif()
+endif()
+
+FetchContent_Declare(
+  abseil-cpp
+  GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
+  GIT_TAG        20260107.1
+)
+
+# Populate Abseil sources but configure it with a temporary exception policy
+# that matches the project's myproject_DISABLE_EXCEPTIONS setting.
+## Use FetchContent_MakeAvailable and temporarily force the global C/CXX
+## flags in the cache so Abseil's configure-time detection sees the
+## exception configuration.
+set(_kataglyphis_saved_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(_kataglyphis_saved_CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+
+## Ensure MSVC runtime selection is visible to Abseil at configure time.
+if(MSVC)
+  if(DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
+    set(_kataglyphis_saved_CMAKE_MSVC_RUNTIME_LIBRARY "${CMAKE_MSVC_RUNTIME_LIBRARY}")
+  else()
+    set(_kataglyphis_saved_CMAKE_MSVC_RUNTIME_LIBRARY "")
+  endif()
+
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "${CMAKE_MSVC_RUNTIME_LIBRARY}" CACHE STRING "MSVC runtime library" FORCE)
+endif()
+
+if(_absl_extra_flags)
+  # Force cached values so FetchContent configures Abseil with these flags.
+  # We only do this during the MakeAvailable call.
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${_absl_extra_flags}" CACHE STRING "(temp) CXX flags for Abseil configure" FORCE)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_absl_extra_flags}" CACHE STRING "(temp) C flags for Abseil configure" FORCE)
+endif()
+
+FetchContent_MakeAvailable(abseil-cpp)
+
+# Ensure Abseil's root is in the include path for all targets to avoid "file not found" errors
+# on some compilers (like clang-cl) during internal Abseil builds.
+include_directories(${abseil-cpp_SOURCE_DIR})
+
+# Restore previous flags after Abseil has been configured
+set(CMAKE_CXX_FLAGS "${_kataglyphis_saved_CMAKE_CXX_FLAGS}" CACHE STRING "restored CXX flags" FORCE)
+set(CMAKE_C_FLAGS "${_kataglyphis_saved_CMAKE_C_FLAGS}" CACHE STRING "restored C flags" FORCE)
+
+# Restore previously-saved MSVC runtime selection if we forced it above.
+if(MSVC)
+  if(_kataglyphis_saved_CMAKE_MSVC_RUNTIME_LIBRARY)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "${_kataglyphis_saved_CMAKE_MSVC_RUNTIME_LIBRARY}" CACHE STRING "restored MSVC runtime library" FORCE)
+  else()
+    # Do not unset the cache here. If no saved value was recorded assume the
+    # top-level cache (possibly forced for ASan) is authoritative and leave it
+    # untouched so subprojects continue to observe the intended runtime.
+    message(STATUS "No saved MSVC runtime to restore; preserving top-level CMAKE_MSVC_RUNTIME_LIBRARY: ${CMAKE_MSVC_RUNTIME_LIBRARY}")
+  endif()
+endif()
+
+# Restore previous BUILD_TESTING value so we don't change the outer project's setting
+if(_kataglyphis_saved_BUILD_TESTING)
+  set(BUILD_TESTING ${_kataglyphis_saved_BUILD_TESTING})
+else()
+  unset(BUILD_TESTING)
+endif()
+## -------------------------------------------------------------------------
+
 if(myproject_DISABLE_EXCEPTIONS)
   set(SPDLOG_NO_EXCEPTIONS
       ON
@@ -76,9 +171,8 @@ add_subdirectory(SPDLOG)
 # Enable building nlohmann.json as a C++20 module by default so consumers
 # that import the module (import nlohmann.json;) get the module target.
 # This is a cache variable so users can override it when configuring.
-set(NLOHMANN_JSON_BUILD_MODULES
-    ON
-    CACHE BOOL "Build nlohmann JSON as a C++20 module.")
+set(NLOHMANN_JSON_BUILD_MODULES ON CACHE BOOL "Build nlohmann JSON as a C++20 module.")
+
 
 add_subdirectory(NLOHMANN_JSON)
 
@@ -108,18 +202,12 @@ endif()
 # modules provider requires CMake 3.28+; the top-level project already
 # requires CMake 4.x so this is acceptable. Consumers can still opt-out by
 # overriding the cache variable when configuring.
-set(TOMLPLUSPLUS_BUILD_MODULES
-    ON
-    CACHE BOOL "Build tomlplusplus as a C++ module provider" FORCE)
+set(TOMLPLUSPLUS_BUILD_MODULES ON CACHE BOOL "Build tomlplusplus as a C++ module provider" FORCE)
+
 
 add_subdirectory(tomlplusplus)
 
 if(TARGET tomlplusplus_modules AND TARGET tomlplusplus_tomlplusplus)
-  # Link the implementation target to the module provider so consumers get
-  # the BMI when they link against the public tomlplusplus target (the
-  # alias tomlplusplus::tomlplusplus forwards to tomlplusplus_tomlplusplus).
-  target_link_libraries(tomlplusplus_tomlplusplus INTERFACE tomlplusplus_modules)
-
   # Remove the header include directories from the interface to discourage
   # header-only usage; consumers should import the module instead.
   set_target_properties(tomlplusplus_tomlplusplus PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "")
@@ -262,13 +350,10 @@ if(RUST_FEATURES)
 endif()
 
 # Enforce module-only usage: make the legacy nlohmann_json interface target
-# forward to the module provider. This ensures that targets linking against
-# nlohmann_json will actually depend on the compiled C++ module (nlohmann_json_modules)
-# instead of consuming the header-only include paths.
+# point at the module provider's include directories if needed, but avoid
+# circular linkage. Consumers should ideally link against nlohmann_json_modules
+# directly.
 if(TARGET nlohmann_json_modules AND TARGET nlohmann_json)
-  # Link the public interface to the module provider so consumers get the BMI
-  target_link_libraries(nlohmann_json INTERFACE nlohmann_json_modules)
-
   # Remove the header include directories from the interface to discourage
   # header-only usage; consumers should import the module instead.
   set_target_properties(nlohmann_json PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "")

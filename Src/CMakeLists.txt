@@ -11,6 +11,11 @@ file(GLOB_RECURSE KataglyphisCppProject_HEADERS "*.hpp")
 set(KATAGLYPHIS_MAIN_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/Main.cpp")
 list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${KATAGLYPHIS_MAIN_SOURCE}")
 
+# Ensure the Abseil flags translation unit is compiled and linked into the
+# executable. We add it explicitly so module-aware compilers see the TU even
+# if the global glob was run before the file was created.
+list(APPEND KataglyphisCppProject_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/flags.cc")
+
 file(
   GLOB_RECURSE
   KataglyphisCppProject_MODULES
@@ -45,9 +50,9 @@ set(RUSTY_CRATE_NAME
     "rusty_code"
     CACHE STRING "Name of the Rust crate target")
 
-if(ENABLE_RUST OR RUST_FEATURES)
+if(ENABLE_RUST AND RUST_FEATURES)
 
-  message(STATUS "RUST_FEATURES is enabled; importing ${RUSTY_CRATE_NAME} crate")
+  message(STATUS "RUST_FEATURES enabled and ENABLE_RUST=ON; importing ${RUSTY_CRATE_NAME} crate")
   message(STATUS "About to run corrosion_import_crate for ${RUSTY_MANIFEST_PATH}")
   corrosion_import_crate(
     MANIFEST_PATH
@@ -68,15 +73,19 @@ if(ENABLE_RUST OR RUST_FEATURES)
                 ws2_32
                 dbghelp)
 
-    set(_RUST_WINDOWS_DEBUG_CXXFLAGS "/MDd /D_DEBUG /D_ITERATOR_DEBUG_LEVEL=2")
-    set(_RUST_WINDOWS_DEBUG_CFLAGS "/MDd /D_DEBUG")
-
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-       AND MSVC
-       AND myproject_ENABLE_SANITIZER_ADDRESS)
-      set(_RUST_WINDOWS_DEBUG_CXXFLAGS "/MD /D_ITERATOR_DEBUG_LEVEL=0")
-      set(_RUST_WINDOWS_DEBUG_CFLAGS "/MD")
-    endif()
+    # Avoid hard-coding /MDd. Derive debug C/C++ flags for Cargo from the
+    # configured MSVC runtime selection so AddressSanitizer and other build
+    # decisions that force /MD are respected. Use generator-expressions to
+    # select appropriate flags for Debug vs non-Debug configurations.
+    # Default debug flags: enable iterator debug level 2 for debug CRT, 0
+    # for release CRT. Use /MD when the forced CMAKE_MSVC_RUNTIME_LIBRARY is
+    # MultiThreadedDLL (ASan case) and /MDd when MultiThreadedDebugDLL is set.
+    set(_RUST_WINDOWS_DEBUG_CXXFLAGS
+        "$<$<STREQUAL:${CMAKE_MSVC_RUNTIME_LIBRARY},MultiThreadedDebugDLL>:/MDd /D_DEBUG /D_ITERATOR_DEBUG_LEVEL=2>$<$<STREQUAL:${CMAKE_MSVC_RUNTIME_LIBRARY},MultiThreadedDLL>:/MD /D_ITERATOR_DEBUG_LEVEL=0>"
+    )
+    set(_RUST_WINDOWS_DEBUG_CFLAGS
+        "$<$<STREQUAL:${CMAKE_MSVC_RUNTIME_LIBRARY},MultiThreadedDebugDLL>:/MDd /D_DEBUG>$<$<STREQUAL:${CMAKE_MSVC_RUNTIME_LIBRARY},MultiThreadedDLL>:/MD>"
+    )
 
     set(_RUST_WINDOWS_CXXFLAGS
         "/EHsc $<$<CONFIG:Debug>:${_RUST_WINDOWS_DEBUG_CXXFLAGS}>$<$<NOT:$<CONFIG:Debug>>:/MD /DNDEBUG /D_ITERATOR_DEBUG_LEVEL=0>"
@@ -97,7 +106,15 @@ if(ENABLE_RUST OR RUST_FEATURES)
       CARGO_TERM_COLOR=never
       CRATE_CC_NO_DEFAULTS=1)
 
-    corrosion_set_cargo_flags(${RUSTY_CRATE_NAME} --verbose --message-format=json)
+    # Make Cargo invocation explicit about the profile used. For RelWithDebInfo
+    # and Release builds ask Cargo to build the release profile so the crate
+    # receives the optimized/release settings (the project's Cargo.toml keeps
+    # debug info in the release profile where appropriate).
+    set(_RUST_CARGO_FLAGS --message-format=json --verbose)
+    # Corrosion now selects the appropriate Cargo profile for Release/RelWithDebInfo
+    # configurations. Avoid adding an explicit --release here to prevent passing
+    # duplicate --release flags when Corrosion already injects it.
+    corrosion_set_cargo_flags(${RUSTY_CRATE_NAME} ${_RUST_CARGO_FLAGS})
 
     # Forward any MSVC-targeted CC/CXX values from the environment so
     # Cargo uses the same compiler as the CMake build when present. Prefer
@@ -160,7 +177,15 @@ if(ENABLE_RUST OR RUST_FEATURES)
       CXX=${RUST_CXX}
       "CXXFLAGS=${RUST_CXXFLAGS}")
 
-    corrosion_set_cargo_flags(${RUSTY_CRATE_NAME} --message-format=json --verbose)
+    # Make Cargo invocation explicit about the profile used. For RelWithDebInfo
+    # and Release builds ask Cargo to build the release profile so the crate
+    # receives the optimized/release settings (the project's Cargo.toml keeps
+    # debug info in the release profile where appropriate).
+    set(_RUST_CARGO_FLAGS --message-format=json --verbose)
+    # Corrosion now selects the appropriate Cargo profile for Release/RelWithDebInfo
+    # configurations. Avoid adding an explicit --release here to prevent passing
+    # duplicate --release flags when Corrosion already injects it.
+    corrosion_set_cargo_flags(${RUSTY_CRATE_NAME} ${_RUST_CARGO_FLAGS})
 
     message(STATUS "Configured native corrosion: CC=${RUST_CC} CXX=${RUST_CXX} CXXFLAGS=${RUST_CXXFLAGS}")
   endif()
@@ -241,30 +266,103 @@ target_link_libraries(
          myproject_warnings
          # enable sanitizers
          myproject_options
-  PUBLIC GSL spdlog::spdlog nlohmann_json_modules)
+  PUBLIC GSL spdlog::spdlog)
+
+if(TARGET nlohmann_json_modules)
+  target_link_libraries(${KATAGLYPHIS_CORE_TARGET} PUBLIC nlohmann_json_modules)
+  target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PUBLIC NLOHMANN_JSON_MODULE_AVAILABLE)
+endif()
+
+# Link Abseil flags and strings libraries for command-line flag parsing.
+# Only link if Abseil was fetched by ExternalLib/CMakeLists (FetchContent makes
+# the absl targets available globally when FetchContent_MakeAvailable was called).
+if(TARGET absl::flags AND TARGET absl::flags_parse)
+  target_link_libraries(${KATAGLYPHIS_CORE_TARGET} PRIVATE absl::flags absl::flags_parse absl::strings)
+endif()
+
+# If Abseil was fetched and built, prefer to align our executable's MSVC runtime
+# and iterator-debug level with Abseil's choice to avoid /failifmismatch and
+# _ITERATOR_DEBUG_LEVEL LNK2038 errors when linking against Abseil libraries.
+if(TARGET absl::flags_parse AND MSVC)
+  # Prefer using a concrete MSVC runtime selection for the main target.
+  # Some dependencies (Abseil) may expose a generator-expression for
+  # MSVC_RUNTIME_LIBRARY (for example: MultiThreaded$<$<CONFIG:Debug>:Debug>DLL)
+  # which, if copied directly, causes per-config flags like /MDd to appear
+  # and can conflict with AddressSanitizer. Avoid adopting generator
+  # expressions from deps; prefer a concrete runtime resolved from the
+  # project's cached CMAKE_MSVC_RUNTIME_LIBRARY when necessary.
+  get_target_property(_absl_runtime absl::flags_parse MSVC_RUNTIME_LIBRARY)
+  if(_absl_runtime)
+    string(FIND "${_absl_runtime}" "$<" _absl_has_genexpr)
+    if(_absl_has_genexpr EQUAL -1)
+      # Abseil provided a concrete runtime string; use it.
+      set(_runtime_to_use "${_absl_runtime}")
+    else()
+      # Fall back to resolving a concrete runtime from the cached
+      # CMAKE_MSVC_RUNTIME_LIBRARY value so we don't copy generator-exprs.
+      get_property(
+        _cached_msvc_runtime
+        CACHE CMAKE_MSVC_RUNTIME_LIBRARY
+        PROPERTY VALUE)
+      if(_cached_msvc_runtime)
+        string(FIND "${_cached_msvc_runtime}" "$<" _cached_has_genexpr)
+        if(_cached_has_genexpr EQUAL -1)
+          set(_runtime_to_use "${_cached_msvc_runtime}")
+        else()
+          if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            string(
+              REPLACE "$<$<CONFIG:Debug>:Debug>"
+                      "Debug"
+                      _runtime_to_use
+                      "${_cached_msvc_runtime}")
+          else()
+            string(
+              REPLACE "$<$<CONFIG:Debug>:Debug>"
+                      ""
+                      _runtime_to_use
+                      "${_cached_msvc_runtime}")
+          endif()
+        endif()
+      else()
+        # No cached value; fall back to Abseil's runtime (generator-expr).
+        set(_runtime_to_use "${_absl_runtime}")
+      endif()
+    endif()
+
+    if(_runtime_to_use)
+      message(STATUS "Aligning ${KATAGLYPHIS_CORE_TARGET} MSVC_RUNTIME_LIBRARY to concrete value: ${_runtime_to_use}")
+      set_property(TARGET ${KATAGLYPHIS_CORE_TARGET} PROPERTY MSVC_RUNTIME_LIBRARY "${_runtime_to_use}")
+
+      # And also apply to all sources explicitly just in case CMake misses it due to being an interface
+      get_target_property(_target_sources ${KATAGLYPHIS_CORE_TARGET} SOURCES)
+      foreach(_source IN LISTS _target_sources)
+        set_property(SOURCE "${_source}" PROPERTY MSVC_RUNTIME_LIBRARY "${_runtime_to_use}")
+      endforeach()
+      set_property(SOURCE "${KATAGLYPHIS_MAIN_SOURCE}" PROPERTY MSVC_RUNTIME_LIBRARY "${_runtime_to_use}")
+
+      if(_runtime_to_use STREQUAL "MultiThreadedDLL")
+        target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PRIVATE _ITERATOR_DEBUG_LEVEL=0)
+      elseif(_runtime_to_use STREQUAL "MultiThreadedDebugDLL")
+        target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PRIVATE _ITERATOR_DEBUG_LEVEL=2)
+      endif()
+    endif()
+  endif()
+endif()
 
 # Ensure the tomlplusplus module provider is linked so module BMIs and
 # module-mapping information are available to consumers at compile time.
 if(TARGET tomlplusplus_modules)
   target_link_libraries(${KATAGLYPHIS_CORE_TARGET} PUBLIC tomlplusplus_modules)
+  target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PUBLIC TOMLPLUSPLUS_MODULE_AVAILABLE)
+  add_dependencies(${KATAGLYPHIS_CORE_TARGET} tomlplusplus_modules)
 endif()
 
 # Ensure the nlohmann.json module target is built before compiling the
 # project's module interface units. Some generators/compilers (clang-cl on
 # Windows) can attempt to compile module-importing translation units before
 # the provider target has produced its BMI, which yields "module not found".
-add_dependencies(${KATAGLYPHIS_CORE_TARGET} nlohmann_json_modules)
-
-# Ensure the tomlplusplus module provider is built before consumers import it.
-# Some generators/compilers (clang-cl on Windows) may attempt to compile
-# module-importing translation units before the provider has produced its BMI
-# which yields "module not found". Make the provider a dependency when present.
-if(TARGET tomlplusplus_modules)
-  add_dependencies(${KATAGLYPHIS_CORE_TARGET} tomlplusplus_modules)
-  # Also link the tomlplusplus interface target so consumers inherit include dirs
-  if(TARGET tomlplusplus::tomlplusplus)
-    target_link_libraries(${KATAGLYPHIS_CORE_TARGET} PUBLIC tomlplusplus::tomlplusplus)
-  endif()
+if(TARGET nlohmann_json_modules)
+  add_dependencies(${KATAGLYPHIS_CORE_TARGET} nlohmann_json_modules)
 endif()
 
 if(RUST_FEATURES)

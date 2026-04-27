@@ -3,13 +3,19 @@ module;
 #include <cstdint>
 #include <iostream>
 
+#if !defined(NLOHMANN_JSON_MODULE_AVAILABLE)
+#include <nlohmann/json.hpp>
+#endif
+
 export module kataglyphis_core;
 
 import kataglyphis_config;
+#if defined(NLOHMANN_JSON_MODULE_AVAILABLE)
 // Always import the nlohmann.json C++ module. The project is configured to
 // build nlohmann.json as a module (nlohmann_json_modules) and consumers must
 // use the module interface rather than the header-only form.
 import nlohmann.json;
+#endif
 
 #if defined(TOMLPLUSPLUS_MODULE_AVAILABLE)
 import tomlplusplus;
