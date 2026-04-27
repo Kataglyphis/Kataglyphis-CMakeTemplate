@@ -219,7 +219,7 @@ macro(myproject_global_options)
     # clang-cl accepts -W... style options. These prevent unknown -W... options
     # (or their escalation to errors) from breaking the build when deps inject GCC-only flags.
     set(_CLANG_CL_SAFE_WARNINGS
-        "-fcolor-diagnostics -Wno-error=unused-command-line-argument -Wno-error=character-conversion -Wno-unknown-warning-option -Wno-error=unknown-warning-option"
+        "-fcolor-diagnostics -Wno-error=unused-command-line-argument -Wno-error=character-conversion -Wno-unknown-warning-option -Wno-error=unknown-warning-option -Wno-unused-command-line-argument"
     )
     # Apply to both C and C++ flags (some deps add to C flags)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  /Od ${_CLANG_CL_SAFE_WARNINGS}")

@@ -206,9 +206,10 @@ if(ENABLE_RUST AND RUST_FEATURES)
 
 endif()
 
-set(KATAGLYPHIS_CORE_TARGET ${PROJECT_NAME})
+set(KATAGLYPHIS_CORE_TARGET "${PROJECT_NAME}_Lib")
 
-add_executable(${KATAGLYPHIS_CORE_TARGET} "${KATAGLYPHIS_MAIN_SOURCE}")
+add_library(${KATAGLYPHIS_CORE_TARGET} OBJECT)
+add_library(${PROJECT_NAME}::Lib ALIAS ${KATAGLYPHIS_CORE_TARGET})
 
 if(RUST_FEATURES)
   target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PUBLIC USE_RUST=1)
@@ -227,11 +228,11 @@ endif()
 # Treat MSVC and clang-cl on Windows differently in a sense of deployment
 # https://clang.llvm.org/docs/UsersManual.html
 if(WIN32 AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC))
-  target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PUBLIC RELATIVE_RESOURCE_PATH="/../../Resources/"
-                                                               RELATIVE_INCLUDE_PATH="/../../Src/")
+  target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources/"
+                                                                RELATIVE_INCLUDE_PATH="/../../Src/")
 else()
-  target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PUBLIC RELATIVE_RESOURCE_PATH="/../Resources/"
-                                                               RELATIVE_INCLUDE_PATH="/../Src/")
+  target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PRIVATE RELATIVE_RESOURCE_PATH="/../Resources/"
+                                                                RELATIVE_INCLUDE_PATH="/../Src/")
 endif()
 
 target_sources(
@@ -242,21 +243,19 @@ target_sources(
          BASE_DIRS
          ${PROJECT_INCLUDE_DIR}
          FILES
-         ${KataglyphisCppProject_HEADERS})
+         ${KataglyphisCppProject_HEADERS}
+  PUBLIC FILE_SET
+         CXX_MODULES
+         BASE_DIRS
+         ${PROJECT_INCLUDE_DIR}
+         ${CMAKE_CURRENT_BINARY_DIR}
+         FILES
+         ${KataglyphisCppProject_MODULES})
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   message(STATUS "GCC modules enabled")
 endif()
 set_target_properties(${KATAGLYPHIS_CORE_TARGET} PROPERTIES CXX_SCAN_FOR_MODULES ON)
-target_sources(
-  ${KATAGLYPHIS_CORE_TARGET}
-  PRIVATE FILE_SET
-          CXX_MODULES
-          BASE_DIRS
-          ${PROJECT_INCLUDE_DIR}
-          ${CMAKE_CURRENT_BINARY_DIR}
-          FILES
-          ${KataglyphisCppProject_MODULES})
 
 target_link_libraries(
   ${KATAGLYPHIS_CORE_TARGET}
@@ -277,7 +276,7 @@ endif()
 # Only link if Abseil was fetched by ExternalLib/CMakeLists (FetchContent makes
 # the absl targets available globally when FetchContent_MakeAvailable was called).
 if(TARGET absl::flags AND TARGET absl::flags_parse)
-  target_link_libraries(${KATAGLYPHIS_CORE_TARGET} PRIVATE absl::flags absl::flags_parse absl::strings)
+  target_link_libraries(${KATAGLYPHIS_CORE_TARGET} PUBLIC absl::flags absl::flags_parse absl::strings)
 endif()
 
 # If Abseil was fetched and built, prefer to align our executable's MSVC runtime
@@ -381,4 +380,22 @@ if(TARGET ${KATAGLYPHIS_CORE_TARGET} AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
   message(STATUS "GCC modules enabled — adding -fmodules-ts to target ${KATAGLYPHIS_CORE_TARGET}")
   target_compile_options(${KATAGLYPHIS_CORE_TARGET} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-fmodules-ts>)
+endif()
+
+# Create the main executable target and link it to the core project library.
+# Dividing the project into a library and a small executable allows test suites
+# to link against the library logic and properly record code coverage.
+add_executable(${PROJECT_NAME} "${KATAGLYPHIS_MAIN_SOURCE}")
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${KATAGLYPHIS_CORE_TARGET})
+
+# Forward core definitions to the executable
+if(RUST_FEATURES)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE USE_RUST=1)
+else()
+  target_compile_definitions(${PROJECT_NAME} PRIVATE USE_RUST=0)
+endif()
+
+if(MSVC)
+  target_compile_options(${PROJECT_NAME} PRIVATE /EHsc)
 endif()

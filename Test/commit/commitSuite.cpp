@@ -7,6 +7,9 @@
 
 // NOLINTNEXTLINE
 import kataglyphis_config;
+import kataglyphis_core;
+
+extern "C" void kataglyphis_parse_flags(int argc, char** argv);
 
 // Demonstrate some basic assertions.
 // NOLINTBEGIN(misc-use-internal-linkage, modernize-use-trailing-return-type, readability-named-parameter,
@@ -26,10 +29,9 @@ TEST(HelloTestCommit, BasicAssertions)
 
 TEST(Integration, VulkanEngine)
 {
-    constexpr auto expected_result = 42;
-    constexpr auto multiplier1 = 7;
-    constexpr auto multiplier2 = 6;
-    EXPECT_EQ(multiplier1 * multiplier2, expected_result);
+    char* argv[] = {(char*)"test", (char*)"--verbose"};
+    kataglyphis_parse_flags(2, argv);
+    EXPECT_EQ(kataglyphis::run(), 0);
 }
 // NOLINTEND(misc-use-internal-linkage, modernize-use-trailing-return-type, readability-named-parameter,
 // hicpp-named-parameter)

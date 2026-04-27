@@ -16,10 +16,11 @@ file(GLOB_RECURSE KataglyphisCppProject_COMPILE_TEST_FILTER "*.cpp")
 
 message("Compile test filter is: ${KataglyphisCppProject_COMPILE_TEST_FILTER}")
 
-kataglyphis_collect_project_sources(KataglyphisCppProject_SOURCES KataglyphisCppProject_HEADERS ${PROJECT_SRC_DIR})
+# kataglyphis_collect_project_sources(KataglyphisCppProject_SOURCES KataglyphisCppProject_HEADERS ${PROJECT_SRC_DIR})
 
-add_executable(${COMPILE_TEST_SUITE})
-kataglyphis_add_config_module_to_target(${COMPILE_TEST_SUITE} ${PROJECT_SRC_DIR})
+add_executable(${COMPILE_TEST_SUITE} ${KataglyphisCppProject_COMPILE_TEST_FILTER})
+set_target_properties(${COMPILE_TEST_SUITE} PROPERTIES CXX_SCAN_FOR_MODULES ON)
+# kataglyphis_add_config_module_to_target(${COMPILE_TEST_SUITE} ${PROJECT_SRC_DIR})
 
 if(RUST_FEATURES)
   target_compile_definitions(${COMPILE_TEST_SUITE} PRIVATE USE_RUST=1)
@@ -30,25 +31,21 @@ endif()
 if(NOT MSVC)
   target_compile_definitions(${COMPILE_TEST_SUITE} PRIVATE RELATIVE_RESOURCE_PATH="/../../../Resources/"
                                                            RELATIVE_INCLUDE_PATH="/../../../Src/")
-else()
-  target_compile_definitions(
-    ${COMPILE_TEST_SUITE}
-    PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources"
-    PUBLIC RELATIVE_INCLUDE_PATH="/../../Src/")
 endif()
 
-target_sources(
-  ${COMPILE_TEST_SUITE}
-  PUBLIC ${KataglyphisCppProject_COMPILE_TEST_FILTER} ${KataglyphisCppProject_SOURCES}
-  PUBLIC FILE_SET
-         HEADERS
-         BASE_DIRS
-         ${PROJECT_INCLUDE_DIR}
-         FILES
-         ${KataglyphisCppProject_HEADERS})
+# target_sources(
+#   ${COMPILE_TEST_SUITE}
+#   PUBLIC ${KataglyphisCppProject_COMPILE_TEST_FILTER} ${KataglyphisCppProject_SOURCES}
+#   PUBLIC FILE_SET
+#          HEADERS
+#          BASE_DIRS
+#          ${PROJECT_INCLUDE_DIR}
+#          FILES
+#          ${KataglyphisCppProject_HEADERS})
 
 target_link_libraries(
   ${COMPILE_TEST_SUITE}
+  PRIVATE KataglyphisCppProject_Lib
   PUBLIC ${CMAKE_DL_LIBS}
          Threads::Threads
          # enable compiler warnings
@@ -62,9 +59,9 @@ target_link_libraries(
 
 kataglyphis_configure_gtest_discovery(${COMPILE_TEST_SUITE})
 
-if(RUST_FEATURES)
-  target_link_libraries(${COMPILE_TEST_SUITE} PUBLIC rusty_code)
-endif()
+# if(RUST_FEATURES)
+#   target_link_libraries(${COMPILE_TEST_SUITE} PUBLIC rusty_code)
+# endif()
 
 # disable all warnings for our test suite
 if(MSVC)
