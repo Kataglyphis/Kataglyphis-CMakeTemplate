@@ -2,16 +2,18 @@ include(CMakeDependentOption)
 include(CheckCXXCompilerFlag)
 
 macro(myproject_supports_sanitizers)
-  if((CMAKE_CXX_COMPILER_ID MATCHES ".*Clang.*" OR CMAKE_CXX_COMPILER_ID MATCHES ".*GNU.*") AND NOT WIN32)
+  # AddressSanitizer support: Generally Clang/GNU, or Clang-cl (MSVC with Clang frontend)
+  if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang.*" OR CMAKE_CXX_COMPILER_ID MATCHES ".*GNU.*")
+    set(SUPPORTS_ASAN ON)
+  else()
+    set(SUPPORTS_ASAN OFF)
+  endif()
+
+  # UndefinedBehaviorSanitizer support: Generally Clang/GNU, not typically on MSVC/Clang-cl
+  if((CMAKE_CXX_COMPILER_ID MATCHES ".*Clang.*" OR CMAKE_CXX_COMPILER_ID MATCHES ".*GNU.*") AND NOT MSVC)
     set(SUPPORTS_UBSAN ON)
   else()
     set(SUPPORTS_UBSAN OFF)
-  endif()
-
-  if((CMAKE_CXX_COMPILER_ID MATCHES ".*Clang.*" OR CMAKE_CXX_COMPILER_ID MATCHES ".*GNU.*") AND WIN32)
-    set(SUPPORTS_ASAN OFF)
-  else()
-    set(SUPPORTS_ASAN ON)
   endif()
 endmacro()
 
@@ -22,67 +24,25 @@ macro(myproject_setup_options)
   option(myproject_ENABLE_GPROF "Enable profiling with gprof or gperftools (RelWithDebInfo on Linux)" OFF)
   # for now disable global hardening, as it is not supported by all dependencies
   option(myproject_ENABLE_GLOBAL_HARDENING "Enable global hardening for all dependencies" OFF)
-  if(myproject_ENABLE_GLOBAL_HARDENING)
-    message(WARNING "Global hardening is enabled, but it is not supported by all dependencies.")
-  else()
-    message(STATUS "Global hardening is disabled")
-  endif()
-
-  # namely FUZZTEST
-  # cmake_dependent_option(
-  #   myproject_ENABLE_GLOBAL_HARDENING
-  #   "Attempt to push hardening options to built dependencies"
-  #   OFF
-  #   myproject_ENABLE_HARDENING
-  #   OFF)
 
   myproject_supports_sanitizers()
 
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-      set(DEFAULT_ASAN ON)
-    elseif(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-      # MSVC debug: enable AddressSanitizer by default.
-      set(DEFAULT_ASAN ON)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
-      # clang-cl debug: enable AddressSanitizer by default. We prefer to fix
-      # the CRT/runtime selection (force /MD) when ASan is enabled instead of
-      # disabling ASan by default. The logic later in myproject_global_options
-      # will force the MSVC runtime to the release DLL (/MD) when ASan is
-      # requested so ASan can link correctly on clang-cl.
-      set(DEFAULT_ASAN ON)
-    else()
-      set(DEFAULT_ASAN OFF)
-    endif()
-  else()
-    set(DEFAULT_ASAN OFF)
-  endif()
-
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND SUPPORTS_UBSAN)
-      set(DEFAULT_UBSAN ON)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
-      # clang-cl debug: enable UBSan by default.
-      set(DEFAULT_UBSAN ON)
-    else()
-      set(DEFAULT_UBSAN OFF)
-    endif()
-  else()
-    set(DEFAULT_UBSAN OFF)
-  endif()
-
-  # Thread sanitizer option overrides ASan and UBSan
   option(USE_THREAD_SANITIZER "Use ThreadSanitizer instead of Address/UndefinedBehavior Sanitizer" OFF)
-  if(USE_THREAD_SANITIZER)
+
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT USE_THREAD_SANITIZER)
+    set(DEFAULT_ASAN ${SUPPORTS_ASAN})
+    set(DEFAULT_UBSAN ${SUPPORTS_UBSAN})
+    set(DEFAULT_TSAN OFF)
+  elseif(USE_THREAD_SANITIZER)
     set(DEFAULT_ASAN OFF)
     set(DEFAULT_UBSAN OFF)
     set(DEFAULT_TSAN ON)
   else()
+    set(DEFAULT_ASAN OFF)
+    set(DEFAULT_UBSAN OFF)
     set(DEFAULT_TSAN OFF)
   endif()
 
-  # Keep all project options in one place to avoid duplicated defaults across
-  # top-level vs. subproject/packaging entry points.
   option(myproject_ENABLE_IPO "Enable IPO/LTO" ON)
   option(myproject_ENABLE_STATIC_ANALYZER "Enable Static Analyzer" OFF)
   option(myproject_WARNINGS_AS_ERRORS "Treat Warnings As Errors" OFF)
@@ -97,18 +57,6 @@ macro(myproject_setup_options)
   option(myproject_ENABLE_PCH "Enable precompiled headers" OFF)
   option(myproject_ENABLE_CACHE "Enable ccache" ON)
   option(myproject_ENABLE_IWYU "Enable IWYU" ON)
-
-  if(NOT
-     CMAKE_BUILD_TYPE
-     STREQUAL
-     "Debug")
-    if(myproject_ENABLE_SANITIZER_UNDEFINED)
-      message(STATUS "Disabling UBSan: this project enables it only for Debug builds.")
-    endif()
-    set(myproject_ENABLE_SANITIZER_UNDEFINED
-        OFF
-        CACHE BOOL "Enable undefined sanitizer" FORCE)
-  endif()
 
   if(NOT PROJECT_IS_TOP_LEVEL)
     mark_as_advanced(
@@ -140,117 +88,26 @@ macro(myproject_global_options)
   set(CMAKE_C_STANDARD 17)
   set(CMAKE_C_STANDARD_REQUIRED True)
 
-  # Ensure the MSVC runtime selection is consistent across all subprojects and
-  # third-party dependencies. Mismatched runtime libraries cause the
-  # _ITERATOR_DEBUG_LEVEL LNK2038 mismatch when linking libraries built with
-  # different CRT/debug settings. Set the runtime early so FetchContent and
-  # add_subdirectory() consumers inherit a consistent choice.
-  if(MSVC)
-    # Prefer forcing the release DLL runtime when AddressSanitizer is enabled
-    # on clang-cl Debug builds because ASan's runtime is incompatible with
-    # the MSVC debug DLL (/MDd). Set the cache value early so FetchContent
-    # and subprojects see the correct runtime during their configure step.
-    #
-    # NOTE: ExternalLib/CMakeLists may save/restore or re-force the cache
-    # variable when configuring FetchContent dependencies. To make the
-    # top-level intent authoritative, we only set/force the runtime here when
-    # ASan is active on clang-cl Debug builds. For non-ASan Debug builds we
-    # still force the debug DLL so behaviour stays consistent for developers.
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-       AND CMAKE_BUILD_TYPE STREQUAL "Debug"
-       AND myproject_ENABLE_SANITIZER_ADDRESS)
-      # clang-cl + ASan: use release DLL runtime (/MD) so ASan can link.
-      set(CMAKE_MSVC_RUNTIME_LIBRARY
-          "MultiThreadedDLL"
-          CACHE STRING "MSVC runtime library" FORCE)
-      message(
-        STATUS "clang-cl + ASan: forcing MSVC runtime selection to MultiThreadedDLL (/MD) to satisfy ASan requirements")
-    elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-      # Use the debug DLL runtime in Debug builds (equivalent to /MDd).
-      set(CMAKE_MSVC_RUNTIME_LIBRARY
-          "MultiThreadedDebugDLL"
-          CACHE STRING "MSVC runtime library" FORCE)
-    else()
-      # Use the release DLL runtime in non-Debug builds (equivalent to /MD).
-      set(CMAKE_MSVC_RUNTIME_LIBRARY
-          "MultiThreadedDLL"
-          CACHE STRING "MSVC runtime library" FORCE)
-    endif()
-  endif()
-
-  # Ensure iterator debugging configuration is consistent across all
-  # subprojects and dependencies. Some toolchains (for example clang-cl with
-  # AddressSanitizer) force the release runtime for Debug builds which sets
-  # the default iterator debug level to 0. To avoid LNK2038 mismatches, set
-  # an explicit _ITERATOR_DEBUG_LEVEL for all MSVC-like builds early.
-  if(MSVC)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-      if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND myproject_ENABLE_SANITIZER_ADDRESS)
-        # clang-cl + ASan: force iterator debug level 0 to match the forced
-        # release CRT used by AddressSanitizer on Windows.
-        add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0)
-      else()
-        # Normal Debug builds: enable iterator debugging.
-        add_compile_definitions(_ITERATOR_DEBUG_LEVEL=2)
-      endif()
-    else()
-      # Non-debug builds use iterator debug level 0.
-      add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0)
-    endif()
-  endif()
-
-  # Keep global module scanning disabled so vendored third-party targets are not
-  # forced into module dependency scanning. Individual targets can opt in.
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
-  message(STATUS "Global C++ modules scan disabled; project targets can opt in explicitly")
 
   # set build type specific flags
   if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DEBUG /Od /std:c++23preview")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /GL /std:c++23preview")
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    # https://gcc.gnu.org/onlinedocs/gcc/Debugging-Options.html
-    # https://gcc.gnu.org/onlinedocs/gcc/Option-Summary.html
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -std=c++23 -ggdb")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -std=c++23 -DNDEBUG")
-    # https://clang.llvm.org/docs/UsersManual.html
-    # this is the clang-cl case
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
-    # clang-cl accepts -W... style options. These prevent unknown -W... options
-    # (or their escalation to errors) from breaking the build when deps inject GCC-only flags.
-    set(_CLANG_CL_SAFE_WARNINGS
-        "-fcolor-diagnostics -Wno-error=unused-command-line-argument -Wno-error=character-conversion -Wno-unknown-warning-option -Wno-error=unknown-warning-option -Wno-unused-command-line-argument"
-    )
-    # Apply to both C and C++ flags (some deps add to C flags)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  /Od ${_CLANG_CL_SAFE_WARNINGS}")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2  -DNDEBUG ${_CLANG_CL_SAFE_WARNINGS}")
-    # https://clang.llvm.org/docs/ClangCommandLineReference.html
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  /Od")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2  -DNDEBUG")
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -ggdb -std=c++23 -fcolor-diagnostics") # -std=c++2a
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -ggdb -std=c++23 -fcolor-diagnostics")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG -std=c++23 -fcolor-diagnostics")
-    # -std=c++2a
   endif()
 
-  # control where the static and shared libraries are built so that on windows
-  # we don't need to tinker with the path to run the executable
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-     AND MSVC
-     AND CMAKE_BUILD_TYPE STREQUAL "Debug"
-     AND myproject_ENABLE_SANITIZER_ADDRESS)
-    # clang-cl AddressSanitizer does not support the Debug CRT (/MDd).
-    # Force the MSVC runtime to the release DLL (/MD) so the ASan runtime can
-    # link successfully. Set the cache value so subprojects and FetchContent
-    # consumers inherit the choice during their configure step.
-    set(CMAKE_MSVC_RUNTIME_LIBRARY
-        "MultiThreadedDLL"
-        CACHE STRING "MSVC runtime library" FORCE)
-    message(
-      STATUS "clang-cl + ASan: forcing MSVC runtime selection to MultiThreadedDLL (/MD) to satisfy ASan requirements")
-  endif()
 
   if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_LINK_WHAT_YOU_USE FALSE)
@@ -269,23 +126,15 @@ macro(myproject_global_options)
 
   if(myproject_ENABLE_HARDENING AND myproject_ENABLE_GLOBAL_HARDENING)
     include(cmake/Hardening.cmake)
-    if(NOT SUPPORTS_UBSAN
-       OR myproject_ENABLE_SANITIZER_UNDEFINED
-       OR myproject_ENABLE_SANITIZER_ADDRESS
-       OR myproject_ENABLE_SANITIZER_THREAD
-       OR myproject_ENABLE_SANITIZER_LEAK)
-      set(ENABLE_UBSAN_MINIMAL_RUNTIME FALSE)
-    else()
-      set(ENABLE_UBSAN_MINIMAL_RUNTIME TRUE)
-    endif()
+    # ENABLE_UBSAN_MINIMAL_RUNTIME is always set to FALSE below, so the preceding logic is redundant.
     set(ENABLE_UBSAN_MINIMAL_RUNTIME FALSE)
-    message("${myproject_ENABLE_HARDENING} ${ENABLE_UBSAN_MINIMAL_RUNTIME} ${myproject_ENABLE_SANITIZER_UNDEFINED}")
+
     myproject_enable_hardening(myproject_options ON ${ENABLE_UBSAN_MINIMAL_RUNTIME})
   endif()
 endmacro()
 
 macro(myproject_local_options)
-  message("In the beginning of the local options functions.")
+
   if(PROJECT_IS_TOP_LEVEL)
     include(cmake/StandardProjectSettings.cmake)
   endif()
@@ -304,7 +153,6 @@ macro(myproject_local_options)
     ""
     "")
 
-  # Profiling is opt-in and uses RelWithDebInfo as the build type.
   if(myproject_ENABLE_GPROF
      AND CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"
      AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -312,62 +160,16 @@ macro(myproject_local_options)
 
     find_library(PROFILER_LIB profiler)
 
-    if(PROFILER_LIB)
-      message(STATUS "Enabling CPU profiling with gperftools (libprofiler)")
-      message(STATUS "Found libprofiler: ${PROFILER_LIB}")
-      target_link_libraries(myproject_options INTERFACE -lprofiler)
-    else()
-      # sudo apt install libgoogle-perftools-dev google-perftools
-      message(WARNING "libprofiler not found, falling back to gprof (-pg)")
-      target_compile_options(myproject_options INTERFACE -pg)
-      target_link_libraries(myproject_options INTERFACE -pg)
-    endif()
-
   elseif(myproject_ENABLE_GPROF)
-    message(
-      STATUS "Profiling requested, but supported only on non-Windows GNU/Clang with -DCMAKE_BUILD_TYPE=RelWithDebInfo")
+
   endif()
 
   if(myproject_DISABLE_EXCEPTIONS)
-    if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-      # When Rust features are enabled we need standard exception unwind
-      # semantics for some C++ consumers (Rust cxx bridge). In that case
-      # avoid adding the MSVC flag that disables exceptions (/EHs-) so the
-      # later RUST_FEATURES block can enforce /EHsc consistently.
-      if(NOT (DEFINED RUST_FEATURES) OR NOT RUST_FEATURES)
-        target_compile_options(myproject_options INTERFACE /EHs-) # Disable exceptions
-      else()
-        message(STATUS "RUST_FEATURES=ON on MSVC: keeping exceptions enabled to satisfy Rust integration")
-      endif()
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
-      message(STATUS "Using clang-cl and disable exceptions with /GX-")
-      if(NOT (DEFINED RUST_FEATURES) OR NOT RUST_FEATURES)
-        target_compile_options(myproject_options INTERFACE /EHs-) # Disable exceptions
-      else()
-        message(STATUS "RUST_FEATURES=ON with clang-cl: keeping exceptions enabled to satisfy Rust integration")
-      endif()
-    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-      target_compile_options(myproject_options INTERFACE -fno-exceptions)
-    else()
-      message(WARNING "Disabling exceptions is not supported for this compiler.")
-    endif()
+
   else()
-    if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-      target_compile_options(myproject_options INTERFACE /EHs) # Enable exceptions
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
-      target_compile_options(myproject_options INTERFACE /EHs) # Enable exceptions
-    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-      target_compile_options(myproject_options INTERFACE -fexceptions)
-    else()
-      message(WARNING "Enabling exceptions is not supported for this compiler.")
-    endif()
+
   endif()
 
-  # If Rust features are enabled, ensure exception handling is enabled for
-  # C++ consumers. The cxx crate and some imported C++ dependencies expect
-  # standard exception unwind semantics to be available; forcing /EHsc for
-  # the interface target avoids mismatches between library builds that would
-  # otherwise cause link-time unresolved externals on MSVC toolchains.
   if(RUST_FEATURES AND MSVC)
     target_compile_options(myproject_options INTERFACE /EHsc)
   endif()
@@ -432,15 +234,7 @@ macro(myproject_local_options)
 
   if(myproject_ENABLE_HARDENING AND NOT myproject_ENABLE_GLOBAL_HARDENING)
     include(cmake/Hardening.cmake)
-    if(NOT SUPPORTS_UBSAN
-       OR myproject_ENABLE_SANITIZER_UNDEFINED
-       OR myproject_ENABLE_SANITIZER_ADDRESS
-       OR myproject_ENABLE_SANITIZER_THREAD
-       OR myproject_ENABLE_SANITIZER_LEAK)
-      set(ENABLE_UBSAN_MINIMAL_RUNTIME FALSE)
-    else()
-      set(ENABLE_UBSAN_MINIMAL_RUNTIME TRUE)
-    endif()
+    # ENABLE_UBSAN_MINIMAL_RUNTIME is always set to FALSE below, so the preceding logic is redundant.
     set(ENABLE_UBSAN_MINIMAL_RUNTIME FALSE)
     myproject_enable_hardening(myproject_options OFF ${ENABLE_UBSAN_MINIMAL_RUNTIME})
   endif()
@@ -449,38 +243,10 @@ macro(myproject_local_options)
      CMAKE_BUILD_TYPE
      STREQUAL
      "Release")
-    if(myproject_ENABLE_IWYU)
-      if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        find_program(IWYU_PATH NAMES include-what-you-use iwyu)
-        if(IWYU_PATH)
-          set_target_properties(myproject_options PROPERTIES CXX_INCLUDE_WHAT_YOU_USE "${IWYU_PATH}")
-          message(STATUS "Include-What-You-Use found: ${IWYU_PATH}")
-        else()
-          message(STATUS "Include-What-You-Use not found!")
-        endif()
-      endif()
-    endif()
 
     include(cmake/Doxygen.cmake)
     enable_doxygen()
 
-    if(myproject_ENABLE_STATIC_ANALYZER)
-      if(MSVC)
-        target_compile_options(${project_name} INTERFACE /analyze)
-        target_link_libraries(${project_name} INTERFACE /analyze)
-      elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_compile_options(myproject_options INTERFACE -fanalyzer)
-        target_link_libraries(myproject_options INTERFACE -fanalyzer)
-        # https://clang.llvm.org/docs/UsersManual.html
-      elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
-        #target_compile_options(myproject_options INTERFACE --analyze)
-        #target_link_libraries(myproject_options INTERFACE --analyze)
-        # https://clang.llvm.org/docs/ClangCommandLineReference.html
-      elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        #target_compile_options(myproject_options INTERFACE --analyze --analyzer-output html)
-        #target_link_libraries(myproject_options INTERFACE --analyze --analyzer-output html)
-      endif()
-    endif()
   endif()
 
   include(cmake/Speedup.cmake)

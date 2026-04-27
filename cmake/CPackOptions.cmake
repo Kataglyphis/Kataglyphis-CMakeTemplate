@@ -3,7 +3,7 @@ set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
 # Experience shows that explicit package naming can help make it easier to sort
 # out potential ABI related issues before they start, while helping you
 # track a build to a specific GIT SHA
-# Architektur bestimmen (normalisiert), damit sie in den Paketnamen aufgenommen werden kann.
+# Determine (normalized) architecture for inclusion in package names.
 if(NOT DEFINED PROJECT_ARCH)
   if(CMAKE_SYSTEM_PROCESSOR)
     set(PROJECT_ARCH "${CMAKE_SYSTEM_PROCESSOR}")
@@ -49,17 +49,17 @@ set(ENABLE_WIX_PACKAGING
     OFF
     CACHE BOOL "Enable WiX MSI package generation on Windows")
 
-# Windows (egal ob MSVC oder Clang/clang-cl) -> NSIS + WIX Binaries erzeugen
+# Windows (MSVC or Clang/clang-cl) -> Generate NSIS + WIX Binaries
 if(WIN32)
-  # Standard: NSIS + ZIP. WiX kann optional über ENABLE_WIX_PACKAGING aktiviert werden.
+  # Default: NSIS + ZIP. WiX can optionally be enabled via ENABLE_WIX_PACKAGING.
   set(CPACK_GENERATOR "NSIS;ZIP")
   if(ENABLE_WIX_PACKAGING)
     set(CPACK_GENERATOR "${CPACK_GENERATOR};WIX")
   endif()
-  # Quellpaket-Format für Windows (optional, sonst ZIP/TGZ). Kann bei Bedarf angepasst werden.
+  # Source package format for Windows (optional, otherwise ZIP/TGZ). Can be adjusted if needed.
   set(CPACK_SOURCE_GENERATOR "ZIP")
 
-  # Gemeinsame Einstellungen für NSIS
+  # Common NSIS settings
   set(CPACK_NSIS_WELCOME_TITLE "Get ready for epic graphics.")
   set(CPACK_NSIS_FINISH_TITLE "Now you are ready to render :)")
   set(CPACK_NSIS_MUI_HEADERIMAGE ${CMAKE_CURRENT_SOURCE_DIR}/images/Engine_logo.bmp)
@@ -94,20 +94,20 @@ if(WIN32)
   ")
 
   if(ENABLE_WIX_PACKAGING)
-    # WiX spezifische Einstellungen
-    # WICHTIG: Diese Upgrade GUID MUSS STABIL BLEIBEN, sonst funktionieren Upgrades/Deinstallationen nicht korrekt.
-    # Falls bereits ein Wert existiert, NICHT ändern. Bei erstmaliger Einführung einmalig generieren.
+    # WiX specific settings
+    # IMPORTANT: This Upgrade GUID MUST REMAIN STABLE, otherwise upgrades/uninstallations will not work correctly.
+    # If a value already exists, DO NOT change it. Generate once upon initial introduction.
     set(CPACK_WIX_VERSION 4)
     set(CPACK_WIX_UPGRADE_GUID "A8B86F5E-5B3E-4C38-9D7F-4F4923F9E5C2")
     set(CPACK_WIX_PRODUCT_ICON ${CMAKE_CURRENT_SOURCE_DIR}/images/faviconNew.ico)
     set(CPACK_WIX_PROGRAM_MENU_FOLDER "${PROJECT_NAME}")
     set(CPACK_WIX_USE_LONG_FILE_NAMES ON)
-    # Optional eigenes Banner/Logo (muss BMP 493x58 bzw. 493x312 sein, wenn gesetzt)
+    # Optional custom banner/logo (must be BMP 493x58 or 493x312, if set)
     # set(CPACK_WIX_UI_BANNER ${CMAKE_CURRENT_SOURCE_DIR}/images/your_banner.bmp)
     # set(CPACK_WIX_UI_DIALOG  ${CMAKE_CURRENT_SOURCE_DIR}/images/your_dialog.bmp)
 
-    # License RTF: WiX benötigt echtes RTF. Falls keine LICENSE.rtf vorhanden ist, erzeugen wir eine minimale Dummy-Version,
-    # damit der Generator nicht mit 'unsupported WiX License file extension' abbricht (ein häufiger Fall auf CI).
+    # License RTF: WiX requires actual RTF. If no LICENSE.rtf is present, we generate a minimal dummy version,
+    # so that the generator does not abort with 'unsupported WiX License file extension' (a common case on CI).
     set(_WIX_LICENSE_RTF "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.rtf")
     if(NOT EXISTS "${_WIX_LICENSE_RTF}")
       file(
@@ -117,7 +117,7 @@ if(WIN32)
     endif()
     set(CPACK_WIX_LICENSE_RTF "${_WIX_LICENSE_RTF}")
 
-    # Beispiel für zusätzliche Einträge in ARP (Add/Remove Programs) - optional
+    # Example for additional entries in ARP (Add/Remove Programs) - optional
     set(CPACK_WIX_PROPERTY_ARPURLINFOABOUT "${CMAKE_PROJECT_HOMEPAGE_URL}")
     set(CPACK_WIX_PROPERTY_ARPHELPLINK "${CMAKE_PROJECT_HOMEPAGE_URL}")
   endif()
@@ -126,18 +126,18 @@ if(WIN32)
   set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_NAME}")
 
 else()
-  # Nicht Windows -> Linux / andere UNIX Systeme
-  # Source bleibt TGZ; zusätzlich binärer TGZ + (unter Debian/Ubuntu) DEB
+  # Not Windows -> Linux / other UNIX systems
+  # Source remains TGZ; additionally binary TGZ + (on Debian/Ubuntu) DEB
   set(CPACK_SOURCE_GENERATOR "TGZ")
   if(UNIX AND NOT APPLE)
     # Binaries als TGZ + DEB ausgeben
     set(CPACK_GENERATOR "TGZ;DEB")
-    # Debian/Ubuntu spezifische Felder
+    # Debian/Ubuntu specific fields
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${AUTHOR}")
     set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
     set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
-    # Architektur automatisch ermitteln
-    # Debian-Architektur (Mapping auf offizielle Deb-Namen)
+    # Automatically detect architecture
+    # Debian architecture (mapping to official Deb names)
     if(NOT DEFINED CPACK_DEBIAN_PACKAGE_ARCHITECTURE)
       if(_arch_lc STREQUAL "x86_64" OR _arch_lc STREQUAL "amd64")
         set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
@@ -147,9 +147,9 @@ else()
         set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${_arch_lc}")
       endif()
     endif()
-    # Abhängigkeiten (einfach gehalten; kann verfeinert werden)
+    # Dependencies (kept simple; can be refined)
     set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.31)")
-    # Automatisches Shlib-Skipping vermeiden falls nötig
+    # Avoid automatic shlib skipping if necessary
     set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
     if(CPACK_ENABLE_APPIMAGE)
@@ -193,7 +193,7 @@ else()
 
         if(_APPIMAGETOOL_URL)
           if(NOT EXISTS "${_APPIMAGETOOL_LOCAL}")
-            message(STATUS "appimagetool nicht gefunden. Lade ${_APPIMAGETOOL_URL}")
+            message(STATUS "appimagetool not found. Downloading ${_APPIMAGETOOL_URL}")
             file(
               DOWNLOAD "${_APPIMAGETOOL_URL}" "${_APPIMAGETOOL_LOCAL}"
               SHOW_PROGRESS
@@ -208,9 +208,7 @@ else()
                _APPIMAGETOOL_DOWNLOAD_CODE
                EQUAL
                0)
-              message(
-                WARNING
-                  "AppImage aktiviert, aber appimagetool Download fehlgeschlagen: ${_APPIMAGETOOL_DOWNLOAD_STATUS}")
+              message(WARNING "AppImage enabled, but appimagetool download failed: ${_APPIMAGETOOL_DOWNLOAD_STATUS}")
             endif()
           endif()
 

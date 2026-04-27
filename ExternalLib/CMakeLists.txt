@@ -70,27 +70,12 @@ FetchContent_MakeAvailable(GSL)
 ## Save/restore BUILD_TESTING (avoid building Abseil tests) and temporarily
 ## adjust C/C++ global flags if the project requests exceptions-disabled
 ## builds (myproject_DISABLE_EXCEPTIONS).
-if(DEFINED BUILD_TESTING)
-  set(_kataglyphis_saved_BUILD_TESTING "${BUILD_TESTING}")
-else()
-  set(_kataglyphis_saved_BUILD_TESTING "")
-endif()
 
-set(BUILD_TESTING OFF)
 
 # If the top-level project requested exceptions to be disabled, propagate that
 # policy to Abseil's configure-time checks so Abseil's config.h is generated
 # with ABSL_HAVE_EXCEPTIONS unset.
-if(DEFINED myproject_DISABLE_EXCEPTIONS AND myproject_DISABLE_EXCEPTIONS)
-  message(STATUS "Configuring Abseil with exceptions disabled to match project policy")
-  if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-    set(_absl_extra_flags "/EHs-")
-  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
-    set(_absl_extra_flags "/EHs-")
-  elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    set(_absl_extra_flags "-fno-exceptions")
-  endif()
-endif()
+
 
 FetchContent_Declare(
   abseil-cpp
@@ -103,26 +88,9 @@ FetchContent_Declare(
 ## Use FetchContent_MakeAvailable and temporarily force the global C/CXX
 ## flags in the cache so Abseil's configure-time detection sees the
 ## exception configuration.
-set(_kataglyphis_saved_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-set(_kataglyphis_saved_CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
-## Ensure MSVC runtime selection is visible to Abseil at configure time.
-if(MSVC)
-  if(DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
-    set(_kataglyphis_saved_CMAKE_MSVC_RUNTIME_LIBRARY "${CMAKE_MSVC_RUNTIME_LIBRARY}")
-  else()
-    set(_kataglyphis_saved_CMAKE_MSVC_RUNTIME_LIBRARY "")
-  endif()
 
-  set(CMAKE_MSVC_RUNTIME_LIBRARY "${CMAKE_MSVC_RUNTIME_LIBRARY}" CACHE STRING "MSVC runtime library" FORCE)
-endif()
 
-if(_absl_extra_flags)
-  # Force cached values so FetchContent configures Abseil with these flags.
-  # We only do this during the MakeAvailable call.
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${_absl_extra_flags}" CACHE STRING "(temp) CXX flags for Abseil configure" FORCE)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_absl_extra_flags}" CACHE STRING "(temp) C flags for Abseil configure" FORCE)
-endif()
 
 FetchContent_MakeAvailable(abseil-cpp)
 
@@ -131,27 +99,7 @@ FetchContent_MakeAvailable(abseil-cpp)
 include_directories(${abseil-cpp_SOURCE_DIR})
 
 # Restore previous flags after Abseil has been configured
-set(CMAKE_CXX_FLAGS "${_kataglyphis_saved_CMAKE_CXX_FLAGS}" CACHE STRING "restored CXX flags" FORCE)
-set(CMAKE_C_FLAGS "${_kataglyphis_saved_CMAKE_C_FLAGS}" CACHE STRING "restored C flags" FORCE)
 
-# Restore previously-saved MSVC runtime selection if we forced it above.
-if(MSVC)
-  if(_kataglyphis_saved_CMAKE_MSVC_RUNTIME_LIBRARY)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "${_kataglyphis_saved_CMAKE_MSVC_RUNTIME_LIBRARY}" CACHE STRING "restored MSVC runtime library" FORCE)
-  else()
-    # Do not unset the cache here. If no saved value was recorded assume the
-    # top-level cache (possibly forced for ASan) is authoritative and leave it
-    # untouched so subprojects continue to observe the intended runtime.
-    message(STATUS "No saved MSVC runtime to restore; preserving top-level CMAKE_MSVC_RUNTIME_LIBRARY: ${CMAKE_MSVC_RUNTIME_LIBRARY}")
-  endif()
-endif()
-
-# Restore previous BUILD_TESTING value so we don't change the outer project's setting
-if(_kataglyphis_saved_BUILD_TESTING)
-  set(BUILD_TESTING ${_kataglyphis_saved_BUILD_TESTING})
-else()
-  unset(BUILD_TESTING)
-endif()
 ## -------------------------------------------------------------------------
 
 if(myproject_DISABLE_EXCEPTIONS)
@@ -320,34 +268,7 @@ endif()
 # Ensure Corrosion and cxxbridge are available when Rust features are enabled.
 # The real project configures this at top-level; when working from this
 # template enable the same behaviour here so rust integration works.
-if(RUST_FEATURES)
-  if(WIN32)
-    # Use cargo wrapper script that retries transient Windows file-lock failures
-    set(Rust_CARGO
-        "${CMAKE_SOURCE_DIR}/scripts/windows/cargo-retry.cmd"
-        CACHE FILEPATH "Cargo wrapper used to retry transient Windows file-lock failures" FORCE)
-  endif()
 
-  FetchContent_Declare(
-    Corrosion
-    GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
-    GIT_TAG master)
-  FetchContent_MakeAvailable(Corrosion)
-
-  # Find cxxbridge/cargo in common cargo locations and attempt to install
-  # cxxbridge-cmd via cargo if it is missing. This mirrors the behaviour of
-  # the working repository to reduce integration diffs.
-  find_program(CXXBRIDGE cxxbridge PATHS "$ENV{HOME}/.cargo/bin/" "$ENV{USERPROFILE}/.cargo/bin/")
-  if(CXXBRIDGE STREQUAL "CXXBRIDGE-NOTFOUND")
-    message(STATUS "Could not find cxxbridge, trying to install with `cargo install cxxbridge-cmd'")
-    find_program(CARGO cargo PATHS "$ENV{HOME}/.cargo/bin/" "$ENV{USERPROFILE}/.cargo/bin/")
-    if(CARGO STREQUAL "CARGO-NOTFOUND")
-      message(FATAL_ERROR "Requires cargo available in path, install via rustup https://rustup.rs/")
-    endif()
-    execute_process(COMMAND ${CARGO} install cxxbridge-cmd)
-    find_program(CXXBRIDGE cxxbridge PATHS "$ENV{HOME}/.cargo/bin/" "$ENV{USERPROFILE}/.cargo/bin/")
-  endif()
-endif()
 
 # Enforce module-only usage: make the legacy nlohmann_json interface target
 # point at the module provider's include directories if needed, but avoid

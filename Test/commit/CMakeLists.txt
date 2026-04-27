@@ -66,9 +66,9 @@ target_link_libraries(
 
 kataglyphis_configure_gtest_discovery(${COMMIT_TEST_SUITE})
 
-# if(RUST_FEATURES)
-#   target_link_libraries(${COMMIT_TEST_SUITE} PUBLIC rusty_code)
-# endif()
+if(RUST_FEATURES)
+  target_link_libraries(${COMMIT_TEST_SUITE} PUBLIC rusty_code)
+endif()
 
 # disable all warnings for our test suite
 if(MSVC)
