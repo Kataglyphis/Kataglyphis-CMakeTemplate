@@ -26,27 +26,6 @@ myproject_configure_rust()
 
 myproject_local_options()
 
-include(cmake/SystemLibDependencies.cmake)
-
-if(myproject_ENABLE_SANITIZER_ADDRESS)
-  if(MSVC)
-    # Keep STL annotation settings consistent for all targets (including gtest)
-    # to avoid LNK2038 mismatches with AddressSanitizer builds.
-    add_compile_definitions(_DISABLE_VECTOR_ANNOTATION _DISABLE_STRING_ANNOTATION)
-    if(NOT
-       CMAKE_CXX_COMPILER_ID
-       STREQUAL
-       "Clang")
-      add_compile_options(/fsanitize=address /Zi)
-      add_link_options(/INCREMENTAL:NO)
-    endif()
-  else()
-    add_compile_options(-fsanitize=address)
-    add_link_options(-fsanitize=address)
-  endif()
-
-endif()
-
 ## Coverage instrumentation is applied per-target by
 ## myproject_enable_coverage() in cmake/Tests.cmake (invoked from
 ## cmake/ProjectOptions.cmake). Avoid global add_compile_options/add_link_options
@@ -123,9 +102,11 @@ if(BUILD_TESTING)
     if(NOT USE_THREAD_SANITIZER)
       add_subdirectory(Test/fuzz)
     endif()
-  elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    add_subdirectory(Test/perf)
   endif()
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+  add_subdirectory(Test/perf)
 endif()
 
 # install(

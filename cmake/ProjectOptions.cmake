@@ -1,21 +1,6 @@
 include(CMakeDependentOption)
 include(CheckCXXCompilerFlag)
-
-macro(myproject_supports_sanitizers)
-  # AddressSanitizer support: Generally Clang/GNU, or Clang-cl (MSVC with Clang frontend)
-  if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang.*" OR CMAKE_CXX_COMPILER_ID MATCHES ".*GNU.*")
-    set(SUPPORTS_ASAN ON)
-  else()
-    set(SUPPORTS_ASAN OFF)
-  endif()
-
-  # UndefinedBehaviorSanitizer support: Generally Clang/GNU, not typically on MSVC/Clang-cl
-  if((CMAKE_CXX_COMPILER_ID MATCHES ".*Clang.*" OR CMAKE_CXX_COMPILER_ID MATCHES ".*GNU.*") AND NOT MSVC)
-    set(SUPPORTS_UBSAN ON)
-  else()
-    set(SUPPORTS_UBSAN OFF)
-  endif()
-endmacro()
+include(${CMAKE_SOURCE_DIR}/cmake/CompilerDetection.cmake)
 
 macro(myproject_setup_options)
   option(myproject_ENABLE_HARDENING "Enable hardening" ON)
@@ -81,17 +66,16 @@ endmacro()
 
 macro(myproject_global_options)
 
-  # specify the C/C++ standard
+  find_package(Threads REQUIRED)
+
   set(CMAKE_CXX_STANDARD 23)
   set(CMAKE_CXX_STANDARD_REQUIRED True)
 
   set(CMAKE_C_STANDARD 17)
   set(CMAKE_C_STANDARD_REQUIRED True)
 
-  set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
-
   # set build type specific flags
-  if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DEBUG /Od /std:c++23preview")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /GL /std:c++23preview")
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -103,6 +87,10 @@ macro(myproject_global_options)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -ggdb -std=c++23 -fcolor-diagnostics")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG -std=c++23 -fcolor-diagnostics")
+  endif()
+
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
+    set(CMAKE_CXX_SCAN_FOR_MODULES ON)
   endif()
 
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
@@ -122,16 +110,49 @@ macro(myproject_global_options)
     endif()
   endif()
 
-  myproject_supports_sanitizers()
-
-  if(myproject_ENABLE_HARDENING AND myproject_ENABLE_GLOBAL_HARDENING)
-    include(cmake/Hardening.cmake)
-    # ENABLE_UBSAN_MINIMAL_RUNTIME is always set to FALSE below, so the preceding logic is redundant.
-    set(ENABLE_UBSAN_MINIMAL_RUNTIME FALSE)
-
-    myproject_enable_hardening(myproject_options ON ${ENABLE_UBSAN_MINIMAL_RUNTIME})
-  endif()
 endmacro()
+
+function(myproject_enable_cache)
+  # Compiler cache configuration for improved build performance.
+  # To maximize cache hit rates:
+  #   - Keep build directories stable across builds
+  #   - Use consistent compiler versions
+  #   - Avoid changing CMAKE_BUILD_TYPE frequently (Debug/Release have different flags)
+  #   - For sccache on Windows: set SCCACHE_CACHE_SIZE (e.g., 10GiB)
+  #   - For sccache: consider SCCACHE_DIRECT=1 to skip preprocessor for C/C++
+  set(COMPILER_CACHE "" CACHE STRING "Compiler cache to be used (ccache or sccache; leave empty to disable)")
+  if(MSVC AND WIN32)
+    set(_allowed_values sccache)
+  else()
+    set(_allowed_values ccache sccache)
+  endif()
+  set_property(CACHE "COMPILER_CACHE" PROPERTY STRINGS ${_allowed_values})
+  if(NOT "${COMPILER_CACHE}" STREQUAL "")
+    list(FIND _allowed_values "${COMPILER_CACHE}" _idx)
+    if(_idx EQUAL -1)
+      message(FATAL_ERROR "Invalid value for compiler_cache: '${COMPILER_CACHE}'. Supported values: ${_allowed_values}")
+    endif()
+    find_program(CACHE_BINARY NAMES "${COMPILER_CACHE}" DOC "Path to the compiler cache executable")
+    if(CACHE_BINARY AND NOT CACHE_BINARY STREQUAL "${PATH}-NOTFOUND")
+      message(STATUS "${COMPILER_CACHE} found at ${CACHE_BINARY}. Enabling compiler cache.")
+      set(CMAKE_C_COMPILER_LAUNCHER "${CACHE_BINARY}" CACHE STRING "C compiler cache launcher")
+      set(CMAKE_CXX_COMPILER_LAUNCHER "${CACHE_BINARY}" CACHE STRING "CXX compiler cache launcher")
+      if(MSVC)
+        if(POLICY CMP0141)
+          cmake_policy(SET CMP0141 NEW)
+          set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded CACHE STRING "MSVC debug info format (use /Z7)")
+          message(STATUS "Configured MSVC to embed PDB info (/Z7) for cache consistency.")
+        else()
+          string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+          string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+          message(STATUS "Replaced /Zi with /Z7 in debug flags for cache consistency.")
+        endif()
+      endif()
+    else()
+      message(WARNING "${COMPILER_CACHE} was requested but not found. Skipping cache integration.")
+    endif()
+  endif()
+endfunction()
 
 macro(myproject_local_options)
 
@@ -152,23 +173,6 @@ macro(myproject_local_options)
     ""
     ""
     "")
-
-  if(myproject_ENABLE_GPROF
-     AND CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"
-     AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-     AND NOT WIN32)
-
-    find_library(PROFILER_LIB profiler)
-
-  elseif(myproject_ENABLE_GPROF)
-
-  endif()
-
-  if(myproject_DISABLE_EXCEPTIONS)
-
-  else()
-
-  endif()
 
   if(RUST_FEATURES AND MSVC)
     target_compile_options(myproject_options INTERFACE /EHsc)
@@ -200,7 +204,6 @@ macro(myproject_local_options)
   endif()
 
   if(myproject_ENABLE_CACHE)
-    include(cmake/Cache.cmake)
     myproject_enable_cache()
   endif()
 
@@ -226,17 +229,11 @@ macro(myproject_local_options)
 
   if(myproject_WARNINGS_AS_ERRORS)
     check_cxx_compiler_flag("-Wl,--fatal-warnings" LINKER_FATAL_WARNINGS)
-    if(LINKER_FATAL_WARNINGS)
-      # This is not working consistently, so disabling for now
-      # target_link_options(myproject_options INTERFACE -Wl,--fatal-warnings)
-    endif()
   endif()
 
   if(myproject_ENABLE_HARDENING AND NOT myproject_ENABLE_GLOBAL_HARDENING)
     include(cmake/Hardening.cmake)
-    # ENABLE_UBSAN_MINIMAL_RUNTIME is always set to FALSE below, so the preceding logic is redundant.
-    set(ENABLE_UBSAN_MINIMAL_RUNTIME FALSE)
-    myproject_enable_hardening(myproject_options OFF ${ENABLE_UBSAN_MINIMAL_RUNTIME})
+    myproject_enable_hardening(myproject_options OFF FALSE)
   endif()
 
   if(NOT
@@ -249,6 +246,12 @@ macro(myproject_local_options)
 
   endif()
 
-  include(cmake/Speedup.cmake)
+  include(ProcessorCount)
+  ProcessorCount(N)
+  if(NOT N EQUAL 0)
+    set(CTEST_BUILD_FLAGS -j${N})
+    set(ctest_test_args ${ctest_test_args} PARALLEL_LEVEL ${N})
+    set(ENV{CMAKE_BUILD_PARALLEL_LEVEL} "${N}")
+  endif()
 
 endmacro()

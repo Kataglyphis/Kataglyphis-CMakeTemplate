@@ -1,5 +1,6 @@
 import kataglyphis_core;
 
+// NOLINTBEGIN(misc-use-internal-linkage,cppcoreguidelines-avoid-non-const-global-variables,modernize-use-trailing-return-type)
 // Declaration of the C-linkage wrapper implemented in Src/flags.cc. Placing
 // the declaration at global scope avoids declaring `main` with extern "C"
 // linkage (which triggers a warning) and avoids putting linkage-specifiers
@@ -15,3 +16,4 @@ int main(int argc, char** argv)
 
     return kataglyphis::run();
 }
+// NOLINTEND(misc-use-internal-linkage,cppcoreguidelines-avoid-non-const-global-variables,modernize-use-trailing-return-type)

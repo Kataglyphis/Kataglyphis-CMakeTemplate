@@ -17,17 +17,8 @@ file(GLOB_RECURSE KataglyphisCppProject_COMMIT_TEST_FILTER "*.cpp")
 
 message("Commit test filter is: ${KataglyphisCppProject_COMMIT_TEST_FILTER}")
 
-# kataglyphis_collect_project_sources(KataglyphisCppProject_SOURCES KataglyphisCppProject_HEADERS ${PROJECT_SRC_DIR})
-
-# if(RUST_FEATURES)
-#   corrosion_import_crate(MANIFEST_PATH ${PROJECT_SRC_DIR}rusty_code/Cargo.toml)
-#   corrosion_add_cxxbridge(rusty_bridge_commit CRATE rusty_code FILES lib.rs)
-#   add_dependencies(${COMMIT_TEST_SUITE} rusty_bridge)
-# endif()
-
 add_executable(${COMMIT_TEST_SUITE} ${KataglyphisCppProject_COMMIT_TEST_FILTER})
 set_target_properties(${COMMIT_TEST_SUITE} PROPERTIES CXX_SCAN_FOR_MODULES ON)
-# kataglyphis_add_config_module_to_target(${COMMIT_TEST_SUITE} ${PROJECT_SRC_DIR})
 
 if(RUST_FEATURES)
   target_compile_definitions(${COMMIT_TEST_SUITE} PRIVATE USE_RUST=1)
@@ -39,16 +30,6 @@ if(NOT MSVC)
   target_compile_definitions(${COMMIT_TEST_SUITE} PRIVATE RELATIVE_RESOURCE_PATH="/../../../Resources/"
                                                           RELATIVE_INCLUDE_PATH="/../../../Src/")
 endif()
-
-# target_sources(
-#   ${COMMIT_TEST_SUITE}
-#   PUBLIC ${KataglyphisCppProject_COMMIT_TEST_FILTER} ${KataglyphisCppProject_SOURCES}
-#   PUBLIC FILE_SET
-#          HEADERS
-#          BASE_DIRS
-#          ${PROJECT_INCLUDE_DIR}
-#          FILES
-#          ${KataglyphisCppProject_HEADERS})
 
 target_link_libraries(
   ${COMMIT_TEST_SUITE}

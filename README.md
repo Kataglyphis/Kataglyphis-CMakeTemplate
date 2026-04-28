@@ -300,9 +300,57 @@ Jonas Heinle - [@Cataglyphis_](https://twitter.com/Cataglyphis_) - jonasheinle@g
 * [Morgan McGuire, Computer Graphics Archive, July 2017 (https://casual-effects.com/data)](http://casual-effects.com/data/)
 * [Viking room](https://sketchfab.com/3d-models/viking-room-a49f1b8e4f5c4ecf9e1fe7d81915ad38) -->
 
-## Literature 
+## Windows Build Scripts
 
-Some very helpful literature, tutorials, etc. 
+PowerShell scripts for building and running the project on Windows (clang-cl compiler).
+
+### Build
+
+Build using the `Build-Windows.ps1` script from the `scripts/Windows` directory:
+
+```powershell
+.\scripts\Windows\Build-Windows.ps1 -Configurations 'clangcl-debug'
+.\scripts\Windows\Build-Windows.ps1 -Configurations 'clangcl-profile'
+.\scripts\Windows\Build-Windows.ps1 -Configurations 'clangcl-release'
+```
+
+Or build multiple configurations at once:
+
+```powershell
+.\scripts\Windows\Build-Windows.ps1 -Configurations 'clangcl-debug,clangcl-profile,clangcl-release'
+```
+
+### Run
+
+| Script | Purpose | Build Type |
+|--------|---------|------------|
+| `Run-Debug.ps1` | Runs `compileTestSuite.exe` and `commitTestSuite.exe` | clangcl-debug |
+| `Run-Profile.ps1` | Runs `perfTestSuite.exe` with benchmark output | clangcl-profile |
+| `Run-Release.ps1` | Runs the release executable | clangcl-release |
+
+```powershell
+# Run tests from debug build
+.\scripts\Windows\Run-Debug.ps1
+
+# Skip tests (just verify executables exist)
+.\scripts\Windows\Run-Debug.ps1 -SkipTests
+
+# Run benchmarks from profile build
+.\scripts\Windows\Run-Profile.ps1
+
+# Run release executable
+.\scripts\Windows\Run-Release.ps1
+
+# Run with custom executable name and arguments
+.\scripts\Windows\Run-Release.ps1 -ExecutableName "MyApp.exe" --arg1 value
+
+# Override default build directory
+.\scripts\Windows\Run-Debug.ps1 -BuildDir "D:\custom\path\build"
+```
+
+## Literature
+
+Some very helpful literature, tutorials, etc.
 
 Rust
 * [rust-lang](https://www.rust-lang.org/)

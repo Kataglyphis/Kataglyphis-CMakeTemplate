@@ -6,6 +6,12 @@ use std::process::Command;
 
 
 fn main() {
+    let is_ci = env::var("CI").is_ok();
+
+    if is_ci {
+        println!("cargo:warning=build.rs: CI environment detected - emitting diagnostic info");
+    }
+
     // Print a selected set of environment variables so the build log records
     // the values Corrosion/CMake may have set for the crate build.
     let keys = [
@@ -23,19 +29,25 @@ fn main() {
 
     for k in &keys {
         let v = env::var(k).unwrap_or_else(|_| "<unset>".to_string());
-        println!("cargo:warning=build.rs: {}={}", k, v);
+        if is_ci {
+            println!("cargo:warning=build.rs: {}={}", k, v);
+        }
     }
 
     // Capture rustc/cargo versions when available; these are useful in CI
     // diagnostics. We only query --version to avoid invoking nested builds.
     if let Ok(out) = Command::new("rustc").arg("--version").output() {
         if let Ok(s) = String::from_utf8(out.stdout) {
-            println!("cargo:warning=build.rs: rustc version: {}", s.trim());
+            if is_ci {
+                println!("cargo:warning=build.rs: rustc version: {}", s.trim());
+            }
         }
     }
     if let Ok(out) = Command::new("cargo").arg("--version").output() {
         if let Ok(s) = String::from_utf8(out.stdout) {
-            println!("cargo:warning=build.rs: cargo version: {}", s.trim());
+            if is_ci {
+                println!("cargo:warning=build.rs: cargo version: {}", s.trim());
+            }
         }
     }
 
@@ -54,8 +66,12 @@ fn main() {
             .std("c++17")
             .compile("rusty_code");
     } else {
-        println!("cargo:warning=build.rs: skipping cxx bridge for wasm32 target");
+        if is_ci {
+            println!("cargo:warning=build.rs: skipping cxx bridge for wasm32 target");
+        }
     }
 
-    println!("cargo:warning=build.rs: Build-script completed.");
+    if is_ci {
+        println!("cargo:warning=build.rs: Build-script completed.");
+    }
 }

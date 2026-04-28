@@ -1,8 +1,8 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "MAX_RETRIES=4"
-set "RETRY_DELAY_SECONDS=2"
+set "MAX_RETRIES=8"
+set "RETRY_DELAY_SECONDS=4"
 set "ATTEMPT=1"
 set "LOG_FILE=%TEMP%\cargo-retry-%RANDOM%%RANDOM%.log"
 
@@ -13,7 +13,7 @@ type "%LOG_FILE%"
 
 if "%EXIT_CODE%"=="0" goto done
 
-findstr /C:"failed to remove temporary directory" /C:"(os error 32)" "%LOG_FILE%" >nul
+findstr /C:"failed to remove temporary directory" /C:"Failed to clean up" /C:"(os error 32)" "%LOG_FILE%" >nul
 if errorlevel 1 goto done
 
 if !ATTEMPT! GEQ %MAX_RETRIES% goto done

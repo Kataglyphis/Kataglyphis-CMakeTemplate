@@ -1,4 +1,5 @@
 include(CheckCXXCompilerFlag)
+include(${CMAKE_SOURCE_DIR}/cmake/CompilerDetection.cmake)
 
 macro(
   myproject_enable_hardening
@@ -12,7 +13,11 @@ macro(
   set(NEW_LINK_OPTIONS "")
   set(NEW_CXX_DEFINITIONS "")
 
-  if(MSVC)
+  myproject_is_msvc_compiler(IS_MSVC)
+  myproject_is_unix_like_compiler(IS_UNIX_LIKE)
+  myproject_is_gnu_compiler(IS_GNU)
+
+  if(IS_MSVC)
     list(
       APPEND
       NEW_COMPILE_OPTIONS
@@ -26,7 +31,7 @@ macro(
       /NXCOMPAT
       /CETCOMPAT)
 
-  elseif(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang|GNU")
+  elseif(IS_UNIX_LIKE)
     list(APPEND NEW_CXX_DEFINITIONS -D_GLIBCXX_ASSERTIONS)
     message(STATUS "*** GLIBC++ Assertions (vector[], string[], ...) enabled")
 
@@ -36,16 +41,6 @@ macro(
       -U_FORTIFY_SOURCE
       -D_FORTIFY_SOURCE=3)
     message(STATUS "*** g++/clang _FORTIFY_SOURCE=3 enabled")
-
-    #    check_cxx_compiler_flag(-fpie PIE)
-    #if(PIE)
-    #  set(NEW_COMPILE_OPTIONS ${NEW_COMPILE_OPTIONS} -fpie)
-    #  set(NEW_LINK_OPTIONS ${NEW_LINK_OPTIONS} -pie)
-    #
-    #  message(STATUS "*** g++/clang PIE mode enabled")
-    #else()
-    #  message(STATUS "*** g++/clang PIE mode NOT enabled (not supported)")
-    #endif()
 
     check_cxx_compiler_flag(-fstack-protector-strong STACK_PROTECTOR)
     if(STACK_PROTECTOR)
@@ -65,7 +60,7 @@ macro(
 
     check_cxx_compiler_flag(-fstack-clash-protection CLASH_PROTECTION)
     if(CLASH_PROTECTION)
-      if(LINUX OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+      if(LINUX OR IS_GNU)
         list(APPEND NEW_COMPILE_OPTIONS -fstack-clash-protection)
         message(STATUS "*** g++/clang -fstack-clash-protection enabled")
       else()

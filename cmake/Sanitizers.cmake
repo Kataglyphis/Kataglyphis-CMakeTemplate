@@ -1,3 +1,5 @@
+include(${CMAKE_SOURCE_DIR}/cmake/CompilerDetection.cmake)
+
 function(
   myproject_enable_sanitizers
   project_name
@@ -9,7 +11,11 @@ function(
 
   set(SANITIZERS "")
 
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+  myproject_is_unix_like_compiler(IS_UNIX_LIKE)
+  myproject_is_msvc_compiler(IS_MSVC)
+  myproject_is_clang_cl(IS_CLANG_CL)
+
+  if(IS_UNIX_LIKE)
     if(${ENABLE_SANITIZER_ADDRESS})
       list(APPEND SANITIZERS "address")
     endif()
@@ -43,7 +49,7 @@ function(
         list(APPEND SANITIZERS "memory")
       endif()
     endif()
-  elseif(MSVC)
+  elseif(IS_MSVC)
     if(${ENABLE_SANITIZER_ADDRESS})
       list(APPEND SANITIZERS "address")
     endif()
@@ -62,7 +68,7 @@ function(
     LIST_OF_SANITIZERS)
 
   if(LIST_OF_SANITIZERS)
-    if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" AND MSVC)
+    if(IS_CLANG_CL)
       set(_CLANGCL_COMPILE_SAN_FLAGS "")
       set(_CLANGCL_LINK_SAN_FLAGS "")
 
@@ -121,7 +127,7 @@ function(
           message(WARNING "Unable to detect clang resource directory for clang-cl ASan runtime linkage")
         endif()
       endif()
-    elseif(MSVC)
+    elseif(IS_MSVC)
       string(FIND "$ENV{PATH}" "$ENV{VSINSTALLDIR}" index_of_vs_install_dir)
       if("${index_of_vs_install_dir}" STREQUAL "-1")
         message(

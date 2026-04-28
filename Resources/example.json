@@ -1,0 +1,17 @@
+{
+    "application": {
+        "name": "Kataglyphis Runtime",
+        "version": "0.0.1"
+    },
+    "renderer": {
+        "width": 800,
+        "height": 600,
+        "fullscreen": false,
+        "vsync": true,
+        "antialiasing": 4
+    },
+    "logging": {
+        "level": "info",
+        "file_output": true
+    }
+}

@@ -1,7 +1,7 @@
 # update current positions
 set(PROJECT_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/)
 set(PROJECT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/)
-set(EXTERNAL_LIB_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}../ExternalLib/)
+set(EXTERNAL_LIB_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../ExternalLib/)
 
 include(cmake/filters/SetProjectFilters.cmake)
 include(cmake/SetSourceGroups.cmake)
@@ -49,14 +49,38 @@ if(MSVC)
   target_compile_options(${KATAGLYPHIS_CORE_TARGET} PRIVATE /EHsc)
 endif()
 
-# Treat MSVC and clang-cl on Windows differently in a sense of deployment
+add_executable(${PROJECT_NAME} Main.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${KATAGLYPHIS_CORE_TARGET})
 
-if(WIN32 AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC))
+if(TARGET nlohmann_json_modules)
+  target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json_modules)
+endif()
+
+if(TARGET tomlplusplus_modules)
+  target_link_libraries(${PROJECT_NAME} PRIVATE tomlplusplus_modules)
+endif()
+
+if(MSVC)
+  target_compile_options(${PROJECT_NAME} PRIVATE /EHsc)
+endif()
+
+if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  target_compile_definitions(${PROJECT_NAME} PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources/"
+                                                        RELATIVE_INCLUDE_PATH="/../../Src/")
+else()
+  target_compile_definitions(${PROJECT_NAME} PRIVATE RELATIVE_RESOURCE_PATH="/../Resources/"
+                                                        RELATIVE_INCLUDE_PATH="/../Src/")
+endif()
+
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+
+# Treat MSVC and clang-cl on Windows differently in a sense of deployment
+if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources/"
-                                                                RELATIVE_INCLUDE_PATH="/../../Src/")
+                                                        RELATIVE_INCLUDE_PATH="/../../Src/")
 else()
   target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PRIVATE RELATIVE_RESOURCE_PATH="/../Resources/"
-                                                                RELATIVE_INCLUDE_PATH="/../Src/")
+                                                        RELATIVE_INCLUDE_PATH="/../Src/")
 endif()
 
 target_sources(
@@ -156,6 +180,7 @@ if(TARGET nlohmann_json_modules)
   add_dependencies(${KATAGLYPHIS_CORE_TARGET} nlohmann_json_modules)
 endif()
 
-if(MSVC)
-  target_compile_options(${KATAGLYPHIS_CORE_TARGET} PRIVATE /EHsc)
-endif()
+# Ensure the core library is fully compiled (including its module BMI) before
+# compiling the executable. clang-cl may schedule Main.cpp compilation before
+# the kataglyphis_core module is available, causing "module not found" errors.
+add_dependencies(${PROJECT_NAME} ${KATAGLYPHIS_CORE_TARGET})

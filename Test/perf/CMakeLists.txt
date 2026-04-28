@@ -14,11 +14,6 @@ set(PERF_TEST_SUITE perfTestSuite)
 
 kataglyphis_collect_project_sources(KataglyphisCppProject_SOURCES KataglyphisCppProject_HEADERS ${PROJECT_SRC_DIR})
 
-# if(RUST_FEATURES)
-#   corrosion_import_crate(MANIFEST_PATH ${PROJECT_SRC_DIR}rusty_code/Cargo.toml)
-#   corrosion_add_cxxbridge(rusty_bridge_perf CRATE rusty_code FILES lib.rs)
-# endif()
-
 add_executable(${PERF_TEST_SUITE})
 kataglyphis_add_config_module_to_target(${PERF_TEST_SUITE} ${PROJECT_SRC_DIR})
 
