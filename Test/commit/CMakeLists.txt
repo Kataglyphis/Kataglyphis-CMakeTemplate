@@ -1,46 +1,17 @@
 include(GoogleTest)
-
-# all testing related stuff
-set(WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../)
-
-# update current positions
-set(PROJECT_SRC_DIR ${WORKING_DIRECTORY}Src/)
-set(PROJECT_INCLUDE_DIR ${WORKING_DIRECTORY}Src/)
-set(EXTERNAL_LIB_SRC_DIR ${WORKING_DIRECTORY}ExternalLib/)
-
-include(${PROJECT_SRC_DIR}cmake/filters/SetProjectFilters.cmake)
-include(${WORKING_DIRECTORY}Test/cmake/CommonTestBuild.cmake)
+include(${CMAKE_SOURCE_DIR}/Test/cmake/CommonTestBuild.cmake)
 
 set(COMMIT_TEST_SUITE commitTestSuite)
 
 file(GLOB_RECURSE KataglyphisCppProject_COMMIT_TEST_FILTER "*.cpp")
 
-message("Commit test filter is: ${KataglyphisCppProject_COMMIT_TEST_FILTER}")
-
 add_executable(${COMMIT_TEST_SUITE} ${KataglyphisCppProject_COMMIT_TEST_FILTER})
-set_target_properties(${COMMIT_TEST_SUITE} PROPERTIES CXX_SCAN_FOR_MODULES ON)
-
-if(RUST_FEATURES)
-  target_compile_definitions(${COMMIT_TEST_SUITE} PRIVATE USE_RUST=1)
-else()
-  target_compile_definitions(${COMMIT_TEST_SUITE} PRIVATE USE_RUST=0)
-endif()
-
-if(NOT MSVC)
-  target_compile_definitions(${COMMIT_TEST_SUITE} PRIVATE RELATIVE_RESOURCE_PATH="/../../../Resources/"
-                                                          RELATIVE_INCLUDE_PATH="/../../../Src/")
-endif()
+kataglyphis_configure_project_test_target(${COMMIT_TEST_SUITE})
 
 target_link_libraries(
   ${COMMIT_TEST_SUITE}
   PRIVATE KataglyphisCppProject_Lib
-  PUBLIC ${CMAKE_DL_LIBS}
-         Threads::Threads
-         # enable compiler warnings
-         myproject_warnings
-         # enable sanitizers
-         myproject_options
-  PRIVATE gtest
+          gtest
           gtest_main
           GSL
           spdlog)
@@ -49,13 +20,4 @@ kataglyphis_configure_gtest_discovery(${COMMIT_TEST_SUITE})
 
 if(RUST_FEATURES)
   target_link_libraries(${COMMIT_TEST_SUITE} PUBLIC rusty_code)
-endif()
-
-# disable all warnings for our test suite
-if(MSVC)
-  target_compile_options(${COMMIT_TEST_SUITE} INTERFACE /w)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  target_compile_options(${COMMIT_TEST_SUITE} INTERFACE -w)
-else()
-  target_compile_options(${COMMIT_TEST_SUITE} INTERFACE -w)
 endif()

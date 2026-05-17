@@ -1,13 +1,33 @@
-function(
-  kataglyphis_collect_project_sources
-  out_sources
-  out_headers
-  project_src_dir)
+function(kataglyphis_collect_project_sources out_sources project_src_dir)
   file(GLOB_RECURSE _kataglyphis_sources "${project_src_dir}/*.cpp")
   list(REMOVE_ITEM _kataglyphis_sources "${project_src_dir}/Main.cpp")
   set(${out_sources}
       "${_kataglyphis_sources}"
       PARENT_SCOPE)
+endfunction()
+
+function(kataglyphis_configure_project_test_target target_name)
+  set_target_properties(${target_name} PROPERTIES CXX_SCAN_FOR_MODULES ON)
+
+  if(RUST_FEATURES)
+    target_compile_definitions(${target_name} PRIVATE USE_RUST=1)
+  else()
+    target_compile_definitions(${target_name} PRIVATE USE_RUST=0)
+  endif()
+
+  target_link_libraries(
+    ${target_name}
+    PUBLIC ${CMAKE_DL_LIBS}
+           Threads::Threads
+           myproject_warnings
+           myproject_options)
+
+  # Tests don't need the full warning surface from the project interface.
+  if(MSVC)
+    target_compile_options(${target_name} PRIVATE /w)
+  else()
+    target_compile_options(${target_name} PRIVATE -w)
+  endif()
 endfunction()
 
 function(kataglyphis_add_config_module_to_target target_name project_src_dir)

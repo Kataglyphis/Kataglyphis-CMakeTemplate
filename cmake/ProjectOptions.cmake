@@ -1,20 +1,16 @@
-include(CMakeDependentOption)
-include(CheckCXXCompilerFlag)
+include(${CMAKE_SOURCE_DIR}/cmake/BuildTypeHelpers.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CompilerDetection.cmake)
 
 macro(myproject_setup_options)
   option(myproject_ENABLE_HARDENING "Enable hardening" ON)
   option(myproject_ENABLE_COVERAGE "Enable coverage reporting" ON)
   option(myproject_DISABLE_EXCEPTIONS "Disable C++ exceptions" ON)
-  option(myproject_ENABLE_GPROF "Enable profiling with gprof or gperftools (RelWithDebInfo on Linux)" OFF)
-  # for now disable global hardening, as it is not supported by all dependencies
-  option(myproject_ENABLE_GLOBAL_HARDENING "Enable global hardening for all dependencies" OFF)
 
   myproject_supports_sanitizers()
 
   option(USE_THREAD_SANITIZER "Use ThreadSanitizer instead of Address/UndefinedBehavior Sanitizer" OFF)
 
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT USE_THREAD_SANITIZER)
+  if(MYPROJECT_BUILD_IS_DEBUG AND NOT USE_THREAD_SANITIZER)
     set(DEFAULT_ASAN ${SUPPORTS_ASAN})
     set(DEFAULT_UBSAN ${SUPPORTS_UBSAN})
     set(DEFAULT_TSAN OFF)
@@ -70,24 +66,14 @@ macro(myproject_global_options)
 
   set(CMAKE_CXX_STANDARD 23)
   set(CMAKE_CXX_STANDARD_REQUIRED True)
+  set(CMAKE_CXX_EXTENSIONS OFF)
 
   set(CMAKE_C_STANDARD 17)
   set(CMAKE_C_STANDARD_REQUIRED True)
+  set(CMAKE_C_EXTENSIONS OFF)
 
-  # set build type specific flags
-if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DEBUG /Od /std:c++23preview")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /GL /std:c++23preview")
-  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -std=c++23 -ggdb")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -std=c++23 -DNDEBUG")
-  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  /Od")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2  -DNDEBUG")
-  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -ggdb -std=c++23 -fcolor-diagnostics")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG -std=c++23 -fcolor-diagnostics")
-  endif()
+  # Leave optimization/debug defaults to the generator and toolchain instead of
+  # mutating CMAKE_<LANG>_FLAGS_* globally.
 
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
     set(CMAKE_CXX_SCAN_FOR_MODULES ON)
@@ -97,7 +83,7 @@ if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
-  if(CMAKE_BUILD_TYPE STREQUAL "Release")
+  if(MYPROJECT_BUILD_IS_RELEASE)
     set(CMAKE_LINK_WHAT_YOU_USE FALSE)
   else()
     set(CMAKE_LINK_WHAT_YOU_USE TRUE)
@@ -105,7 +91,7 @@ if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
 
   if(myproject_ENABLE_IPO)
     include(cmake/InterproceduralOptimization.cmake)
-    if(NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    if(NOT MYPROJECT_BUILD_IS_DEBUG)
       myproject_enable_ipo()
     endif()
   endif()
@@ -120,31 +106,61 @@ function(myproject_enable_cache)
   #   - Avoid changing CMAKE_BUILD_TYPE frequently (Debug/Release have different flags)
   #   - For sccache on Windows: set SCCACHE_CACHE_SIZE (e.g., 10GiB)
   #   - For sccache: consider SCCACHE_DIRECT=1 to skip preprocessor for C/C++
-  set(COMPILER_CACHE "" CACHE STRING "Compiler cache to be used (ccache or sccache; leave empty to disable)")
+  set(COMPILER_CACHE
+      ""
+      CACHE STRING "Compiler cache to be used (ccache or sccache; leave empty to disable)")
   if(MSVC AND WIN32)
     set(_allowed_values sccache)
   else()
     set(_allowed_values ccache sccache)
   endif()
   set_property(CACHE "COMPILER_CACHE" PROPERTY STRINGS ${_allowed_values})
-  if(NOT "${COMPILER_CACHE}" STREQUAL "")
-    list(FIND _allowed_values "${COMPILER_CACHE}" _idx)
+  if(NOT
+     "${COMPILER_CACHE}"
+     STREQUAL
+     "")
+    list(
+      FIND
+      _allowed_values
+      "${COMPILER_CACHE}"
+      _idx)
     if(_idx EQUAL -1)
       message(FATAL_ERROR "Invalid value for compiler_cache: '${COMPILER_CACHE}'. Supported values: ${_allowed_values}")
     endif()
-    find_program(CACHE_BINARY NAMES "${COMPILER_CACHE}" DOC "Path to the compiler cache executable")
-    if(CACHE_BINARY AND NOT CACHE_BINARY STREQUAL "${PATH}-NOTFOUND")
+    find_program(
+      CACHE_BINARY
+      NAMES "${COMPILER_CACHE}"
+      DOC "Path to the compiler cache executable")
+    if(CACHE_BINARY
+       AND NOT
+           CACHE_BINARY
+           STREQUAL
+           "${PATH}-NOTFOUND")
       message(STATUS "${COMPILER_CACHE} found at ${CACHE_BINARY}. Enabling compiler cache.")
-      set(CMAKE_C_COMPILER_LAUNCHER "${CACHE_BINARY}" CACHE STRING "C compiler cache launcher")
-      set(CMAKE_CXX_COMPILER_LAUNCHER "${CACHE_BINARY}" CACHE STRING "CXX compiler cache launcher")
+      set(CMAKE_C_COMPILER_LAUNCHER
+          "${CACHE_BINARY}"
+          CACHE STRING "C compiler cache launcher")
+      set(CMAKE_CXX_COMPILER_LAUNCHER
+          "${CACHE_BINARY}"
+          CACHE STRING "CXX compiler cache launcher")
       if(MSVC)
         if(POLICY CMP0141)
           cmake_policy(SET CMP0141 NEW)
-          set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded CACHE STRING "MSVC debug info format (use /Z7)")
+          set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT
+              Embedded
+              CACHE STRING "MSVC debug info format (use /Z7)")
           message(STATUS "Configured MSVC to embed PDB info (/Z7) for cache consistency.")
         else()
-          string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
-          string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+          string(
+            REPLACE "/Zi"
+                    "/Z7"
+                    CMAKE_C_FLAGS_DEBUG
+                    "${CMAKE_C_FLAGS_DEBUG}")
+          string(
+            REPLACE "/Zi"
+                    "/Z7"
+                    CMAKE_CXX_FLAGS_DEBUG
+                    "${CMAKE_CXX_FLAGS_DEBUG}")
           message(STATUS "Replaced /Zi with /Z7 in debug flags for cache consistency.")
         endif()
       endif()
@@ -178,10 +194,7 @@ macro(myproject_local_options)
     target_compile_options(myproject_options INTERFACE /EHsc)
   endif()
 
-  if(NOT
-     CMAKE_BUILD_TYPE
-     STREQUAL
-     "Release")
+  if(NOT MYPROJECT_BUILD_IS_RELEASE)
     include(cmake/Sanitizers.cmake)
     myproject_enable_sanitizers(
       myproject_options
@@ -207,10 +220,7 @@ macro(myproject_local_options)
     myproject_enable_cache()
   endif()
 
-  if(NOT
-     CMAKE_BUILD_TYPE
-     STREQUAL
-     "Release")
+  if(NOT MYPROJECT_BUILD_IS_RELEASE)
     include(cmake/StaticAnalyzers.cmake)
     if(myproject_ENABLE_CLANG_TIDY)
       myproject_enable_clang_tidy(myproject_options ${myproject_WARNINGS_AS_ERRORS})
@@ -227,19 +237,12 @@ macro(myproject_local_options)
     endif()
   endif()
 
-  if(myproject_WARNINGS_AS_ERRORS)
-    check_cxx_compiler_flag("-Wl,--fatal-warnings" LINKER_FATAL_WARNINGS)
-  endif()
-
-  if(myproject_ENABLE_HARDENING AND NOT myproject_ENABLE_GLOBAL_HARDENING)
+  if(myproject_ENABLE_HARDENING)
     include(cmake/Hardening.cmake)
-    myproject_enable_hardening(myproject_options OFF FALSE)
+    myproject_enable_hardening(myproject_options)
   endif()
 
-  if(NOT
-     CMAKE_BUILD_TYPE
-     STREQUAL
-     "Release")
+  if(NOT MYPROJECT_BUILD_IS_RELEASE)
 
     include(cmake/Doxygen.cmake)
     enable_doxygen()
@@ -248,7 +251,10 @@ macro(myproject_local_options)
 
   include(ProcessorCount)
   ProcessorCount(N)
-  if(NOT N EQUAL 0)
+  if(NOT
+     N
+     EQUAL
+     0)
     set(CTEST_BUILD_FLAGS -j${N})
     set(ctest_test_args ${ctest_test_args} PARALLEL_LEVEL ${N})
     set(ENV{CMAKE_BUILD_PARALLEL_LEVEL} "${N}")

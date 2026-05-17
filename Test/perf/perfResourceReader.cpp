@@ -1,13 +1,13 @@
 #include <benchmark/benchmark.h>
-#include <string>
 #include <sstream>
+#include <string>
 
 import kataglyphis_config;
 import kataglyphis_resources;
 
 using namespace kataglyphis::resources;
 
-static void BM_JsonParseSmallString(benchmark::State& state)
+static void BM_JsonParseSmallString(benchmark::State &state)
 {
     const std::string json_string = R"({"key": "value", "number": 42})";
     for (auto _ : state) {
@@ -17,7 +17,7 @@ static void BM_JsonParseSmallString(benchmark::State& state)
 }
 BENCHMARK(BM_JsonParseSmallString);
 
-static void BM_JsonParseMediumString(benchmark::State& state)
+static void BM_JsonParseMediumString(benchmark::State &state)
 {
     const std::string json_string = R"({
         "application": {
@@ -39,7 +39,7 @@ static void BM_JsonParseMediumString(benchmark::State& state)
 }
 BENCHMARK(BM_JsonParseMediumString);
 
-static void BM_JsonGetString(benchmark::State& state)
+static void BM_JsonGetString(benchmark::State &state)
 {
     auto json_obj = ResourceReader::read_json_string(R"({"key": "test_value", "number": 42})");
     for (auto _ : state) {
@@ -49,7 +49,7 @@ static void BM_JsonGetString(benchmark::State& state)
 }
 BENCHMARK(BM_JsonGetString);
 
-static void BM_JsonGetInt(benchmark::State& state)
+static void BM_JsonGetInt(benchmark::State &state)
 {
     auto json_obj = ResourceReader::read_json_string(R"({"key": "test_value", "number": 42})");
     for (auto _ : state) {
@@ -59,7 +59,7 @@ static void BM_JsonGetInt(benchmark::State& state)
 }
 BENCHMARK(BM_JsonGetInt);
 
-static void BM_TomlParseSmallString(benchmark::State& state)
+static void BM_TomlParseSmallString(benchmark::State &state)
 {
     const std::string toml_string = R"(
         name = "test"
@@ -72,7 +72,7 @@ static void BM_TomlParseSmallString(benchmark::State& state)
 }
 BENCHMARK(BM_TomlParseSmallString);
 
-static void BM_TomlParseMediumString(benchmark::State& state)
+static void BM_TomlParseMediumString(benchmark::State &state)
 {
     const std::string toml_string = R"(
         [application]
@@ -94,7 +94,7 @@ static void BM_TomlParseMediumString(benchmark::State& state)
 }
 BENCHMARK(BM_TomlParseMediumString);
 
-static void BM_TomlGetString(benchmark::State& state)
+static void BM_TomlGetString(benchmark::State &state)
 {
     auto tbl = ResourceReader::read_toml_string(R"(
         name = "test_value"
@@ -107,7 +107,7 @@ static void BM_TomlGetString(benchmark::State& state)
 }
 BENCHMARK(BM_TomlGetString);
 
-static void BM_TomlGetInt(benchmark::State& state)
+static void BM_TomlGetInt(benchmark::State &state)
 {
     auto tbl = ResourceReader::read_toml_string(R"(
         name = "test_value"
@@ -120,7 +120,7 @@ static void BM_TomlGetInt(benchmark::State& state)
 }
 BENCHMARK(BM_TomlGetInt);
 
-static void BM_TomlNestedTableAccess(benchmark::State& state)
+static void BM_TomlNestedTableAccess(benchmark::State &state)
 {
     auto tbl = ResourceReader::read_toml_string(R"(
         [application]

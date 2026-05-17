@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include <filesystem>
+#include <gtest/gtest.h>
 #include <string>
 
 import kataglyphis_config;
@@ -101,7 +101,7 @@ TEST(ResourceReaderTest, JsonNestedObject)
 
     EXPECT_TRUE(ResourceReader::json_has_key(json_obj, "application"));
     EXPECT_TRUE(json_obj["application"].is_object());
-    auto& app_obj = json_obj["application"];
+    auto &app_obj = json_obj["application"];
     EXPECT_EQ(ResourceReader::json_get_string(app_obj, "name"), "MyApp");
     EXPECT_EQ(ResourceReader::json_get_string(app_obj, "version"), "1.0.0");
 }

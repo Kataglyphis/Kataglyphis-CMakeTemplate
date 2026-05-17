@@ -10,11 +10,20 @@ project(
 
 set(AUTHOR "Jonas Heinle")
 
+include(cmake/BuildTypeHelpers.cmake)
+
+# Resolve symlinks before comparing so aliased source/build paths are still rejected.
+get_filename_component(_myproject_source_dir "${CMAKE_SOURCE_DIR}" REALPATH)
+get_filename_component(_myproject_binary_dir "${CMAKE_BINARY_DIR}" REALPATH)
+if("${_myproject_source_dir}" STREQUAL "${_myproject_binary_dir}")
+  message(
+    FATAL_ERROR "In-source builds are disabled. Please create a separate build directory and run CMake from there.")
+endif()
+
 set(MYPROJECT_GCC_TOOLCHAIN_PATH
     ""
     CACHE PATH "Optional GCC toolchain root used by Clang and Rust tooling on Linux (for example /opt/gcc-15.2.0)")
 
-include(cmake/PreventInSourceBuilds.cmake)
 include(cmake/ProjectOptions.cmake)
 include(cmake/MSVCRuntimeConfig.cmake)
 include(cmake/RustOptions.cmake)
@@ -57,7 +66,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
       # If a profile path is supplied, use it for profile-guided optimizations.
       target_compile_options(myproject_options INTERFACE -fprofile-instr-use=${myproject_PGO_PROFILE})
       target_link_options(myproject_options INTERFACE -fprofile-instr-use=${myproject_PGO_PROFILE})
-    elseif(myproject_ENABLE_PGO AND (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" OR CMAKE_BUILD_TYPE STREQUAL "Release"))
+    elseif(myproject_ENABLE_PGO AND (MYPROJECT_BUILD_IS_RELWITHDEBINFO OR MYPROJECT_BUILD_IS_RELEASE))
       # Instrument the build to generate runtime profiles (.profraw).
       target_compile_options(myproject_options INTERFACE -fprofile-instr-generate)
       target_link_options(myproject_options INTERFACE -fprofile-instr-generate)
@@ -74,6 +83,18 @@ endif()
 myproject_configure_msvc_runtime()
 
 add_subdirectory(ExternalLib)
+
+# FUZZTEST pulls antlr4-cpp transitively on Windows clang-cl debug builds.
+# antlr4-cpp 4.13.2's ProfilingATNSimulator.cpp uses std::chrono without
+# including <chrono>, so fix that at the target level instead of patching the
+# vendored source tree.
+if(MSVC AND CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+  foreach(_myproject_antlr_target antlr4_static antlr4_shared)
+    if(TARGET ${_myproject_antlr_target})
+      target_compile_options(${_myproject_antlr_target} PRIVATE /FIchrono)
+    endif()
+  endforeach()
+endif()
 
 # If the nlohmann.json module target was created, expose a compile-time macro
 # so consumer module units can conditionally import the module. This lets
@@ -96,7 +117,7 @@ if(BUILD_TESTING)
   include(CTest)
   enable_testing()
 
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  if(MYPROJECT_BUILD_IS_DEBUG)
     add_subdirectory(Test/commit)
     add_subdirectory(Test/compile)
     if(NOT USE_THREAD_SANITIZER)
@@ -105,7 +126,7 @@ if(BUILD_TESTING)
   endif()
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+if(MYPROJECT_BUILD_IS_RELWITHDEBINFO)
   add_subdirectory(Test/perf)
 endif()
 

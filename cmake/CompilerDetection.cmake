@@ -1,53 +1,74 @@
 include_guard(GLOBAL)
 
 function(myproject_is_clang_compiler result_var)
-    if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang.*")
-        set(${result_var} ON PARENT_SCOPE)
-    else()
-        set(${result_var} OFF PARENT_SCOPE)
-    endif()
+  if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang.*")
+    set(${result_var}
+        ON
+        PARENT_SCOPE)
+  else()
+    set(${result_var}
+        OFF
+        PARENT_SCOPE)
+  endif()
 endfunction()
 
 function(myproject_is_gnu_compiler result_var)
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set(${result_var} ON PARENT_SCOPE)
-    else()
-        set(${result_var} OFF PARENT_SCOPE)
-    endif()
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(${result_var}
+        ON
+        PARENT_SCOPE)
+  else()
+    set(${result_var}
+        OFF
+        PARENT_SCOPE)
+  endif()
 endfunction()
 
 function(myproject_is_msvc_compiler result_var)
-    if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang.*"))
-        set(${result_var} ON PARENT_SCOPE)
-    else()
-        set(${result_var} OFF PARENT_SCOPE)
-    endif()
+  if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang.*"))
+    set(${result_var}
+        ON
+        PARENT_SCOPE)
+  else()
+    set(${result_var}
+        OFF
+        PARENT_SCOPE)
+  endif()
 endfunction()
 
 function(myproject_is_clang_cl result_var)
-    if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang.*" AND MSVC)
-        set(${result_var} ON PARENT_SCOPE)
-    else()
-        set(${result_var} OFF PARENT_SCOPE)
-    endif()
+  if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang.*" AND MSVC)
+    set(${result_var}
+        ON
+        PARENT_SCOPE)
+  else()
+    set(${result_var}
+        OFF
+        PARENT_SCOPE)
+  endif()
 endfunction()
 
 function(myproject_is_unix_like_compiler result_var)
-    if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang.*" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set(${result_var} ON PARENT_SCOPE)
-    else()
-        set(${result_var} OFF PARENT_SCOPE)
-    endif()
+  if((CMAKE_CXX_COMPILER_ID MATCHES ".*Clang.*" AND NOT MSVC) OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(${result_var}
+        ON
+        PARENT_SCOPE)
+  else()
+    set(${result_var}
+        OFF
+        PARENT_SCOPE)
+  endif()
 endfunction()
 
 macro(myproject_supports_sanitizers)
-    myproject_is_unix_like_compiler(IS_UNIX_LIKE)
+  myproject_is_unix_like_compiler(IS_UNIX_LIKE)
+  myproject_is_clang_cl(IS_CLANG_CL)
 
-    if(IS_UNIX_LIKE)
-        set(SUPPORTS_ASAN ON)
-        set(SUPPORTS_UBSAN ON)
-    else()
-        set(SUPPORTS_ASAN OFF)
-        set(SUPPORTS_UBSAN OFF)
-    endif()
+  if(IS_UNIX_LIKE OR IS_CLANG_CL)
+    set(SUPPORTS_ASAN ON)
+    set(SUPPORTS_UBSAN ON)
+  else()
+    set(SUPPORTS_ASAN OFF)
+    set(SUPPORTS_UBSAN OFF)
+  endif()
 endmacro()

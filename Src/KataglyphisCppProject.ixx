@@ -45,11 +45,14 @@ auto run() -> int
               << "\n";
 
 #if defined(TOMLPLUSPLUS_MODULE_AVAILABLE)
-    // Parse the example TOML resource to demonstrate module usage.
-    // Use the no-exceptions API (parse_result) so this code compiles when
-    // exceptions are disabled for the toolchain.
+    // Parse an in-memory TOML document to demonstrate module usage without
+    // depending on the current working directory at runtime.
     {
-        auto res = toml::parse_file("${CMAKE_SOURCE_DIR}/Src/resources/example.toml");
+        auto res = toml::parse(R"(
+            [application]
+            name = "Kataglyphis Runtime"
+            version = "0.0.1"
+        )");
         if (res) {
             // parse_result is convertible to toml::table when successful
             const auto &t = static_cast<const toml::table &>(res);

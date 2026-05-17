@@ -9,7 +9,7 @@
 import kataglyphis_config;
 import kataglyphis_core;
 
-extern "C" void kataglyphis_parse_flags(int argc, char** argv);
+extern "C" void kataglyphis_parse_flags(int argc, char **argv);
 
 // Demonstrate some basic assertions.
 // NOLINTBEGIN(misc-use-internal-linkage, modernize-use-trailing-return-type, readability-named-parameter,
@@ -29,7 +29,7 @@ TEST(HelloTestCommit, BasicAssertions)
 
 TEST(Integration, VulkanEngine)
 {
-    char* argv[] = {(char*)"test", (char*)"--verbose"};
+    char *argv[] = { (char *)"test", (char *)"--verbose" };
     kataglyphis_parse_flags(2, argv);
     EXPECT_EQ(kataglyphis::run(), 0);
 }

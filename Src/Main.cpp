@@ -5,9 +5,9 @@ import kataglyphis_core;
 // the declaration at global scope avoids declaring `main` with extern "C"
 // linkage (which triggers a warning) and avoids putting linkage-specifiers
 // inside the function body which can confuse some frontends.
-extern "C" void kataglyphis_parse_flags(int argc, char** argv);
+extern "C" void kataglyphis_parse_flags(int argc, char **argv);
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     // Parse flags in a separate translation unit to avoid including Abseil
     // headers in a module-importing TU. The parse_flags function is defined

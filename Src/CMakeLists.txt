@@ -3,13 +3,11 @@ set(PROJECT_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/)
 set(PROJECT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/)
 set(EXTERNAL_LIB_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../ExternalLib/)
 
-include(cmake/filters/SetProjectFilters.cmake)
-include(cmake/SetSourceGroups.cmake)
-
 file(GLOB_RECURSE KataglyphisCppProject_SOURCES "*.cpp")
 file(GLOB_RECURSE KataglyphisCppProject_HEADERS "*.hpp")
 set(KATAGLYPHIS_MAIN_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/Main.cpp")
 list(REMOVE_ITEM KataglyphisCppProject_SOURCES "${KATAGLYPHIS_MAIN_SOURCE}")
+source_group("main" FILES "${KATAGLYPHIS_MAIN_SOURCE}")
 
 # Ensure the Abseil flags translation unit is compiled and linked into the
 # executable. We add it explicitly so module-aware compilers see the TU even
@@ -64,24 +62,7 @@ if(MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE /EHsc)
 endif()
 
-if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  target_compile_definitions(${PROJECT_NAME} PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources/"
-                                                        RELATIVE_INCLUDE_PATH="/../../Src/")
-else()
-  target_compile_definitions(${PROJECT_NAME} PRIVATE RELATIVE_RESOURCE_PATH="/../Resources/"
-                                                        RELATIVE_INCLUDE_PATH="/../Src/")
-endif()
-
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
-
-# Treat MSVC and clang-cl on Windows differently in a sense of deployment
-if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PRIVATE RELATIVE_RESOURCE_PATH="/../../Resources/"
-                                                        RELATIVE_INCLUDE_PATH="/../../Src/")
-else()
-  target_compile_definitions(${KATAGLYPHIS_CORE_TARGET} PRIVATE RELATIVE_RESOURCE_PATH="/../Resources/"
-                                                        RELATIVE_INCLUDE_PATH="/../Src/")
-endif()
 
 target_sources(
   ${KATAGLYPHIS_CORE_TARGET}

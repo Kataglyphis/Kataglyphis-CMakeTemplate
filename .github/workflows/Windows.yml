@@ -48,7 +48,7 @@ jobs:
 
       - name: Run build inside container
         run: |
-          docker run --rm --cpus 4 `
+          docker run --rm --memory 16g --cpus 4 `
             --mount "type=bind,source=${{ github.workspace }},target=C:\workspace" `
             -w "C:\workspace" `
             "${{ env.CONTAINER_IMAGE }}" `

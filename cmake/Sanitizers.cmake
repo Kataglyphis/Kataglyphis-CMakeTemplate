@@ -15,7 +15,29 @@ function(
   myproject_is_msvc_compiler(IS_MSVC)
   myproject_is_clang_cl(IS_CLANG_CL)
 
-  if(IS_UNIX_LIKE)
+  if(IS_CLANG_CL)
+    if(${ENABLE_SANITIZER_ADDRESS})
+      list(APPEND SANITIZERS "address")
+    endif()
+
+    if(${ENABLE_SANITIZER_UNDEFINED_BEHAVIOR})
+      list(APPEND SANITIZERS "undefined")
+    endif()
+
+    if(${ENABLE_SANITIZER_THREAD})
+      message(
+        WARNING
+          "clang-cl ThreadSanitizer is not supported for target x86_64-pc-windows-msvc; ignoring thread sanitizer request"
+      )
+    endif()
+
+    if(${ENABLE_SANITIZER_LEAK} OR ${ENABLE_SANITIZER_MEMORY})
+      message(
+        WARNING
+          "clang-cl with MSVC ABI currently supports AddressSanitizer and UndefinedBehaviorSanitizer in this configuration"
+      )
+    endif()
+  elseif(IS_UNIX_LIKE)
     if(${ENABLE_SANITIZER_ADDRESS})
       list(APPEND SANITIZERS "address")
     endif()
@@ -81,20 +103,6 @@ function(
         list(APPEND _CLANGCL_LINK_SAN_FLAGS -fsanitize=undefined)
       endif()
 
-      if("thread" IN_LIST SANITIZERS)
-        message(
-          WARNING
-            "clang-cl ThreadSanitizer is not supported for target x86_64-pc-windows-msvc; ignoring thread sanitizer request"
-        )
-      endif()
-
-      if("leak" IN_LIST SANITIZERS OR "memory" IN_LIST SANITIZERS)
-        message(
-          WARNING
-            "clang-cl with MSVC ABI currently supports AddressSanitizer and UndefinedBehaviorSanitizer in this configuration"
-        )
-      endif()
-
       if(_CLANGCL_COMPILE_SAN_FLAGS)
         target_compile_options(${project_name} INTERFACE ${_CLANGCL_COMPILE_SAN_FLAGS} /Zi /INCREMENTAL:NO)
         target_link_options(
@@ -105,7 +113,8 @@ function(
       endif()
 
       if("address" IN_LIST SANITIZERS)
-        target_compile_definitions(${project_name} INTERFACE _DISABLE_VECTOR_ANNOTATION _DISABLE_STRING_ANNOTATION)
+        target_compile_definitions(${project_name} INTERFACE _DISABLE_VECTOR_ANNOTATION _DISABLE_STRING_ANNOTATION
+                                                             _DISABLE_OPTIONAL_ANNOTATION)
 
         execute_process(
           COMMAND ${CMAKE_CXX_COMPILER} --print-resource-dir
@@ -136,7 +145,8 @@ function(
         )
       endif()
       target_compile_options(${project_name} INTERFACE /fsanitize=${LIST_OF_SANITIZERS} /Zi /INCREMENTAL:NO)
-      target_compile_definitions(${project_name} INTERFACE _DISABLE_VECTOR_ANNOTATION _DISABLE_STRING_ANNOTATION)
+      target_compile_definitions(${project_name} INTERFACE _DISABLE_VECTOR_ANNOTATION _DISABLE_STRING_ANNOTATION
+                                                           _DISABLE_OPTIONAL_ANNOTATION)
       target_link_options(${project_name} INTERFACE /INCREMENTAL:NO)
     else()
       target_compile_options(${project_name} INTERFACE -fsanitize=${LIST_OF_SANITIZERS})

@@ -1,7 +1,6 @@
 include(FetchContent)
 
-message(STATUS "ExternalLib/CMakeLists: RUST_FEATURES=${RUST_FEATURES} CMAKE_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}")
-
+include(${CMAKE_SOURCE_DIR}/cmake/BuildTypeHelpers.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CompilerConfigHelpers.cmake)
 
 if(BUILD_TESTING)
@@ -19,15 +18,30 @@ set(BENCHMARK_USE_BUNDLED_GTEST OFF CACHE BOOL "Disable the bundled GTest usage.
 
 add_subdirectory(GOOGLE_BENCHMARK)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND BUILD_TESTING AND CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" AND NOT USE_THREAD_SANITIZER)
-    message("Adding Fuzztest")
-    option(KATAGLYPHIS_ENABLE_FUZZTEST_FUZZING_MODE
-           "Build FUZZTEST in fuzzing mode (injects AddressSanitizer/coverage flags; keep OFF for normal builds)"
-           ON)
-    set(FUZZTEST_FUZZING_MODE OFF CACHE BOOL "" FORCE)
-    add_subdirectory(FUZZTEST)
+set(_kataglyphis_enable_fuzztest FALSE)
+if(BUILD_TESTING
+   AND MYPROJECT_BUILD_IS_DEBUG
+   AND CMAKE_CXX_COMPILER_ID MATCHES ".*Clang"
+   AND NOT USE_THREAD_SANITIZER
+   AND (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Windows"))
+  set(_kataglyphis_enable_fuzztest TRUE)
+endif()
+
+if(_kataglyphis_enable_fuzztest)
+  if(CMAKE_SYSTEM_NAME STREQUAL "Windows" AND FUZZTEST_COMPATIBILITY_MODE STREQUAL "libfuzzer")
+    message(FATAL_ERROR "FUZZTEST_COMPATIBILITY_MODE=libfuzzer is not supported on Windows clang-cl.")
   endif()
+
+  set(_kataglyphis_default_fuzztest_fuzzing_mode OFF)
+  if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(_kataglyphis_default_fuzztest_fuzzing_mode ON)
+  endif()
+
+  option(KATAGLYPHIS_ENABLE_FUZZTEST_FUZZING_MODE
+         "Build FUZZTEST in fuzzing mode (injects AddressSanitizer/coverage flags; keep OFF for normal builds)"
+         ${_kataglyphis_default_fuzztest_fuzzing_mode})
+  set(FUZZTEST_FUZZING_MODE OFF CACHE BOOL "" FORCE)
+  add_subdirectory(FUZZTEST)
 endif()
 
 FetchContent_Declare(GSL GIT_REPOSITORY "https://github.com/microsoft/GSL" GIT_TAG "v4.2.1")
@@ -35,7 +49,6 @@ FetchContent_MakeAvailable(GSL)
 
 FetchContent_Declare(abseil-cpp GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git GIT_TAG 20260107.1)
 FetchContent_MakeAvailable(abseil-cpp)
-include_directories(${abseil-cpp_SOURCE_DIR})
 
 if(myproject_DISABLE_EXCEPTIONS)
   set(SPDLOG_NO_EXCEPTIONS ON CACHE BOOL "Disable SPDLOG exceptions.")

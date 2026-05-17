@@ -1,9 +1,11 @@
+include(${CMAKE_SOURCE_DIR}/cmake/BuildTypeHelpers.cmake)
+
 function(myproject_enable_coverage project_name)
   # Restrict coverage instrumentation to Debug builds only. Enabling
   # profile/coverage instrumentation for RelWithDebInfo/Release can
   # interact poorly with LTO/IPO and sanitizers; keep coverage confined
   # to Debug where tooling and runtime expectations are predictable.
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  if(MYPROJECT_BUILD_IS_DEBUG)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
       message(" -- ** Enabling coverage reporting (gcov-style)**")
       target_compile_options(${project_name} INTERFACE --coverage -O0 -g)

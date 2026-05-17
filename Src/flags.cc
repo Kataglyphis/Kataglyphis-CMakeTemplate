@@ -17,19 +17,16 @@ ABSL_FLAG(bool, verbose, false, "Enable verbose logging");
 
 namespace kataglyphis {
 
-void parse_flags(int argc, char** argv)
+void parse_flags(int argc, char **argv)
 {
     absl::SetProgramUsageMessage("Usage: kataglyphis --input=FILE [options]");
     // Parse and ignore leftover positional arguments here.
     (void)absl::ParseCommandLine(argc, argv);
 }
 
-} // namespace kataglyphis
+}// namespace kataglyphis
 
 // Provide a C-linkage wrapper so the module-based main can reliably call the
 // flag parsing function without depending on C++ name mangling or module
 // visibility rules across translation units.
-extern "C" void kataglyphis_parse_flags(int argc, char** argv)
-{
-    kataglyphis::parse_flags(argc, argv);
-}
+extern "C" void kataglyphis_parse_flags(int argc, char **argv) { kataglyphis::parse_flags(argc, argv); }

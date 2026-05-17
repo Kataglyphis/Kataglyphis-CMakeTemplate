@@ -1,16 +1,20 @@
 # This module centralizes MSVC runtime library and iterator debug level configuration.
 # It ensures consistency across the project and its external dependencies.
 
+include(${CMAKE_SOURCE_DIR}/cmake/BuildTypeHelpers.cmake)
+
 macro(myproject_configure_msvc_runtime)
   if(MSVC)
     # Determine the desired runtime based on build type and AddressSanitizer status.
     set(_initial_runtime "MultiThreadedDLL") # Default to release DLL runtime
 
-    if(DEFINED CMAKE_BUILD_TYPE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if(MYPROJECT_BUILD_IS_DEBUG)
       if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND myproject_ENABLE_SANITIZER_ADDRESS)
         # clang-cl + ASan in Debug: use release DLL runtime (/MD) so ASan can link.
         set(_initial_runtime "MultiThreadedDLL")
-        message(STATUS "clang-cl + ASan: forcing MSVC runtime selection to MultiThreadedDLL (/MD) to satisfy ASan requirements")
+        message(
+          STATUS
+            "clang-cl + ASan: forcing MSVC runtime selection to MultiThreadedDLL (/MD) to satisfy ASan requirements")
       else()
         # Normal Debug builds: use debug DLL runtime (/MDd).
         set(_initial_runtime "MultiThreadedDebugDLL")
